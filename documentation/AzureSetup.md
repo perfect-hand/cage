@@ -30,9 +30,9 @@
 * Authentication - Unauthenticated requests: HTTP 302 Found redirect: recommended for websites
 * Authentication - Token store: Enabled
 * Authentication - Identity Provider: Microsoft
-* Authentication - Identity Provider - Application (client) ID: from Entra App Registration (Frontend), see above
-* Authentication - Identity Provider - Issuer URL: https://{tenantid}.ciamlogin.com/{tenantid}/v2.0
-* Authentication - Identity Provider - Allowed token audiences: application ID from Entra App Registration (Backend), see above (matches access token aud claim)
+* Authentication - Identity Provider - Application (client) ID: from Entra App Registration (Frontend), see above (matches access token azd claim (= Authorized party (the party to which this token was issued)))
+* Authentication - Identity Provider - Issuer URL: https://{tenantid}.ciamlogin.com/{tenantid}/v2.0 (matches access token iss claim (= Issuer (who created and signed this token)))
+* Authentication - Identity Provider - Allowed token audiences: application ID from Entra App Registration (Backend), see above (matches access token aud claim (= Audience (who or what the token is intended for)))
 * Authentication - Identity Provider - Additional checks - Client application requirement: Allow requests only from this application itself
 * Authentication - Identity Provider - Additional checks - Identity requirement: Allow requests from any identity
 * Authentication - Identity Provider - Additional checks - Tenant requirement: Allow requests only from the issuer tenant
