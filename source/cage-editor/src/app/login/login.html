@@ -1,0 +1,7 @@
+@if (isSignedIn()) {
+    <p>Welcome {{ userName() }}!</p>
+    <button matButton="elevated" (click)="sendRequest()">Send Request</button>
+    <button matButton="elevated" (click)="signOut()">Sign Out</button>
+} @else {
+    <button matButton="elevated" (click)="signIn()">Sign In</button>
+}
