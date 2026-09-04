@@ -21,10 +21,25 @@ function Build-Simulation {
     dotnet build
 }
 
+function Test-Simulation {
+    Set-Location $PSScriptRoot/../source/Cage.Simulation.Tests
+
+    Write-Output "`nCleaning simulation tests..."
+    dotnet clean
+
+    Write-Output "`nBuilding simulation tests..."
+    dotnet build
+
+    Write-Output "`nRunning simulation tests..."
+    dotnet test
+}
+
 Show-DebugInfo
 
 $VersionNumber = Get-VersionNumber
 Write-Output "Application version: $VersionNumber"
 
 Build-Simulation
+Test-Simulation
+
 Set-Location $PSScriptRoot
