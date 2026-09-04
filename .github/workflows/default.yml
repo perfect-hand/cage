@@ -9,6 +9,8 @@ jobs:
       # https://github.com/actions/checkout
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       # https://github.com/actions/setup-dotnet
       - name: Setup dotnet 10.0.x
