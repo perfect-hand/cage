@@ -1,4 +1,4 @@
-Import-Module ./GetVersionNumber.psm1
+Import-Module $PSScriptRoot/GetVersionNumber.psm1
 
 $GitVersion = git --version
 $DotNetVersion = dotnet --version
