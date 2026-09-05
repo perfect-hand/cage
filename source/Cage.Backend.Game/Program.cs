@@ -4,10 +4,12 @@ using Cage.Backend.Game.Match;
 var builder = WebApplication.CreateBuilder(args);
 
 // https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis/webapplication?view=aspnetcore-10.0#add-services
+builder.Services.AddHttpLogging(options => {});
 builder.Services.AddScoped<MatchService>();
 
 var app = builder.Build();
 app.UseHttpsRedirection();
+app.UseHttpLogging();
 
 var matches = app.MapGroup("/matches");
 
