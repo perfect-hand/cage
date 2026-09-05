@@ -20,6 +20,14 @@ jobs:
     
       # https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/add-scripts
       # https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsshell
+      - name: Show debug info
+        shell: pwsh
+        run: ./build/ShowDebugInfo.ps1
+
       - name: Build simulation library
         shell: pwsh
         run: ./build/BuildSimulation.ps1
+
+      - name: Build game backend
+        shell: pwsh
+        run: ./build/BuildGameBackend.ps1
