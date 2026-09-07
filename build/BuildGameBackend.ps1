@@ -1,5 +1,7 @@
 Import-Module $PSScriptRoot/GetVersionNumber.psm1
 
+$VersionNumber = Get-VersionNumber
+
 
 Set-Location $PSScriptRoot/../source/Cage.Backend.Game
 
@@ -21,9 +23,15 @@ dotnet build
 Write-Output "`nRunning game backend tests..."
 dotnet test
 
+
+Set-Location $PSScriptRoot/../source/Cage.Backend.Game
+
+Write-Output "`nPublishing game backend..."
+dotnet publish -p:Version=$VersionNumber
+
 Write-Output "`nBuilding docker image..."
 Set-Location $PSScriptRoot/../source/Cage.Backend.Game
-$VersionNumber = Get-VersionNumber
 docker build --build-arg version=$VersionNumber -t perfect-hand/cage-backend-game:$VersionNumber .
+
 
 Set-Location $PSScriptRoot
