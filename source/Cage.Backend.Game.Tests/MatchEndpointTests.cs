@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
+using Cage.Backend.Game.Match;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Cage.Backend.Game.Tests;

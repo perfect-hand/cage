@@ -2,7 +2,7 @@ namespace Cage.Backend.Game.Match;
 
 public class MatchService(ILogger<MatchService> logger)
 {
-    internal MatchDto CreateMatch()
+    public MatchDto CreateMatch()
     {
         var match = new MatchDto
         {
