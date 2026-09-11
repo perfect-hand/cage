@@ -39,4 +39,4 @@ jobs:
           # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context
           GITHUB_USER: ${{ github.actor }}
           # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#secrets-context
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PACKAGING_TOKEN }}
