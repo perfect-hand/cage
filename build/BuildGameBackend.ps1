@@ -31,7 +31,10 @@ dotnet publish -p:Version=$VersionNumber
 
 Write-Output "`nBuilding docker image..."
 Set-Location $PSScriptRoot/../source/Cage.Backend.Game
-docker build --build-arg version=$VersionNumber -t perfect-hand/cage-backend-game:$VersionNumber .
+docker build --build-arg version=$VersionNumber -t ghcr.io/perfect-hand/cage-backend-game:$VersionNumber .
 
+Write-Output "`Pushing docker image..."
+$env:GITHUB_TOKEN | docker login ghcr.io -u $env:GITHUB_USER --password-stdin
+docker push ghcr.io/perfect-hand/cage-backend-game:$VersionNumber
 
 Set-Location $PSScriptRoot
