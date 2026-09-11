@@ -5,10 +5,6 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-    # https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#permissions
-    permissions:
-      contents: read
-      packages: write
     steps:
       # https://github.com/actions/checkout
       - name: Checkout repository
