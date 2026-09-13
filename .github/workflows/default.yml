@@ -36,3 +36,7 @@ jobs:
           GITHUB_USER: ${{ github.actor }}
           # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#secrets-context
           GITHUB_TOKEN: ${{ secrets.PACKAGING_TOKEN }}
+
+      - name: Push Git tag
+        shell: pwsh
+        run: ./build/PushGitTag.ps1
