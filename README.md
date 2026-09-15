@@ -12,4 +12,8 @@ See the following two links for details:
 * https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic
 * https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
 
-Then, set the environment variable `GITHUB_USER` to user GitHub user name.
+Then, set the environment variable `GITHUB_USER` to your GitHub user name.
+
+### Azure Client Secret
+
+Set your environment variable `AZURE_CLIENT_SECRET` to the app registration client secret obtained from Microsoft Entra.

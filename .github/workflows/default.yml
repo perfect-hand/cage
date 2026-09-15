@@ -35,7 +35,8 @@ jobs:
           # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context
           GITHUB_USER: ${{ github.actor }}
           # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#secrets-context
-          GITHUB_TOKEN: ${{ secrets.PACKAGING_TOKEN }}
+          # Secrets in GitHub must not being with GITHUB_ ...
+          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB_PACKAGES }}
 
       - name: Push Git tag
         shell: pwsh
@@ -58,4 +59,4 @@ jobs:
         shell: pwsh
         run: ./build/DeployGameBackend.ps1
         env:
-          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET_AZURE }}
