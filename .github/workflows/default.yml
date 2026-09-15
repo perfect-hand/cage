@@ -40,3 +40,13 @@ jobs:
       - name: Push Git tag
         shell: pwsh
         run: ./build/PushGitTag.ps1
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy game backend
+        shell: pwsh
+        run: ./build/DeployGameBackend.ps1
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
