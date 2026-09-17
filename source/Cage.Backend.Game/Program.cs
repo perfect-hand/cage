@@ -27,7 +27,7 @@ static async Task<IResult> GetInfo(InfoService infoService)
 
 static async Task<IResult> CreateMatch(MatchService matchService)
 {
-    var match = matchService.CreateMatch();
+    var match = await matchService.CreateMatch();
     return TypedResults.Created($"/matches/{match.Id}", match);
 }
 
