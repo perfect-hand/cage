@@ -15,7 +15,7 @@ public class InfoEndpointTests : IClassFixture<WebApplicationFactory<Program>>
     }
 
     [Fact]
-    public async Task ReturnsApplicationVersion()
+    public async Task ReturnsApplicationInfo()
     {
         var response = await httpClient.GetAsync("/info");
 
@@ -24,6 +24,7 @@ public class InfoEndpointTests : IClassFixture<WebApplicationFactory<Program>>
         var info = await response.Content.ReadFromJsonAsync<InfoDto>();
 
         Assert.NotNull(info);
+        Assert.Equal("Cage.Backend.Game", info.Name);
         Assert.NotNull(info.Version);
     }
 }
