@@ -5,6 +5,50 @@
 * Microsoft Entra External Id tenant (+ 2 app registrations)
 * Function App (+ storage account, application insights)
 
+## Naming Conventions
+
+All resource names are following the naming convention
+
+application-environment-resourcetype
+
+with:
+
+* application being `cageeditor` or `cagegame`
+* environment being `dev` or `prod`
+* resourcetype according to [official Microsoft recommendations](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-abbreviations)
+
+Example:
+
+`cageeditor-dev-rg`
+
+## Resource Tags
+
+All resources and resource groups need to have the following tags:
+
+* application
+* environment
+
+These tags are enforced for resource groups and resources through Azure Policy:
+
+* Require a tag on resource groups
+* Require a tag on resources
+
+## Regions
+
+All of our resources are created in the Germany West Central region, if possible.
+
+## Entra App Registration (GitHub Workflow)
+
+* created in the _home_ tenant
+* created a "Client Secret" for use in GitHub workflows
+* assigned "Container Apps Contributor" role via IAM for all container apps (note you have to explicitly start typing the name in the "Select members" filter!)
+
+## Container Apps
+
+* System-assigned managed identity
+* Role "Storage Blob Data Contributor" at storage account
+* Environment variable BLOB_STORAGE_URI set (e.g. https://cageeditordevst.blob.core.windows.net/)
+
 ## Entra App Registration (Backend)
 
 * Supported account types: Single tenant only
@@ -42,6 +86,12 @@
 * Monitoring - Diagnostic Settings: all categories, Send to Log Analytics workspace
 
 ## References
+
+* [Define your naming convention](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming#choose-naming-components)
+* [Define your tagging strategy](https://learn.microsoft.com/en-us/azure/cloud-adoption-framework/ready/azure-best-practices/resource-tagging)
+* [Set up GitHub Actions with Azure CLI in Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/github-actions-cli?tabs=bash)
+* [Manage revisions in Azure Container Apps](https://learn.microsoft.com/en-us/azure/container-apps/revisions-manage?tabs=bash)
+
 ### Azure Functions
 
 * [Learn: Enable diagnostic logs for apps in Azure App Service](https://learn.microsoft.com/en-us/azure/app-service/troubleshoot-diagnostic-logs)
