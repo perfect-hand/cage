@@ -28,6 +28,16 @@ jobs:
         shell: pwsh
         run: ./build/BuildSimulation.ps1
 
+      - name: Build editor backend
+        shell: pwsh
+        run: ./build/BuildEditorBackend.ps1
+        env:
+          # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context
+          GITHUB_USER: ${{ github.actor }}
+          # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#secrets-context
+          # Secrets in GitHub must not being with GITHUB_ ...
+          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB_PACKAGES }}
+
       - name: Build game backend
         shell: pwsh
         run: ./build/BuildGameBackend.ps1
@@ -54,6 +64,12 @@ jobs:
       - name: Show debug info
         shell: pwsh
         run: ./build/ShowDebugInfo.ps1
+
+      - name: Deploy editor backend
+        shell: pwsh
+        run: ./build/DeployEditorBackend.ps1
+        env:
+          AZURE_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET_AZURE }}
 
       - name: Deploy game backend
         shell: pwsh
