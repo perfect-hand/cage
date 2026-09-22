@@ -1,0 +1,30 @@
+﻿using System.Net;
+using System.Net.Http.Json;
+using Cage.Backend.Editor.Info;
+using Microsoft.AspNetCore.Mvc.Testing;
+
+namespace Cage.Backend.Editor.Tests;
+
+public class InfoEndpointTests : IClassFixture<WebApplicationFactory<Program>>
+{
+    private readonly HttpClient httpClient;
+
+    public InfoEndpointTests(WebApplicationFactory<Program> factory)
+    {
+        httpClient = factory.CreateClient();
+    }
+
+    [Fact]
+    public async Task ReturnsApplicationInfo()
+    {
+        var response = await httpClient.GetAsync("/info");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var info = await response.Content.ReadFromJsonAsync<InfoDto>();
+
+        Assert.NotNull(info);
+        Assert.Equal("Cage.Backend.Editor", info.Name);
+        Assert.NotNull(info.Version);
+    }
+}
