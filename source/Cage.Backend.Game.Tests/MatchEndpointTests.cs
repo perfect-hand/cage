@@ -10,6 +10,8 @@ public class MatchEndpointTests : IClassFixture<WebApplicationFactory<Program>>,
 {
     private readonly HttpClient httpClient;
 
+    // https://testcontainers.com/guides/getting-started-with-testcontainers-for-dotnet/
+    // https://testcontainers.com/modules/azurite/?language=dotnet
     private readonly AzuriteContainer azuriteContainer = new AzuriteBuilder("mcr.microsoft.com/azure-storage/azurite:3.37.0").Build();
 
     public async Task InitializeAsync()
