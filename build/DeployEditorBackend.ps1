@@ -2,7 +2,7 @@ Import-Module $PSScriptRoot/GetVersionNumber.psm1
 
 $VersionNumber = Get-VersionNumber
 
-Write-Output "`Deploying game backend to Azure Container App..."
+Write-Output "`Deploying editor backend to Azure Container App..."
 
 az login `
     --service-principal `
@@ -13,6 +13,6 @@ az login `
 az account set --subscription 2f314f3f-f0a7-4227-a8fd-d21027d83b77
 
 az containerapp update `
-    --name cagegame-dev-ca `
-    --resource-group cagegame-dev-rg `
-    --image ghcr.io/perfect-hand/cage-backend-game:$VersionNumber
+    --name cageeditor-dev-ca `
+    --resource-group cageeditor-dev-rg `
+    --image ghcr.io/perfect-hand/cage-backend-editor:$VersionNumber
