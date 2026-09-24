@@ -4,6 +4,20 @@ using Cage.Backend.Editor.Organization;
 // https://learn.microsoft.com/en-us/aspnet/core/tutorials/min-web-api?view=aspnetcore-10.0&tabs=visual-studio-code
 var builder = WebApplication.CreateBuilder(args);
 
+// https://learn.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-10.0
+var frontendUrl = Environment.GetEnvironmentVariable("CAGE_EDITOR_FRONTEND_URL") ?? "http://localhost:4200";
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(
+        policy =>
+        {
+            policy.WithOrigins(frontendUrl)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
+
 // https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis/webapplication?view=aspnetcore-10.0#add-services
 builder.Services.AddHttpLogging(options => {});
 builder.Services.AddScoped<InfoService>();
@@ -12,6 +26,7 @@ builder.Services.AddScoped<OrganizationService>();
 var app = builder.Build();
 app.UseHttpsRedirection();
 app.UseHttpLogging();
+app.UseCors();
 
 var info = app.MapGroup("/info");
 info.MapGet("/", GetInfo);
