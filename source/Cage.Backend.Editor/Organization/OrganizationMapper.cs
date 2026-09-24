@@ -11,6 +11,15 @@ public class OrganizationMapper
         };
     }
 
+    public OrganizationDto ToDto(UserInOrganizationEntity entity)
+    {
+        return new OrganizationDto
+        {
+            Id = entity.OrganizationId,
+            Name = entity.OrganizationName
+        };
+    }
+
     public OrganizationEntity ToEntity(OrganizationDto dto)
     {
         return new OrganizationEntity

@@ -61,21 +61,41 @@ public class OrganizationEndpointTests : IClassFixture<WebApplicationFactory<Pro
         // GIVEN
         var tableServiceClient = new TableServiceClient(azuriteContainer.GetConnectionString());
 
-        var tableName = "Organizations";
-        tableServiceClient.CreateTableIfNotExists(tableName);
+        tableServiceClient.CreateTableIfNotExists(OrganizationDao.OrganizationsTableName);
+        tableServiceClient.CreateTableIfNotExists(OrganizationDao.UsersInOrganizationTableName);
 
-        var tableClient = new TableClient(azuriteContainer.GetConnectionString(), tableName);
-        await tableClient.AddEntityAsync(new OrganizationEntity
+        var organizationsTableClient = new TableClient(azuriteContainer.GetConnectionString(), OrganizationDao.OrganizationsTableName);
+        var usersInOrganizationTableClient = new TableClient(azuriteContainer.GetConnectionString(), OrganizationDao.UsersInOrganizationTableName);
+
+        var organization1 = new OrganizationEntity
                 {
                     PartitionKey = "Organization",
                     RowKey = Guid.NewGuid().ToString(),
                     Name = "Organization1"
-                });
-        await tableClient.AddEntityAsync(new OrganizationEntity
+                };
+        var organization2 = new OrganizationEntity
                 {
                     PartitionKey = "Organization",
                     RowKey = Guid.NewGuid().ToString(),
                     Name = "Organization2"
+                };
+
+        await organizationsTableClient.AddEntityAsync(organization1);
+        await organizationsTableClient.AddEntityAsync(organization2);
+
+        await usersInOrganizationTableClient.AddEntityAsync(new UserInOrganizationEntity
+                {
+                    PartitionKey = TestAuthHandler.TestUser,
+                    RowKey = organization1.RowKey,
+                    OrganizationId = organization1.RowKey,
+                    OrganizationName = organization1.Name
+                });
+        await usersInOrganizationTableClient.AddEntityAsync(new UserInOrganizationEntity
+                {
+                    PartitionKey = organization1.RowKey,
+                    RowKey = TestAuthHandler.TestUser,
+                    OrganizationId = organization1.RowKey,
+                    OrganizationName = organization1.Name
                 });
 
         // WHEN
@@ -87,7 +107,9 @@ public class OrganizationEndpointTests : IClassFixture<WebApplicationFactory<Pro
         var organizations = await response.Content.ReadFromJsonAsync<List<OrganizationDto>>();
 
         Assert.NotNull(organizations);
-        Assert.Equal(2, organizations.Count);
+        var foundOrganization = Assert.Single(organizations);
+        Assert.Equal(organization1.RowKey, foundOrganization.Id);
+        Assert.Equal(organization1.Name, foundOrganization.Name);
     }
 
     [Fact]
