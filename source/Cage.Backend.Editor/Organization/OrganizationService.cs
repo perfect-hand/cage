@@ -34,16 +34,26 @@ public class OrganizationService
             : new TableClient(storageConnectionString, tableName);
     }
 
-    public async Task<OrganizationDto> Create(OrganizationDto dto)
+    public async Task<OrganizationDto> Create(OrganizationDto dto, string? user)
     {
+        if (string.IsNullOrEmpty(user))
+        {
+            throw new UnauthorizedAccessException();
+        }
+
         var organization = mapper.ToEntity(dto);
         await tableClient.AddEntityAsync(organization);
         logger.LogInformation("Organization {} created.", organization.RowKey);
         return mapper.ToDto(organization);
     }
 
-    public async Task<List<OrganizationDto>> ReadAll()
+    public async Task<List<OrganizationDto>> ReadAll(string? user)
     {
+        if (string.IsNullOrEmpty(user))
+        {
+            throw new UnauthorizedAccessException();
+        }
+        
        var organizations = tableClient.Query<OrganizationEntity>();
        return organizations.Select(mapper.ToDto).ToList();
     }
