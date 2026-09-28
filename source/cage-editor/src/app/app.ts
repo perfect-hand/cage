@@ -1,15 +1,24 @@
-import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 
-import { Login } from './login/login';
+import { AuthService } from './auth-service';
+import { Home } from './home/home';
+import { Landing } from './landing/landing';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Login],
+  imports: [RouterOutlet, Landing, Home],
   templateUrl: './app.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.scss',
 })
-export class App {
+export class App implements OnInit {
   protected readonly title = signal('cage-editor');
+  private readonly authService = inject(AuthService);
+
+  readonly isSignedIn = this.authService.isSignedIn;
+
+  ngOnInit(): void {
+    void this.authService.initialize();
+  }
 }

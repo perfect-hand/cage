@@ -21,7 +21,7 @@ export class AuthService {
   private readonly _accessToken = signal('');
 
   readonly userName = this._userName.asReadonly();
-  readonly isSignedIn = computed(() => this._userName() !== '');
+  readonly isSignedIn = computed(() => this._accessToken() !== '');
 
   async initialize(): Promise<void> {
     /**
@@ -75,22 +75,15 @@ export class AuthService {
     }
   }
 
-  getAccessToken(): string {
-    return this._accessToken();
-  }
-
-  private handleAuthenticationResult(result: AuthenticationResult | null): void {
+  private async handleAuthenticationResult(result: AuthenticationResult | null): Promise<void> {
     if (result !== null) {
-      this._accountId.set(result.account.homeAccountId);
-      this.msalInstance.setActiveAccount(result.account);
-      this.showWelcomeMessageAndAcquireToken(result.account);
-      return;
+      await this.showWelcomeMessageAndAcquireToken(result.account);
+    } else {
+      await this.selectAccount();
     }
-
-    this.selectAccount();
   }
 
-  private selectAccount(): void {
+  private async selectAccount(): Promise<void> {
     /**
      * See here for more info on account retrieval:
      * https://github.com/AzureAD/microsoft-authentication-library-for-js/blob/dev/lib/msal-common/docs/Accounts.md
@@ -101,26 +94,34 @@ export class AuthService {
       return;
     }
 
-    this.showWelcomeMessageAndAcquireToken(currentAccounts[0]);
+    await this.showWelcomeMessageAndAcquireToken(currentAccounts[0]);
   }
 
-  private showWelcomeMessageAndAcquireToken(account: AccountInfo): void {
+  private async showWelcomeMessageAndAcquireToken(account: AccountInfo): Promise<void> {
+    this._accountId.set(account.homeAccountId);
+    this.msalInstance.setActiveAccount(account);
     this._userName.set(account.username);
 
-    const request = {
-      scopes: ['api://a6791fa3-10da-4339-8097-ba31b7245e02/user_impersonation'],
-    };
+    try {
+      const token = await this.getAccessToken();
 
-    this.msalInstance
-      .acquireTokenSilent(request)
-      .then((tokenResponse) => {
-        this._accessToken.set(tokenResponse.accessToken);
-      })
-      .catch((error) => {
-        if (error instanceof InteractionRequiredAuthError) {
-          void this.msalInstance.acquireTokenRedirect(request);
-        }
-      });
+      if (token) {
+        this._accessToken.set(token);
+      } else {
+        console.error('Failed to acquire access token.');
+      }
+    } catch (error) {
+      if (error instanceof InteractionRequiredAuthError) {
+        const request = {
+          scopes: ['api://a6791fa3-10da-4339-8097-ba31b7245e02/user_impersonation'],
+        };
+
+        await this.msalInstance.acquireTokenRedirect(request);
+        return;
+      }
+
+      console.error('Failed to acquire access token.', error);
+    }
   }
 
   async signIn(): Promise<void> {
@@ -145,5 +146,25 @@ export class AuthService {
     await this.msalInstance.logoutRedirect({
       account: currentAccount ?? undefined,
     });
+  }
+
+  async getAccessToken(): Promise<string | null> {
+    // Check if already available in service.
+    const cachedAccessToken = this._accessToken()
+    if (cachedAccessToken) {
+      return cachedAccessToken
+    }
+
+    // Try to retrieve from MSAL token cache.
+    if (!this.msalInstance) {
+      return null;
+    }
+
+    const request = {
+      scopes: ['api://a6791fa3-10da-4339-8097-ba31b7245e02/user_impersonation'],
+    };
+
+    const tokenResponse = await this.msalInstance.acquireTokenSilent(request);
+    return tokenResponse.accessToken;
   }
 }

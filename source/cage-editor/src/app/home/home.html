@@ -1,0 +1,17 @@
+<header class="home-header">
+  <div class="brand">CaGE Editor</div>
+
+  <div class="user-menu">
+    <div class="user-info">
+      <mat-icon aria-hidden="true">account_circle</mat-icon>
+      <span>{{ userName() }}</span>
+    </div>
+
+    <button class="sign-out-link" mat-button type="button" (click)="signOut()">
+      <mat-icon aria-hidden="true">logout</mat-icon>
+      <span>Sign Out</span>
+    </button>
+  </div>
+</header>
+
+<organizations />
