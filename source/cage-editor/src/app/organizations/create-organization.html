@@ -1,0 +1,30 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>New organization</h2>
+    </div>
+
+    <form (submit)="createOrganization(); $event.preventDefault()" novalidate>
+      <label for="organization-name">Organization name</label>
+      <input
+        id="organization-name"
+        type="text"
+        [formField]="nameForm"
+        autocomplete="organization"
+      />
+      @if (nameForm().touched() && nameForm().invalid()) {
+        <p class="field-error" role="alert">Enter an organization name.</p>
+      }
+      @if (errorMessage()) {
+        <p class="field-error" role="alert">{{ errorMessage() }}</p>
+      }
+
+      <div class="form-actions">
+        <button mat-button type="button" routerLink="/">Cancel</button>
+        <button mat-button type="submit" [disabled]="isSubmitting()">
+          {{ isSubmitting() ? 'Creating...' : 'Create organization' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</main>

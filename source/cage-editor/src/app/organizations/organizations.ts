@@ -8,6 +8,8 @@ import {
   signal,
 } from '@angular/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonModule } from '@angular/material/button';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 import { AuthService } from '../auth-service';
@@ -18,7 +20,7 @@ interface Organization {
 
 @Component({
   selector: 'organizations',
-  imports: [MatProgressSpinnerModule],
+  imports: [MatProgressSpinnerModule, MatButtonModule, RouterLink],
   templateUrl: './organizations.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './organizations.scss',

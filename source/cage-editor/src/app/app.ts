@@ -2,12 +2,11 @@ import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@ang
 import { RouterOutlet } from '@angular/router';
 
 import { AuthService } from './auth-service';
-import { Home } from './home/home';
 import { Landing } from './landing/landing';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Landing, Home],
+  imports: [RouterOutlet, Landing],
   templateUrl: './app.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.scss',
