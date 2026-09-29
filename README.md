@@ -3,6 +3,10 @@ Backend, editor frontend and libraries of the CArd Game Engine (CAGE).
 
 ## Development Environment Setup
 
+### Intall Tools
+
+1. Run build/InstallTools.ps1.
+
 ### GitHub Token
 
 At GitHub, create a "Personal access token (classic)" with the scopes "read:packages" and "write:packages", and store it as environment variable `GITHUB_TOKEN`.
