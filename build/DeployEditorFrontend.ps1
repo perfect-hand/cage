@@ -1,5 +1,9 @@
 Set-Location $PSScriptRoot/../source/cage-editor
 
+Write-Output "`Installing editor frontend packages..."
+
+npm ci
+
 Write-Output "`Building editor frontend..."
 
 ng build
