@@ -14,6 +14,8 @@ import { firstValueFrom } from 'rxjs';
 
 import { AuthService } from '../auth-service';
 
+import { environment } from '../../environments/environment';
+
 interface Organization {
   name: string;
 }
@@ -42,7 +44,7 @@ export class Organizations implements OnInit {
     try {
       const token = await this.authService.getAccessToken();
       const response = await firstValueFrom(
-        this.http.get<Organization[]>('http://localhost:5267/organizations', {
+        this.http.get<Organization[]>(environment.backendUrl + '/organizations', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
