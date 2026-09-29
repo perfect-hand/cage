@@ -1,5 +1,10 @@
-@if (isSignedIn()) {
-  <router-outlet />
-} @else {
-  <landing />
-}
+<div class="app-container">
+  <div class="app-content">
+    @if (isSignedIn()) {
+      <router-outlet />
+    } @else {
+      <landing />
+    }
+  </div>
+  <footer class="app-footer">Version {{ version }}</footer>
+</div>

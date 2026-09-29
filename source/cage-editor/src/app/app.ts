@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 
 import { AuthService } from './auth-service';
 import { Landing } from './landing/landing';
+import { version } from '../environments/version';
 
 @Component({
   selector: 'app-root',
@@ -16,6 +17,7 @@ export class App implements OnInit {
   private readonly authService = inject(AuthService);
 
   readonly isSignedIn = this.authService.isSignedIn;
+  readonly version = version;
 
   ngOnInit(): void {
     void this.authService.initialize();
