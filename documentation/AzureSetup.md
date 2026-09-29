@@ -48,7 +48,7 @@ All of our resources are created in the Germany West Central region, if possible
 * System-assigned managed identity
 * Role "Storage Blob Data Contributor" at storage account
 * Role "Storage Table Data Contributor" at storage account
-* Environment variable CAGE_EDITOR_FRONTEND_URL set
+* Environment variable CAGE_EDITOR_FRONTEND_URL set (without trailing slash)
 * Environment variable BLOB_STORAGE_URI set (e.g.https://cagegamedevst.blob.core.windows.net/)
 * Environment variable TABLE_STORAGE_URI set (e.g. https://cageeditordevst.table.core.windows.net/)
 
@@ -61,7 +61,7 @@ All of our resources are created in the Germany West Central region, if possible
 ## Entra App Registration (Frontend)
 
 * Supported account types: Single tenant only
-* Redirect URI: Single page application
+* Redirect URI: Single page application (both localhost and Static Web App URL)
 * API permissions - Configured permissions: My APIs - Entra App Registration (Frontend) - delegated permissions - user_impersonation
 
 ## Static Web App
