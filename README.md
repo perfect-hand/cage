@@ -17,3 +17,7 @@ Then, set the environment variable `GITHUB_USER` to your GitHub user name.
 ### Azure Client Secret
 
 Set your environment variable `AZURE_CLIENT_SECRET` to the app registration client secret obtained from Microsoft Entra.
+
+### Azure Static Web App Deployment Token
+
+Set your environment variable `CAGE_EDITOR_SWA_DEPLOYMENT_TOKEN` to the deployment token of the Azure Static Web App for the editor.

@@ -61,6 +61,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Angular CLI
+        shell: pwsh
+        run: npm install -g @angular/cli
+
+      - name: Install Azure Static Web Apps CLI
+        shell: pwsh
+        run: npm install -g @azure/static-web-apps-cli
+
       - name: Show debug info
         shell: pwsh
         run: ./build/ShowDebugInfo.ps1
@@ -76,3 +84,9 @@ jobs:
         run: ./build/DeployGameBackend.ps1
         env:
           AZURE_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET_AZURE }}
+
+      - name: Deploy editor frontend
+        shell: pwsh
+        run: ./build/DeployEditorFrontend.ps1
+        env:
+          CAGE_EDITOR_SWA_DEPLOYMENT_TOKEN: ${{ secrets.CAGE_EDITOR_SWA_DEPLOYMENT_TOKEN }}
