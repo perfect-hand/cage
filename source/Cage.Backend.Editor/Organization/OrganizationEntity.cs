@@ -1,5 +1,6 @@
 using Azure;
 using Azure.Data.Tables;
+using Cage.Simulation.Common;
 
 namespace Cage.Backend.Editor.Organization;
 
@@ -11,4 +12,13 @@ public class OrganizationEntity : ITableEntity
     public ETag ETag { get; set; }
 
     public required string Name { get; set; }
+
+    public override string ToString()
+    {
+        return ToStringBuilder.For(this)
+            .Add(nameof(PartitionKey), PartitionKey)
+            .Add(nameof(RowKey), RowKey)
+            .Add(nameof(Name), Name)
+            .ToString();
+    }
 }

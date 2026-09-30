@@ -10,5 +10,9 @@
     <PackageReference Include="Azure.Identity" Version="1.21.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.29.2" />
   </ItemGroup>
-  
+
+  <ItemGroup>
+    <ProjectReference Include="..\Cage.Simulation\Cage.Simulation.csproj" />
+  </ItemGroup>
+
 </Project>
