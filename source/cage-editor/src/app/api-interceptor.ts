@@ -15,7 +15,7 @@ import { environment } from '../environments/environment';
  * Absolute URLs (e.g. requests to third-party APIs) are passed through
  * unchanged and never receive the Authorization header.
  */
-export const authInterceptor: HttpInterceptorFn = (req, next) => {
+export const apiInterceptor: HttpInterceptorFn = (req, next) => {
   const isAbsoluteUrl = /^[a-z][a-z\d+.-]*:\/\//i.test(req.url);
 
   if (isAbsoluteUrl) {
