@@ -36,4 +36,15 @@ public class ToStringBuilderTests
 
         Assert.Equal("SampleType{}", result);
     }
+
+    [Fact]
+    public void SupportsMixOfNullAndNonNullFields()
+    {
+        var result = ToStringBuilder.For(new SampleType())
+            .Add("Id", null)
+            .Add("Name", "Acme")
+            .ToString();
+
+        Assert.Equal("SampleType{Id=null, Name=Acme}", result);
+    }
 }
