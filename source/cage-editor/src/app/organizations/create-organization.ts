@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
-import { AuthService } from '../auth-service';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'create-organization',
@@ -16,7 +16,6 @@ import { AuthService } from '../auth-service';
 })
 export class CreateOrganization {
   private readonly http = inject(HttpClient);
-  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
   readonly isSubmitting = signal(false);
@@ -36,14 +35,9 @@ export class CreateOrganization {
     this.errorMessage.set('');
 
     try {
-      const token = await this.authService.getAccessToken();
       await firstValueFrom(
-        this.http.post('http://localhost:5267/organizations', {
+        this.http.post(environment.backendUrl + '/organizations', {
           name: this.name().trim(),
-        }, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
         }),
       );
       await this.router.navigateByUrl('/');

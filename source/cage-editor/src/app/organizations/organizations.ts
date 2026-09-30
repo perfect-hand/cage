@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
-  effect,
   inject,
   OnInit,
   signal,
@@ -11,8 +10,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-
-import { AuthService } from '../auth-service';
 
 import { environment } from '../../environments/environment';
 
@@ -29,26 +26,20 @@ interface Organization {
 })
 export class Organizations implements OnInit {
   private readonly http = inject(HttpClient);
-  private readonly authService = inject(AuthService);
 
   readonly organizations = signal<Organization[]>([]);
   readonly isLoading = signal(false);
 
-    ngOnInit(): void {
-        void this.loadOrganizations();
-    }
+  ngOnInit(): void {
+    void this.loadOrganizations();
+  }
 
   private async loadOrganizations(): Promise<void> {
     this.isLoading.set(true);
 
     try {
-      const token = await this.authService.getAccessToken();
       const response = await firstValueFrom(
-        this.http.get<Organization[]>(environment.backendUrl + '/organizations', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }),
+        this.http.get<Organization[]>(environment.backendUrl + '/organizations'),
       );
 
       this.organizations.set(response ?? []);
