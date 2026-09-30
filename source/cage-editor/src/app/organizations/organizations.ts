@@ -11,8 +11,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
-import { environment } from '../../environments/environment';
-
 interface Organization {
   name: string;
 }
@@ -39,7 +37,7 @@ export class Organizations implements OnInit {
 
     try {
       const response = await firstValueFrom(
-        this.http.get<Organization[]>(environment.backendUrl + '/organizations'),
+        this.http.get<Organization[]>('/organizations'),
       );
 
       this.organizations.set(response ?? []);

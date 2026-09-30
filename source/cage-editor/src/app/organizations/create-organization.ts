@@ -5,8 +5,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
-import { environment } from '../../environments/environment';
-
 @Component({
   selector: 'create-organization',
   imports: [FormField, MatButtonModule, RouterLink],
@@ -36,7 +34,7 @@ export class CreateOrganization {
 
     try {
       await firstValueFrom(
-        this.http.post(environment.backendUrl + '/organizations', {
+        this.http.post('/organizations', {
           name: this.name().trim(),
         }),
       );
