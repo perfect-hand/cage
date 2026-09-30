@@ -1,9 +1,10 @@
-namespace Cage.Backend.Editor.Common;
+namespace Cage.Simulation.Common;
 
 /// <summary>
 /// Builds a uniform, human-readable <c>ToString()</c> representation for entities and DTOs,
 /// e.g. "OrganizationEntity{Name=Acme, RowKey=123}". Modeled after Guava's
 /// <c>MoreObjects.toStringHelper</c> to avoid hand-rolled, inconsistent ToString overrides.
+/// Shared across Cage.Backend.Editor and Cage.Backend.Game, both of which reference this project.
 /// </summary>
 public sealed class ToStringBuilder
 {

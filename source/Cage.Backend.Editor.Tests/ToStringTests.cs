@@ -1,32 +1,10 @@
-using Cage.Backend.Editor.Common;
 using Cage.Backend.Editor.Info;
 using Cage.Backend.Editor.Organization;
 
 namespace Cage.Backend.Editor.Tests;
 
-public class ToStringBuilderTests
+public class ToStringTests
 {
-    [Fact]
-    public void BuildsRepresentationWithTypeNameAndFields()
-    {
-        var result = ToStringBuilder.For(new OrganizationDto { Id = "1", Name = "Acme" })
-            .Add("Id", "1")
-            .Add("Name", "Acme")
-            .ToString();
-
-        Assert.Equal("OrganizationDto{Id=1, Name=Acme}", result);
-    }
-
-    [Fact]
-    public void RendersNullValuesAsNullLiteral()
-    {
-        var result = ToStringBuilder.For(new OrganizationDto { Id = null, Name = "Acme" })
-            .Add("Id", null)
-            .ToString();
-
-        Assert.Equal("OrganizationDto{Id=null}", result);
-    }
-
     [Fact]
     public void OrganizationEntityToStringContainsAllFields()
     {
@@ -62,6 +40,14 @@ public class ToStringBuilderTests
         var dto = new OrganizationDto { Id = "1", Name = "Acme" };
 
         Assert.Equal("OrganizationDto{Id=1, Name=Acme}", dto.ToString());
+    }
+
+    [Fact]
+    public void OrganizationDtoToStringRendersNullIdAsNullLiteral()
+    {
+        var dto = new OrganizationDto { Id = null, Name = "Acme" };
+
+        Assert.Equal("OrganizationDto{Id=null, Name=Acme}", dto.ToString());
     }
 
     [Fact]
