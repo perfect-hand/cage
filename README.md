@@ -14,6 +14,9 @@ Backend, editor frontend and libraries of the CArd Game Engine (CAGE).
     2. C# & C# Dev Kit
     3. Postman
     4. Powershell
+    5. EditorConfig
+6. Configure Visual Studio Code:
+    1. Enable "Editor: Format On Save"
 
 ### GitHub Token
 
