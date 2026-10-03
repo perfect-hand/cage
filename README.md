@@ -20,18 +20,18 @@ Backend, editor frontend and libraries of the CArd Game Engine (CAGE).
 
 ### GitHub Token
 
-At GitHub, create a "Personal access token (classic)" with the scopes "read:packages" and "write:packages", and store it as environment variable `GITHUB_TOKEN`.
+At GitHub, create a "Personal access token (classic)" with the scopes "read:packages" and "write:packages", and store it as environment variable `CAGE_GITHUB_TOKEN`.
 
 See the following two links for details:
 
 * https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic
 * https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic
 
-Then, set the environment variable `GITHUB_USER` to your GitHub user name.
+Then, set the environment variable `CAGE_GITHUB_USER` to your GitHub user name.
 
 ### Azure Client Secret
 
-Set your environment variable `AZURE_CLIENT_SECRET` to the app registration client secret obtained from Microsoft Entra.
+Set your environment variable `CAGE_AZURE_CLIENT_SECRET` to the app registration client secret obtained from Microsoft Entra.
 
 ### Azure Static Web App Deployment Token
 

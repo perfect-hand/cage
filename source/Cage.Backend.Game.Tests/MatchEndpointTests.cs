@@ -17,7 +17,7 @@ public class MatchEndpointTests : IClassFixture<WebApplicationFactory<Program>>,
   public async Task InitializeAsync()
   {
     await azuriteContainer.StartAsync();
-    Environment.SetEnvironmentVariable("BLOB_STORAGE_CONNECTION_STRING", azuriteContainer.GetConnectionString());
+    Environment.SetEnvironmentVariable("CAGE_BLOB_STORAGE_CONNECTION_STRING", azuriteContainer.GetConnectionString());
   }
 
   public Task DisposeAsync()

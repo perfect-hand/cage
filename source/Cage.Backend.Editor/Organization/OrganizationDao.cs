@@ -14,12 +14,12 @@ public class OrganizationDao
 
   public OrganizationDao()
   {
-    // Use TABLE_STORAGE_URI to connect to Azure Table Storage in production.
-    // Use TABLE_STORAGE_CONNECTION_STRING for connecting to Azurite in Testcontainers where ports can differ and HTTPS is not supported.
+    // Use CAGE_TABLE_STORAGE_URI to connect to Azure Table Storage in production.
+    // Use CAGE_TABLE_STORAGE_CONNECTION_STRING for connecting to Azurite in Testcontainers where ports can differ and HTTPS is not supported.
     // Fall back to default connection string for local development.
     // See https://learn.microsoft.com/en-us/azure/storage/common/storage-connect-azurite?tabs=table-storage
-    var storageUri = Environment.GetEnvironmentVariable("TABLE_STORAGE_URI");
-    var storageConnectionString = Environment.GetEnvironmentVariable("TABLE_STORAGE_CONNECTION_STRING") ?? "UseDevelopmentStorage=true";
+    var storageUri = Environment.GetEnvironmentVariable("CAGE_TABLE_STORAGE_URI");
+    var storageConnectionString = Environment.GetEnvironmentVariable("CAGE_TABLE_STORAGE_CONNECTION_STRING") ?? "UseDevelopmentStorage=true";
 
     // See https://learn.microsoft.com/en-us/dotnet/api/overview/azure/data.tables-readme?view=azure-dotnet
     var tableServiceClient = storageUri != null

@@ -49,8 +49,8 @@ All of our resources are created in the Germany West Central region, if possible
 * Role "Storage Blob Data Contributor" at storage account
 * Role "Storage Table Data Contributor" at storage account
 * Environment variable CAGE_EDITOR_FRONTEND_URL set (without trailing slash)
-* Environment variable BLOB_STORAGE_URI set (e.g.https://cagegamedevst.blob.core.windows.net/)
-* Environment variable TABLE_STORAGE_URI set (e.g. https://cageeditordevst.table.core.windows.net/)
+* Environment variable CAGE_BLOB_STORAGE_URI set (e.g.https://cagegamedevst.blob.core.windows.net/)
+* Environment variable CAGE_TABLE_STORAGE_URI set (e.g. https://cageeditordevst.table.core.windows.net/)
 
 ## Entra App Registration (Backend)
 

@@ -40,20 +40,20 @@ jobs:
         run: ./build/BuildEditorBackend.ps1
         env:
           # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context
-          GITHUB_USER: ${{ github.actor }}
+          CAGE_GITHUB_USER: ${{ github.actor }}
           # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#secrets-context
           # Secrets in GitHub must not being with GITHUB_ ...
-          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB_PACKAGES }}
+          CAGE_GITHUB_TOKEN: ${{ secrets.CAGE_GITHUB_TOKEN }}
 
       - name: Build game backend
         shell: pwsh
         run: ./build/BuildGameBackend.ps1
         env:
           # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#github-context
-          GITHUB_USER: ${{ github.actor }}
+          CAGE_GITHUB_USER: ${{ github.actor }}
           # https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#secrets-context
           # Secrets in GitHub must not being with GITHUB_ ...
-          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB_PACKAGES }}
+          CAGE_GITHUB_TOKEN: ${{ secrets.CAGE_GITHUB_TOKEN }}
 
       - name: Push Git tag
         shell: pwsh
@@ -80,13 +80,13 @@ jobs:
         shell: pwsh
         run: ./build/DeployEditorBackend.ps1
         env:
-          AZURE_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET_AZURE }}
+          CAGE_AZURE_CLIENT_SECRET: ${{ secrets.CAGE_AZURE_CLIENT_SECRET }}
 
       - name: Deploy game backend
         shell: pwsh
         run: ./build/DeployGameBackend.ps1
         env:
-          AZURE_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET_AZURE }}
+          CAGE_AZURE_CLIENT_SECRET: ${{ secrets.CAGE_AZURE_CLIENT_SECRET }}
 
       - name: Deploy editor frontend
         shell: pwsh

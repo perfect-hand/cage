@@ -33,7 +33,7 @@ Write-Output "`nBuilding editor backend docker image..."
 docker build --build-arg version=$VersionNumber -t ghcr.io/perfect-hand/cage-backend-editor:$VersionNumber .
 
 Write-Output "`Pushing editor backend docker image..."
-$env:GITHUB_TOKEN | docker login ghcr.io -u $env:GITHUB_USER --password-stdin
+$env:CAGE_GITHUB_TOKEN | docker login ghcr.io -u $env:CAGE_GITHUB_USER --password-stdin
 docker push ghcr.io/perfect-hand/cage-backend-editor:$VersionNumber
 
 Set-Location $PSScriptRoot

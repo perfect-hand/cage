@@ -23,7 +23,7 @@ public class OrganizationEndpointTests : IClassFixture<WebApplicationFactory<Pro
   public async Task InitializeAsync()
   {
     await azuriteContainer.StartAsync();
-    Environment.SetEnvironmentVariable("TABLE_STORAGE_CONNECTION_STRING", azuriteContainer.GetConnectionString());
+    Environment.SetEnvironmentVariable("CAGE_TABLE_STORAGE_CONNECTION_STRING", azuriteContainer.GetConnectionString());
   }
 
   public Task DisposeAsync()
@@ -40,14 +40,14 @@ public class OrganizationEndpointTests : IClassFixture<WebApplicationFactory<Pro
             {
               builder.ConfigureTestServices(services =>
                   {
-                  services.AddAuthentication(options =>
-                          {
-                          options.DefaultAuthenticateScheme = "TestScheme";
-                          options.DefaultChallengeScheme = "TestScheme";
-                        })
-                          .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                              "TestScheme", options => { });
-                });
+                    services.AddAuthentication(options =>
+                            {
+                              options.DefaultAuthenticateScheme = "TestScheme";
+                              options.DefaultChallengeScheme = "TestScheme";
+                            })
+                            .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                                "TestScheme", options => { });
+                  });
             })
             .CreateClient();
 
