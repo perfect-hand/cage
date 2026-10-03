@@ -12,46 +12,46 @@ namespace Cage.Simulation.Tests;
 
 public class MatchTests
 {
-    [Fact]
-    public void InitializesMatch()
+  [Fact]
+  public void InitializesMatch()
+  {
+    // Setup data.
+    var resourceCard = new EntityBlueprint("Resource");
+    resourceCard.Tags.Add("Resource");
+
+    var monsterCard = new EntityBlueprint("Monster");
+    monsterCard.Tags.Add("Monster");
+    monsterCard.Attributes["Costs"] = new TypedValue(1);
+    monsterCard.Attributes["Power"] = new TypedValue(1);
+
+    var blueprintRegistry = new EntityBlueprintRegistry();
+    blueprintRegistry.Register(resourceCard);
+    blueprintRegistry.Register(monsterCard);
+
+    var entityManager = new EntityManager(blueprintRegistry);
+
+    // Create match players.
+    var match = new Match(entityManager);
+
+    var deckCardIds = new List<string> { "Resource", "Resource", "Resource", "Resource", "Monster", "Monster", "Monster", "Monster" };
+
+    var player1 = match.EntityManager.CreateEntity();
+    player1.Tags.Add("Player");
+    var player1Deck = entityManager.CreateEntitiesFromBlueprintIds(deckCardIds);
+    player1.Attributes["Deck"] = new TypedValue(player1Deck.ToList());
+    player1.Attributes["Hand"] = new TypedValue(new List<Entity>());
+
+    var player2 = match.EntityManager.CreateEntity();
+    player2.Tags.Add("Player");
+    var player2Deck = entityManager.CreateEntitiesFromBlueprintIds(deckCardIds);
+    player2.Attributes["Deck"] = new TypedValue(player2Deck.ToList());
+    player2.Attributes["Hand"] = new TypedValue(new List<Entity>());
+
+    // Build trigger for match initialization.
+    var matchInitializationTrigger = new Trigger
     {
-        // Setup data.
-        var resourceCard = new EntityBlueprint("Resource");
-        resourceCard.Tags.Add("Resource");
-
-        var monsterCard = new EntityBlueprint("Monster");
-        monsterCard.Tags.Add("Monster");
-        monsterCard.Attributes["Costs"] = new TypedValue(1);
-        monsterCard.Attributes["Power"] = new TypedValue(1);
-
-        var blueprintRegistry = new EntityBlueprintRegistry();
-        blueprintRegistry.Register(resourceCard);
-        blueprintRegistry.Register(monsterCard);
-
-        var entityManager = new EntityManager(blueprintRegistry);
-
-        // Create match players.
-        var match = new Match(entityManager);
-
-        var deckCardIds = new List<string> { "Resource", "Resource", "Resource", "Resource", "Monster", "Monster", "Monster", "Monster" };
-
-        var player1 = match.EntityManager.CreateEntity();
-        player1.Tags.Add("Player");
-        var player1Deck = entityManager.CreateEntitiesFromBlueprintIds(deckCardIds);
-        player1.Attributes["Deck"] = new TypedValue(player1Deck.ToList());
-        player1.Attributes["Hand"] = new TypedValue(new List<Entity>());
-
-        var player2 = match.EntityManager.CreateEntity();
-        player2.Tags.Add("Player");
-        var player2Deck = entityManager.CreateEntitiesFromBlueprintIds(deckCardIds);
-        player2.Attributes["Deck"] = new TypedValue(player2Deck.ToList());
-        player2.Attributes["Hand"] = new TypedValue(new List<Entity>());
-
-        // Build trigger for match initialization.
-        var matchInitializationTrigger = new Trigger
-        {
-            EventName = typeof(MatchInitializationEvent).Name,
-            Actions =
+      EventName = typeof(MatchInitializationEvent).Name,
+      Actions =
             {
                 new ForEachEntityMutation
                 {
@@ -138,19 +138,19 @@ public class MatchTests
                     }
                 }
             }
-        };
+    };
 
-        // Raise match initialization event.
-        var eventManager = new EventManager();
-        eventManager.HandleEvent(new MatchInitializationEvent(), new[] { matchInitializationTrigger }, entityManager);
+    // Raise match initialization event.
+    var eventManager = new EventManager();
+    eventManager.HandleEvent(new MatchInitializationEvent(), new[] { matchInitializationTrigger }, entityManager);
 
-        // Assert expected results.
-        Assert.Equal(5, player1.Attributes["Deck"].AsEntityList().Count);
-        Assert.Equal(3, player1.Attributes["Hand"].AsEntityList().Count);
-        Assert.Equal(10, player1.Attributes["Health"].AsInt());
+    // Assert expected results.
+    Assert.Equal(5, player1.Attributes["Deck"].AsEntityList().Count);
+    Assert.Equal(3, player1.Attributes["Hand"].AsEntityList().Count);
+    Assert.Equal(10, player1.Attributes["Health"].AsInt());
 
-        Assert.Equal(5, player2.Attributes["Deck"].AsEntityList().Count);
-        Assert.Equal(3, player2.Attributes["Hand"].AsEntityList().Count);
-        Assert.Equal(10, player2.Attributes["Health"].AsInt());
-    }
+    Assert.Equal(5, player2.Attributes["Deck"].AsEntityList().Count);
+    Assert.Equal(3, player2.Attributes["Hand"].AsEntityList().Count);
+    Assert.Equal(10, player2.Attributes["Health"].AsInt());
+  }
 }

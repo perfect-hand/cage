@@ -9,31 +9,31 @@ namespace Cage.Simulation.Functions;
 
 public sealed class FindEntitiesByTagFunction : Function
 {
-    public Expression Tag { get; set; } = null!;
+  public Expression Tag { get; set; } = null!;
 
-    public FindEntitiesByTagFunction() { }
+  public FindEntitiesByTagFunction() { }
 
-    public FindEntitiesByTagFunction(Expression tag)
-    {
-        Tag = tag;
-    }
+  public FindEntitiesByTagFunction(Expression tag)
+  {
+    Tag = tag;
+  }
 
-    public override TypedValue Call(EvaluationContext context)
-    {
-        var tag = Tag.Evaluate(context).AsString();
-        var matches = context.EntityManager.FindEntitiesByTag(tag);
-        return new TypedValue(matches);
-    }
+  public override TypedValue Call(EvaluationContext context)
+  {
+    var tag = Tag.Evaluate(context).AsString();
+    var matches = context.EntityManager.FindEntitiesByTag(tag);
+    return new TypedValue(matches);
+  }
 
-    internal override void WriteToJson(Utf8JsonWriter writer, JsonSerializerOptions options)
-    {
-        writer.WritePropertyName("tag");
-        JsonSerializer.Serialize(writer, Tag, options);
-    }
+  internal override void WriteToJson(Utf8JsonWriter writer, JsonSerializerOptions options)
+  {
+    writer.WritePropertyName("tag");
+    JsonSerializer.Serialize(writer, Tag, options);
+  }
 
-    internal override void ReadFromJson(JsonElement root, JsonSerializerOptions options)
-    {
-        if (root.TryGetProperty("tag", out var tagProp))
-            Tag = JsonSerializer.Deserialize<Expression>(tagProp.GetRawText(), options) ?? throw new JsonException("Failed to deserialize tag expression");
-    }
+  internal override void ReadFromJson(JsonElement root, JsonSerializerOptions options)
+  {
+    if (root.TryGetProperty("tag", out var tagProp))
+      Tag = JsonSerializer.Deserialize<Expression>(tagProp.GetRawText(), options) ?? throw new JsonException("Failed to deserialize tag expression");
+  }
 }

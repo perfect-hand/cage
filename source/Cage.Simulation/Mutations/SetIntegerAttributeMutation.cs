@@ -7,38 +7,38 @@ namespace Cage.Simulation.Mutations;
 
 public sealed class SetIntegerAttributeMutation : Mutation
 {
-    public Expression Entity { get; set; } = null!;
-    public string Attribute { get; set; } = null!;
-    public Expression NewValue { get; set; } = null!;
+  public Expression Entity { get; set; } = null!;
+  public string Attribute { get; set; } = null!;
+  public Expression NewValue { get; set; } = null!;
 
-    public override void Apply(EvaluationContext context)
-    {
-        var entity = Entity.Evaluate(context).AsEntity();
-        var newValue = NewValue.Evaluate(context).AsInt();
+  public override void Apply(EvaluationContext context)
+  {
+    var entity = Entity.Evaluate(context).AsEntity();
+    var newValue = NewValue.Evaluate(context).AsInt();
 
-        entity.Attributes[Attribute] = new TypedValue(newValue);
-    }
+    entity.Attributes[Attribute] = new TypedValue(newValue);
+  }
 
-    internal override void WriteToJson(Utf8JsonWriter writer, JsonSerializerOptions options)
-    {
-        writer.WritePropertyName("entity");
-        JsonSerializer.Serialize(writer, Entity, options);
+  internal override void WriteToJson(Utf8JsonWriter writer, JsonSerializerOptions options)
+  {
+    writer.WritePropertyName("entity");
+    JsonSerializer.Serialize(writer, Entity, options);
 
-        writer.WriteString("attribute", Attribute);
+    writer.WriteString("attribute", Attribute);
 
-        writer.WritePropertyName("newValue");
-        JsonSerializer.Serialize(writer, NewValue, options);
-    }
+    writer.WritePropertyName("newValue");
+    JsonSerializer.Serialize(writer, NewValue, options);
+  }
 
-    internal override void ReadFromJson(JsonElement root, JsonSerializerOptions options)
-    {
-        if (root.TryGetProperty("entity", out var entityProp))
-            Entity = JsonSerializer.Deserialize<Expression>(entityProp.GetRawText(), options) ?? throw new JsonException("Failed to deserialize entity expression");
+  internal override void ReadFromJson(JsonElement root, JsonSerializerOptions options)
+  {
+    if (root.TryGetProperty("entity", out var entityProp))
+      Entity = JsonSerializer.Deserialize<Expression>(entityProp.GetRawText(), options) ?? throw new JsonException("Failed to deserialize entity expression");
 
-        if (root.TryGetProperty("attribute", out var attributeProp))
-            Attribute = attributeProp.GetString() ?? throw new JsonException("Missing attribute value");
+    if (root.TryGetProperty("attribute", out var attributeProp))
+      Attribute = attributeProp.GetString() ?? throw new JsonException("Missing attribute value");
 
-        if (root.TryGetProperty("newValue", out var newValueProp))
-            NewValue = JsonSerializer.Deserialize<Expression>(newValueProp.GetRawText(), options) ?? throw new JsonException("Failed to deserialize newValue expression");
-    }
+    if (root.TryGetProperty("newValue", out var newValueProp))
+      NewValue = JsonSerializer.Deserialize<Expression>(newValueProp.GetRawText(), options) ?? throw new JsonException("Failed to deserialize newValue expression");
+  }
 }

@@ -8,32 +8,32 @@ namespace Cage.Simulation.Events;
 
 public sealed class Trigger
 {
-    public string EventName { get; set; } = string.Empty;
-    public List<ExpressionCondition> Conditions { get; set; } = new();
-    public List<Mutation> Actions { get; set; } = new();
+  public string EventName { get; set; } = string.Empty;
+  public List<ExpressionCondition> Conditions { get; set; } = new();
+  public List<Mutation> Actions { get; set; } = new();
 
-    public Trigger() { }
+  public Trigger() { }
 
-    public Trigger(Type eventType)
+  public Trigger(Type eventType)
+  {
+    EventName = eventType.Name;
+  }
+
+  public bool MatchesEvent(GameEvent e)
+  {
+    return string.Equals(EventName, e.GetType().Name, StringComparison.Ordinal);
+  }
+
+  public bool AreAllConditionsFulfilled(EvaluationContext context)
+  {
+    return Conditions.All(condition => condition.Evaluate(context));
+  }
+
+  public void ExecuteActions(EvaluationContext context)
+  {
+    foreach (var action in Actions)
     {
-        EventName = eventType.Name;
+      action.Apply(context);
     }
-
-    public bool MatchesEvent(GameEvent e)
-    {
-        return string.Equals(EventName, e.GetType().Name, StringComparison.Ordinal);
-    }
-
-    public bool AreAllConditionsFulfilled(EvaluationContext context)
-    {
-        return Conditions.All(condition => condition.Evaluate(context));
-    }
-
-    public void ExecuteActions(EvaluationContext context)
-    {
-        foreach (var action in Actions)
-        {
-            action.Apply(context);
-        }
-    }
+  }
 }

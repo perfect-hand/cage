@@ -2,31 +2,31 @@ namespace Cage.Backend.Editor.Organization;
 
 public class OrganizationMapper
 {
-    public OrganizationDto ToDto(OrganizationEntity entity)
+  public OrganizationDto ToDto(OrganizationEntity entity)
+  {
+    return new OrganizationDto
     {
-        return new OrganizationDto
-        {
-            Id = entity.RowKey,
-            Name = entity.Name
-        };
-    }
+      Id = entity.RowKey,
+      Name = entity.Name
+    };
+  }
 
-    public OrganizationDto ToDto(UserInOrganizationEntity entity)
+  public OrganizationDto ToDto(UserInOrganizationEntity entity)
+  {
+    return new OrganizationDto
     {
-        return new OrganizationDto
-        {
-            Id = entity.OrganizationId,
-            Name = entity.OrganizationName
-        };
-    }
+      Id = entity.OrganizationId,
+      Name = entity.OrganizationName
+    };
+  }
 
-    public OrganizationEntity ToEntity(OrganizationDto dto)
+  public OrganizationEntity ToEntity(OrganizationDto dto)
+  {
+    return new OrganizationEntity
     {
-        return new OrganizationEntity
-        {
-            PartitionKey = "Organization",
-            RowKey = dto.Id ?? Guid.NewGuid().ToString(),
-            Name = dto.Name
-        };
-    }
+      PartitionKey = "Organization",
+      RowKey = dto.Id ?? Guid.NewGuid().ToString(),
+      Name = dto.Name
+    };
+  }
 }

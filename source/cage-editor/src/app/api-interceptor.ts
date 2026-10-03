@@ -31,8 +31,8 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
         url,
         setHeaders: token
           ? {
-              Authorization: 'Bearer' + ' ' + token,
-            }
+            Authorization: 'Bearer' + ' ' + token,
+          }
           : {},
       });
 

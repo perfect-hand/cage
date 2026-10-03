@@ -5,7 +5,7 @@ using Cage.Backend.Game.Match;
 var builder = WebApplication.CreateBuilder(args);
 
 // https://learn.microsoft.com/en-us/aspnet/core/fundamentals/minimal-apis/webapplication?view=aspnetcore-10.0#add-services
-builder.Services.AddHttpLogging(options => {});
+builder.Services.AddHttpLogging(options => { });
 builder.Services.AddScoped<InfoService>();
 builder.Services.AddScoped<MatchService>();
 
@@ -21,14 +21,14 @@ matches.MapPost("/", CreateMatch);
 
 static async Task<IResult> GetInfo(InfoService infoService)
 {
-    var info = infoService.GetInfo();
-    return TypedResults.Ok(info);
+  var info = infoService.GetInfo();
+  return TypedResults.Ok(info);
 }
 
 static async Task<IResult> CreateMatch(MatchService matchService)
 {
-    var match = await matchService.CreateMatch();
-    return TypedResults.Created($"/matches/{match.Id}", match);
+  var match = await matchService.CreateMatch();
+  return TypedResults.Created($"/matches/{match.Id}", match);
 }
 
 app.Run();

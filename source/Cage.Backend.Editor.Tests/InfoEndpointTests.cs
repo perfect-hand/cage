@@ -7,24 +7,24 @@ namespace Cage.Backend.Editor.Tests;
 
 public class InfoEndpointTests : IClassFixture<WebApplicationFactory<Program>>
 {
-    private readonly HttpClient httpClient;
+  private readonly HttpClient httpClient;
 
-    public InfoEndpointTests(WebApplicationFactory<Program> factory)
-    {
-        httpClient = factory.CreateClient();
-    }
+  public InfoEndpointTests(WebApplicationFactory<Program> factory)
+  {
+    httpClient = factory.CreateClient();
+  }
 
-    [Fact]
-    public async Task ReturnsApplicationInfo()
-    {
-        var response = await httpClient.GetAsync("/info");
+  [Fact]
+  public async Task ReturnsApplicationInfo()
+  {
+    var response = await httpClient.GetAsync("/info");
 
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var info = await response.Content.ReadFromJsonAsync<InfoDto>();
+    var info = await response.Content.ReadFromJsonAsync<InfoDto>();
 
-        Assert.NotNull(info);
-        Assert.Equal("Cage.Backend.Editor", info.Name);
-        Assert.NotNull(info.Version);
-    }
+    Assert.NotNull(info);
+    Assert.Equal("Cage.Backend.Editor", info.Name);
+    Assert.NotNull(info.Version);
+  }
 }

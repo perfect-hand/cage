@@ -6,17 +6,12 @@
 
     <form (submit)="createOrganization(); $event.preventDefault()" novalidate>
       <label for="organization-name">Organization name</label>
-      <input
-        id="organization-name"
-        type="text"
-        [formField]="nameForm"
-        autocomplete="organization"
-      />
+      <input id="organization-name" type="text" [formField]="nameForm" autocomplete="organization" />
       @if (nameForm().touched() && nameForm().invalid()) {
-        <p class="field-error" role="alert">Enter an organization name.</p>
+      <p class="field-error" role="alert">Enter an organization name.</p>
       }
       @if (errorMessage()) {
-        <p class="field-error" role="alert">{{ errorMessage() }}</p>
+      <p class="field-error" role="alert">{{ errorMessage() }}</p>
       }
 
       <div class="form-actions">

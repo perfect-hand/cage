@@ -13,147 +13,147 @@ namespace Cage.Backend.Editor.Tests;
 
 public class OrganizationEndpointTests : IClassFixture<WebApplicationFactory<Program>>, IAsyncLifetime
 {
-    private readonly HttpClient unauthorizedHttpClient;
-    private readonly HttpClient httpClient;
+  private readonly HttpClient unauthorizedHttpClient;
+  private readonly HttpClient httpClient;
 
-    // https://testcontainers.com/guides/getting-started-with-testcontainers-for-dotnet/
-    // https://testcontainers.com/modules/azurite/?language=dotnet
-    private readonly AzuriteContainer azuriteContainer = new AzuriteBuilder("mcr.microsoft.com/azure-storage/azurite:3.37.0").Build();
-    
-    public async Task InitializeAsync()
-    {
-        await azuriteContainer.StartAsync();
-        Environment.SetEnvironmentVariable("TABLE_STORAGE_CONNECTION_STRING", azuriteContainer.GetConnectionString());
-    }
+  // https://testcontainers.com/guides/getting-started-with-testcontainers-for-dotnet/
+  // https://testcontainers.com/modules/azurite/?language=dotnet
+  private readonly AzuriteContainer azuriteContainer = new AzuriteBuilder("mcr.microsoft.com/azure-storage/azurite:3.37.0").Build();
 
-    public Task DisposeAsync()
-    {
-        return azuriteContainer.DisposeAsync().AsTask();
-    }
+  public async Task InitializeAsync()
+  {
+    await azuriteContainer.StartAsync();
+    Environment.SetEnvironmentVariable("TABLE_STORAGE_CONNECTION_STRING", azuriteContainer.GetConnectionString());
+  }
 
-    public OrganizationEndpointTests(WebApplicationFactory<Program> factory)
-    {
-        unauthorizedHttpClient = factory.CreateClient();
+  public Task DisposeAsync()
+  {
+    return azuriteContainer.DisposeAsync().AsTask();
+  }
 
-        // https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0&pivots=xunit#mock-authentication
-        httpClient = factory.WithWebHostBuilder(builder =>
-                {
-                    builder.ConfigureTestServices(services =>
-                    {
-                        services.AddAuthentication(options =>
-                            {
-                                options.DefaultAuthenticateScheme = "TestScheme";
-                                options.DefaultChallengeScheme = "TestScheme";
-                            })
-                            .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
-                                "TestScheme", options => { });
-                    });
-                })
-                .CreateClient();
+  public OrganizationEndpointTests(WebApplicationFactory<Program> factory)
+  {
+    unauthorizedHttpClient = factory.CreateClient();
 
-        httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue(scheme: "TestScheme");
-    }
-
-    [Fact]
-    public async Task GetsAllOrganizations()
-    {
-        // GIVEN
-        var tableServiceClient = new TableServiceClient(azuriteContainer.GetConnectionString());
-
-        tableServiceClient.CreateTableIfNotExists(OrganizationDao.OrganizationsTableName);
-        tableServiceClient.CreateTableIfNotExists(OrganizationDao.UsersInOrganizationTableName);
-
-        var organizationsTableClient = new TableClient(azuriteContainer.GetConnectionString(), OrganizationDao.OrganizationsTableName);
-        var usersInOrganizationTableClient = new TableClient(azuriteContainer.GetConnectionString(), OrganizationDao.UsersInOrganizationTableName);
-
-        var organization1 = new OrganizationEntity
-                {
-                    PartitionKey = "Organization",
-                    RowKey = Guid.NewGuid().ToString(),
-                    Name = "Organization1"
-                };
-        var organization2 = new OrganizationEntity
-                {
-                    PartitionKey = "Organization",
-                    RowKey = Guid.NewGuid().ToString(),
-                    Name = "Organization2"
-                };
-
-        await organizationsTableClient.AddEntityAsync(organization1);
-        await organizationsTableClient.AddEntityAsync(organization2);
-
-        await usersInOrganizationTableClient.AddEntityAsync(new UserInOrganizationEntity
-                {
-                    PartitionKey = TestAuthHandler.TestUser,
-                    RowKey = organization1.RowKey,
-                    OrganizationId = organization1.RowKey,
-                    OrganizationName = organization1.Name
+    // https://learn.microsoft.com/en-us/aspnet/core/test/integration-tests?view=aspnetcore-10.0&pivots=xunit#mock-authentication
+    httpClient = factory.WithWebHostBuilder(builder =>
+            {
+              builder.ConfigureTestServices(services =>
+                  {
+                  services.AddAuthentication(options =>
+                          {
+                          options.DefaultAuthenticateScheme = "TestScheme";
+                          options.DefaultChallengeScheme = "TestScheme";
+                        })
+                          .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(
+                              "TestScheme", options => { });
                 });
-        await usersInOrganizationTableClient.AddEntityAsync(new UserInOrganizationEntity
-                {
-                    PartitionKey = organization1.RowKey,
-                    RowKey = TestAuthHandler.TestUser,
-                    OrganizationId = organization1.RowKey,
-                    OrganizationName = organization1.Name
-                });
+            })
+            .CreateClient();
 
-        // WHEN
-        var response = await httpClient.GetAsync("/organizations");
+    httpClient.DefaultRequestHeaders.Authorization =
+        new AuthenticationHeaderValue(scheme: "TestScheme");
+  }
 
-        // THEN
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+  [Fact]
+  public async Task GetsAllOrganizations()
+  {
+    // GIVEN
+    var tableServiceClient = new TableServiceClient(azuriteContainer.GetConnectionString());
 
-        var organizations = await response.Content.ReadFromJsonAsync<List<OrganizationDto>>();
+    tableServiceClient.CreateTableIfNotExists(OrganizationDao.OrganizationsTableName);
+    tableServiceClient.CreateTableIfNotExists(OrganizationDao.UsersInOrganizationTableName);
 
-        Assert.NotNull(organizations);
-        var foundOrganization = Assert.Single(organizations);
-        Assert.Equal(organization1.RowKey, foundOrganization.Id);
-        Assert.Equal(organization1.Name, foundOrganization.Name);
-    }
+    var organizationsTableClient = new TableClient(azuriteContainer.GetConnectionString(), OrganizationDao.OrganizationsTableName);
+    var usersInOrganizationTableClient = new TableClient(azuriteContainer.GetConnectionString(), OrganizationDao.UsersInOrganizationTableName);
 
-    [Fact]
-    public async Task FailsToGetAllOrganizationsWithoutAuthentication()
+    var organization1 = new OrganizationEntity
     {
-        var response = await unauthorizedHttpClient.GetAsync("/organizations");
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task CreatesOrganization()
+      PartitionKey = "Organization",
+      RowKey = Guid.NewGuid().ToString(),
+      Name = "Organization1"
+    };
+    var organization2 = new OrganizationEntity
     {
-        // GIVEN
-        var dto = new OrganizationDto
-        {
-            Name = "New Organization"
-        };
+      PartitionKey = "Organization",
+      RowKey = Guid.NewGuid().ToString(),
+      Name = "Organization2"
+    };
 
-        // WHEN
-        var response = await httpClient.PostAsJsonAsync("/organizations", dto);
+    await organizationsTableClient.AddEntityAsync(organization1);
+    await organizationsTableClient.AddEntityAsync(organization2);
 
-        // THEN
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-
-        var createdOrganization = await response.Content.ReadFromJsonAsync<OrganizationDto>();
-
-        Assert.NotNull(createdOrganization);
-        Assert.NotNull(createdOrganization.Id);
-        Assert.Equal(dto.Name, createdOrganization.Name);
-    }
-
-    [Fact]
-    public async Task FailsToCreateOrganizationsWithoutAuthentication()
+    await usersInOrganizationTableClient.AddEntityAsync(new UserInOrganizationEntity
     {
-        // GIVEN
-        var dto = new OrganizationDto
-        {
-            Name = "New Organization"
-        };
+      PartitionKey = TestAuthHandler.TestUser,
+      RowKey = organization1.RowKey,
+      OrganizationId = organization1.RowKey,
+      OrganizationName = organization1.Name
+    });
+    await usersInOrganizationTableClient.AddEntityAsync(new UserInOrganizationEntity
+    {
+      PartitionKey = organization1.RowKey,
+      RowKey = TestAuthHandler.TestUser,
+      OrganizationId = organization1.RowKey,
+      OrganizationName = organization1.Name
+    });
 
-        // WHEN
-        var response = await unauthorizedHttpClient.PostAsJsonAsync("/organizations", dto);
+    // WHEN
+    var response = await httpClient.GetAsync("/organizations");
 
-        // THEN
-        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
+    // THEN
+    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+    var organizations = await response.Content.ReadFromJsonAsync<List<OrganizationDto>>();
+
+    Assert.NotNull(organizations);
+    var foundOrganization = Assert.Single(organizations);
+    Assert.Equal(organization1.RowKey, foundOrganization.Id);
+    Assert.Equal(organization1.Name, foundOrganization.Name);
+  }
+
+  [Fact]
+  public async Task FailsToGetAllOrganizationsWithoutAuthentication()
+  {
+    var response = await unauthorizedHttpClient.GetAsync("/organizations");
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task CreatesOrganization()
+  {
+    // GIVEN
+    var dto = new OrganizationDto
+    {
+      Name = "New Organization"
+    };
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync("/organizations", dto);
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+
+    var createdOrganization = await response.Content.ReadFromJsonAsync<OrganizationDto>();
+
+    Assert.NotNull(createdOrganization);
+    Assert.NotNull(createdOrganization.Id);
+    Assert.Equal(dto.Name, createdOrganization.Name);
+  }
+
+  [Fact]
+  public async Task FailsToCreateOrganizationsWithoutAuthentication()
+  {
+    // GIVEN
+    var dto = new OrganizationDto
+    {
+      Name = "New Organization"
+    };
+
+    // WHEN
+    var response = await unauthorizedHttpClient.PostAsJsonAsync("/organizations", dto);
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+  }
 }

@@ -7,28 +7,28 @@ namespace Cage.Simulation.Mutations;
 
 public sealed class CompositeMutation : Mutation
 {
-    public List<Mutation> Mutations { get; set; } = new();
+  public List<Mutation> Mutations { get; set; } = new();
 
-    public override void Apply(EvaluationContext context)
+  public override void Apply(EvaluationContext context)
+  {
+    foreach (var mutation in Mutations)
     {
-        foreach (var mutation in Mutations)
-        {
-            mutation.Apply(context);
-        }
+      mutation.Apply(context);
     }
+  }
 
-    internal override void WriteToJson(Utf8JsonWriter writer, JsonSerializerOptions options)
-    {
-        writer.WritePropertyName("mutations");
-        JsonSerializer.Serialize(writer, Mutations, options);
-    }
+  internal override void WriteToJson(Utf8JsonWriter writer, JsonSerializerOptions options)
+  {
+    writer.WritePropertyName("mutations");
+    JsonSerializer.Serialize(writer, Mutations, options);
+  }
 
-    internal override void ReadFromJson(JsonElement root, JsonSerializerOptions options)
+  internal override void ReadFromJson(JsonElement root, JsonSerializerOptions options)
+  {
+    if (root.TryGetProperty("mutations", out var mutationsProp))
     {
-        if (root.TryGetProperty("mutations", out var mutationsProp))
-        {
-            Mutations = JsonSerializer.Deserialize<List<Mutation>>(mutationsProp.GetRawText(), options)
-                ?? new List<Mutation>();
-        }
+      Mutations = JsonSerializer.Deserialize<List<Mutation>>(mutationsProp.GetRawText(), options)
+          ?? new List<Mutation>();
     }
+  }
 }

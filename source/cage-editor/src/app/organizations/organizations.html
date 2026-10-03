@@ -5,20 +5,20 @@
     </div>
 
     @if (isLoading()) {
-      <div class="loading-state" aria-live="polite">
-        <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
-        <span>Loading organizations...</span>
-      </div>
+    <div class="loading-state" aria-live="polite">
+      <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+      <span>Loading organizations...</span>
+    </div>
     } @else {
-      <ul class="organization-list">
-        @for (organization of organizations(); track organization.name) {
-          <li class="organization-item">{{ organization.name }}</li>
-        }
-      </ul>
+    <ul class="organization-list">
+      @for (organization of organizations(); track organization.name) {
+      <li class="organization-item">{{ organization.name }}</li>
+      }
+    </ul>
 
-      <button mat-button type="button" routerLink="/organizations/new">
-        New organization
-      </button>
+    <button mat-button type="button" routerLink="/organizations/new">
+      New organization
+    </button>
     }
   </section>
 </main>

@@ -6,5 +6,5 @@ namespace Cage.Simulation.Expressions;
 [JsonConverter(typeof(ExpressionJsonConverter))]
 public abstract class Expression
 {
-    internal abstract TypedValue Evaluate(EvaluationContext context);
+  internal abstract TypedValue Evaluate(EvaluationContext context);
 }

@@ -1,9 +1,9 @@
 <div class="app-container">
   <div class="app-content">
     @if (isSignedIn()) {
-      <router-outlet />
+    <router-outlet />
     } @else {
-      <landing />
+    <landing />
     }
   </div>
   <footer class="app-footer">Version {{ version }}</footer>

@@ -5,11 +5,11 @@ namespace Cage.Simulation.Expressions;
 
 public class EvaluationContext
 {
-    public Dictionary<string, TypedValue> Variables { get; } = new();
-    public EntityManager EntityManager { get; }
+  public Dictionary<string, TypedValue> Variables { get; } = new();
+  public EntityManager EntityManager { get; }
 
-    public EvaluationContext(EntityManager entityManager)
-    {
-        EntityManager = entityManager;
-    }
+  public EvaluationContext(EntityManager entityManager)
+  {
+    EntityManager = entityManager;
+  }
 }

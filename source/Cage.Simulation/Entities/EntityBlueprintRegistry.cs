@@ -5,22 +5,22 @@ namespace Cage.Simulation.Entities;
 /// </summary>
 public class EntityBlueprintRegistry
 {
-    private readonly Dictionary<string, EntityBlueprint> blueprints = new();
+  private readonly Dictionary<string, EntityBlueprint> blueprints = new();
 
-    public IReadOnlyDictionary<string, EntityBlueprint> Blueprints => blueprints;
+  public IReadOnlyDictionary<string, EntityBlueprint> Blueprints => blueprints;
 
-    public void Register(EntityBlueprint blueprint)
-    {
-        blueprints[blueprint.Id] = blueprint;
-    }
+  public void Register(EntityBlueprint blueprint)
+  {
+    blueprints[blueprint.Id] = blueprint;
+  }
 
-    public EntityBlueprint? Get(string id)
-    {
-        return blueprints.TryGetValue(id, out var blueprint) ? blueprint : null;
-    }
+  public EntityBlueprint? Get(string id)
+  {
+    return blueprints.TryGetValue(id, out var blueprint) ? blueprint : null;
+  }
 
-    public bool Contains(string id)
-    {
-        return blueprints.ContainsKey(id);
-    }
+  public bool Contains(string id)
+  {
+    return blueprints.ContainsKey(id);
+  }
 }
