@@ -3,9 +3,17 @@ Backend, editor frontend and libraries of the CArd Game Engine (CAGE).
 
 ## Development Environment Setup
 
-### Intall Tools
+### Install Tools
 
-1. Run build/InstallTools.ps1.
+1. Install .NET Framework 10.
+2. Install Docker.
+3. Install Visual Studio Code.
+4. Run build/InstallTools.ps1.
+5. Install Visual Studio Code extensions:
+    1. Angular Language Service
+    2. C# & C# Dev Kit
+    3. Postman
+    4. Powershell
 
 ### GitHub Token
 
