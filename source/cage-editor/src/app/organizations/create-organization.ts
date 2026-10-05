@@ -17,7 +17,6 @@ export class CreateOrganization {
   private readonly router = inject(Router);
 
   readonly isSubmitting = signal(false);
-  readonly errorMessage = signal('');
   readonly name = signal('');
   readonly nameForm = form(this.name, (path) => {
     required(path, { message: 'Enter an organization name.' });
@@ -30,7 +29,6 @@ export class CreateOrganization {
     }
 
     this.isSubmitting.set(true);
-    this.errorMessage.set('');
 
     try {
       await firstValueFrom(
@@ -41,7 +39,6 @@ export class CreateOrganization {
       await this.router.navigateByUrl('/');
     } catch (error) {
       console.error('Failed to create organization.', error);
-      this.errorMessage.set('Could not create the organization. Please try again.');
     } finally {
       this.isSubmitting.set(false);
     }
