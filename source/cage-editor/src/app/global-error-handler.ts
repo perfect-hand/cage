@@ -1,4 +1,4 @@
-import { ErrorHandler, inject, Injectable } from '@angular/core';
+import { ErrorHandler, inject, Service } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { ToastService } from './toast-service';
@@ -7,7 +7,7 @@ import { ToastService } from './toast-service';
  * Logs unhandled errors and surfaces them to the user. HTTP errors are
  * already surfaced by the error interceptor.
  */
-@Injectable()
+@Service()
 export class GlobalErrorHandler implements ErrorHandler {
   private readonly toastService = inject(ToastService);
 
