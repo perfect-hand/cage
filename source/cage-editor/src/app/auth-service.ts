@@ -1,5 +1,6 @@
 import {
   computed,
+  inject,
   Service,
   signal,
 } from '@angular/core';
@@ -12,8 +13,11 @@ import {
   PublicClientApplication,
 } from '@azure/msal-browser';
 
+import { ToastService } from './toast-service';
+
 @Service()
 export class AuthService {
+  private readonly toastService = inject(ToastService);
   private msalInstance!: PublicClientApplication;
 
   private readonly _accountId = signal('');
@@ -72,6 +76,7 @@ export class AuthService {
       this.handleAuthenticationResult(result);
     } catch (error) {
       console.error(error);
+      this.toastService.showError('Sign-in failed. Please try again.');
     }
   }
 
@@ -109,6 +114,7 @@ export class AuthService {
         this._accessToken.set(token);
       } else {
         console.error('Failed to acquire access token.');
+        this.toastService.showError('Authentication failed. Please sign in again.');
       }
     } catch (error) {
       if (error instanceof InteractionRequiredAuthError) {
@@ -121,6 +127,7 @@ export class AuthService {
       }
 
       console.error('Failed to acquire access token.', error);
+      this.toastService.showError('Authentication failed. Please sign in again.');
     }
   }
 
