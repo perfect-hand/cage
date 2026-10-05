@@ -19,5 +19,7 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('h1')?.textContent).toContain('CaGE Editor');
+    expect(compiled.querySelector('footer')?.textContent).toContain('Development');
+    expect(document.title).toBe('CaGE Editor (Development)');
   });
 });
