@@ -5,11 +5,15 @@ Backend, editor frontend and libraries of the CArd Game Engine (CAGE).
 
 ### Install Tools
 
-1. Install .NET Framework 10.
-2. Install Docker.
-3. Install Visual Studio Code.
-4. Run build/InstallTools.ps1.
-5. Install Visual Studio Code extensions:
+1. Install Git.
+2. Install the .NET 10 SDK.
+3. Install Docker.
+4. Install Node.js (which includes npm).
+5. Install PowerShell.
+6. Install the Azure CLI (needed for deployment).
+7. Install Visual Studio Code.
+8. Run build/InstallTools.ps1 to install the Angular CLI and Azure Static Web Apps CLI.
+9. Install Visual Studio Code extensions:
     1. Angular Language Service
     2. C# & C# Dev Kit
     3. Postman
