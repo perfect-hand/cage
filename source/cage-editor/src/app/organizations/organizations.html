@@ -10,15 +10,17 @@
       <span>Loading organizations...</span>
     </div>
     } @else {
-    <ul class="organization-list">
+    <ul class="item-list">
       @for (organization of organizations(); track organization.name) {
-      <li class="organization-item">{{ organization.name }}</li>
+      <li class="item-list-item">{{ organization.name }}</li>
       }
     </ul>
 
-    <button mat-button type="button" routerLink="/organizations/new">
-      New organization
-    </button>
+    <div class="form-actions">
+      <button mat-button type="button" routerLink="/organizations/new">
+        New organization
+      </button>
+    </div>
     }
   </section>
 </main>

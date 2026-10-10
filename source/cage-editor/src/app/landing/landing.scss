@@ -15,16 +15,7 @@
 
 .landing-header {
   text-align: center;
-  margin: 0 0 2rem;
-}
-
-.title {
-  margin: 0;
-}
-
-.subtitle {
-  margin: 0.5rem 0 0;
-  color: #666;
+  margin: 0 0 var(--app-space-xl);
 }
 
 .landing-login {

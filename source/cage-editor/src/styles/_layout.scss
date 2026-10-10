@@ -1,0 +1,88 @@
+// Shared layout patterns. Colors, typography and shape come from Material system tokens.
+:root {
+    --app-space-xs: 0.25rem;
+    --app-space-sm: 0.5rem;
+    --app-space-md: 1rem;
+    --app-space-lg: 1.5rem;
+    --app-space-xl: 2rem;
+    --app-outline-subtle: color-mix(in srgb, var(--mat-sys-outline-variant) 60%, transparent);
+}
+
+.title {
+    margin: 0;
+    font: var(--mat-sys-display-small);
+}
+
+.subtitle {
+    margin: var(--app-space-sm) 0 0;
+    color: var(--mat-sys-on-surface-variant);
+}
+
+.content-panel {
+    padding: var(--app-space-xl);
+}
+
+.content-section {
+    max-width: 48rem;
+    margin: 0 auto;
+    padding: var(--app-space-lg);
+    background: var(--mat-sys-surface-container-low);
+    border-radius: var(--mat-sys-corner-large);
+    box-shadow: var(--mat-sys-level1);
+}
+
+.section-header h2 {
+    margin: 0 0 var(--app-space-md);
+    font: var(--mat-sys-headline-small);
+}
+
+.loading-state {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--mat-sys-on-surface-variant);
+}
+
+.item-list {
+    display: grid;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.item-list-item {
+    padding: 0.875rem var(--app-space-md);
+    background: var(--mat-sys-surface);
+    border: 1px solid var(--app-outline-subtle);
+    border-radius: var(--mat-sys-corner-medium);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--app-space-sm);
+    margin-top: var(--app-space-md);
+}
+
+.field-error {
+    margin: 0;
+    color: var(--mat-sys-error);
+}
+
+.text-input {
+    box-sizing: border-box;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--mat-sys-outline);
+    border-radius: var(--mat-sys-corner-extra-small);
+    background: var(--mat-sys-surface);
+    color: var(--mat-sys-on-surface);
+    font: inherit;
+
+    &:focus-visible {
+        outline: 2px solid var(--mat-sys-primary);
+        outline-offset: 2px;
+    }
+}
