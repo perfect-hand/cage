@@ -12,7 +12,9 @@
     } @else {
     <ul class="item-list">
       @for (organization of organizations(); track organization.name) {
-      <li class="item-list-item">{{ organization.name }}</li>
+      <li class="item-list-item">
+        <a [routerLink]="['/organizations', organization.id, 'titles']">{{ organization.name }}</a>
+      </li>
       }
     </ul>
 

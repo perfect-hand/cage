@@ -51,4 +51,9 @@ public class OrganizationDao
   {
     return usersInOrganizationTableClient.Query<UserInOrganizationEntity>(ent => ent.PartitionKey == user).ToList();
   }
+
+  public async Task<bool> IsUserInOrganization(string organizationId, string user)
+  {
+    return usersInOrganizationTableClient.Query<UserInOrganizationEntity>(ent => ent.PartitionKey == organizationId && ent.RowKey == user).Any();
+  }
 }

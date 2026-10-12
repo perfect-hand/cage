@@ -1,5 +1,6 @@
 using Cage.Backend.Editor.Info;
 using Cage.Backend.Editor.Organization;
+using Cage.Backend.Editor.Title;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -42,6 +43,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddHttpLogging(options => { });
 builder.Services.AddScoped<InfoService>();
 builder.Services.AddScoped<OrganizationService>();
+builder.Services.AddScoped<TitleService>();
 
 var app = builder.Build();
 app.UseHttpsRedirection();
@@ -56,6 +58,9 @@ info.MapGet("/", GetInfo);
 var organizations = app.MapGroup("/organizations").RequireAuthorization();
 organizations.MapGet("/", GetAllOrganizations);
 organizations.MapPost("/", CreateOrganization);
+
+organizations.MapGet("/{organizationId}/titles", GetAllTitles);
+organizations.MapPost("/{organizationId}/titles", CreateTitle);
 
 static async Task<IResult> GetInfo(InfoService infoService)
 {
@@ -76,6 +81,34 @@ static async Task<IResult> CreateOrganization(OrganizationService organizationSe
   var user = httpContext.User.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
   var organization = await organizationService.Create(dto, user);
   return TypedResults.Created($"/organizations/{organization.Id}", organization);
+}
+
+static async Task<IResult> GetAllTitles(TitleService titleService, string organizationId, HttpContext httpContext)
+{
+  var user = httpContext.User.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
+  try
+  {
+    var titles = await titleService.ReadAll(organizationId, user);
+    return TypedResults.Ok(titles);
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+}
+
+static async Task<IResult> CreateTitle(TitleService titleService, string organizationId, TitleDto dto, HttpContext httpContext)
+{
+  var user = httpContext.User.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
+  try
+  {
+    var title = await titleService.Create(organizationId, dto, user);
+    return TypedResults.Created($"/organizations/{organizationId}/titles/{title.Id}", title);
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
 }
 
 app.Run();
