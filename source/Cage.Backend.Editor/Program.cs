@@ -70,22 +70,35 @@ static async Task<IResult> GetInfo(InfoService infoService)
 
 static async Task<IResult> GetAllOrganizations(OrganizationService organizationService, HttpContext httpContext)
 {
-  // https://learn.microsoft.com/en-us/aspnet/core/fundamentals/use-http-context?view=aspnetcore-10.0
-  var user = httpContext.User.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
-  var organizations = await organizationService.ReadAll(user);
-  return TypedResults.Ok(organizations);
+  var user = GetUser(httpContext);
+  try
+  {
+    var organizations = await organizationService.ReadAll(user);
+    return TypedResults.Ok(organizations);
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
 }
 
 static async Task<IResult> CreateOrganization(OrganizationService organizationService, OrganizationDto dto, HttpContext httpContext)
 {
-  var user = httpContext.User.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
-  var organization = await organizationService.Create(dto, user);
-  return TypedResults.Created($"/organizations/{organization.Id}", organization);
+  var user = GetUser(httpContext);
+  try
+  {
+    var organization = await organizationService.Create(dto, user);
+    return TypedResults.Created($"/organizations/{organization.Id}", organization);
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
 }
 
 static async Task<IResult> GetAllTitles(TitleService titleService, string organizationId, HttpContext httpContext)
 {
-  var user = httpContext.User.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
+  var user = GetUser(httpContext);
   try
   {
     var titles = await titleService.ReadAll(organizationId, user);
@@ -99,7 +112,7 @@ static async Task<IResult> GetAllTitles(TitleService titleService, string organi
 
 static async Task<IResult> CreateTitle(TitleService titleService, string organizationId, TitleDto dto, HttpContext httpContext)
 {
-  var user = httpContext.User.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
+  var user = GetUser(httpContext);
   try
   {
     var title = await titleService.Create(organizationId, dto, user);
@@ -109,6 +122,12 @@ static async Task<IResult> CreateTitle(TitleService titleService, string organiz
   {
     return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
   }
+}
+
+// https://learn.microsoft.com/en-us/aspnet/core/fundamentals/use-http-context?view=aspnetcore-10.0
+static string? GetUser(HttpContext httpContext)
+{
+  return httpContext.User.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
 }
 
 app.Run();

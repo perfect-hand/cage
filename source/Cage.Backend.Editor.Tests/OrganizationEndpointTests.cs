@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Cage.Backend.Editor.Tests;
 
-public class OrganizationEndpointTests : EndpointTestBase, IClassFixture<WebApplicationFactory<Program>>
+public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicationFactory<Program>>
 {
   public OrganizationEndpointTests(WebApplicationFactory<Program> factory) : base(factory)
   {
@@ -19,10 +19,8 @@ public class OrganizationEndpointTests : EndpointTestBase, IClassFixture<WebAppl
     var tableServiceClient = new TableServiceClient(azuriteContainer.GetConnectionString());
 
     tableServiceClient.CreateTableIfNotExists(OrganizationDao.OrganizationsTableName);
-    tableServiceClient.CreateTableIfNotExists(OrganizationDao.UsersInOrganizationTableName);
 
     var organizationsTableClient = new TableClient(azuriteContainer.GetConnectionString(), OrganizationDao.OrganizationsTableName);
-    var usersInOrganizationTableClient = new TableClient(azuriteContainer.GetConnectionString(), OrganizationDao.UsersInOrganizationTableName);
 
     var organization1 = new OrganizationEntity
     {
@@ -40,20 +38,7 @@ public class OrganizationEndpointTests : EndpointTestBase, IClassFixture<WebAppl
     await organizationsTableClient.AddEntityAsync(organization1);
     await organizationsTableClient.AddEntityAsync(organization2);
 
-    await usersInOrganizationTableClient.AddEntityAsync(new UserInOrganizationEntity
-    {
-      PartitionKey = TestAuthHandler.TestUser,
-      RowKey = organization1.RowKey,
-      OrganizationId = organization1.RowKey,
-      OrganizationName = organization1.Name
-    });
-    await usersInOrganizationTableClient.AddEntityAsync(new UserInOrganizationEntity
-    {
-      PartitionKey = organization1.RowKey,
-      RowKey = TestAuthHandler.TestUser,
-      OrganizationId = organization1.RowKey,
-      OrganizationName = organization1.Name
-    });
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organization1.RowKey, organization1.Name);
 
     // WHEN
     var response = await httpClient.GetAsync("/organizations");
@@ -96,6 +81,10 @@ public class OrganizationEndpointTests : EndpointTestBase, IClassFixture<WebAppl
     Assert.NotNull(createdOrganization);
     Assert.NotNull(createdOrganization.Id);
     Assert.Equal(dto.Name, createdOrganization.Name);
+
+    var organizations = await httpClient.GetFromJsonAsync<List<OrganizationDto>>("/organizations");
+    Assert.NotNull(organizations);
+    Assert.Contains(organizations, o => o.Id == createdOrganization.Id);
   }
 
   [Fact]

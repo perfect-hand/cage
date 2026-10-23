@@ -7,36 +7,18 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Cage.Backend.Editor.Tests;
 
-public class TitleEndpointTests : EndpointTestBase, IClassFixture<WebApplicationFactory<Program>>
+public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFactory<Program>>
 {
   public TitleEndpointTests(WebApplicationFactory<Program> factory) : base(factory)
   {
-  }
-
-  private async Task<string> AddOrganizationWithTestUser(bool withUser = true)
-  {
-    var organizationId = Guid.NewGuid().ToString();
-    if (withUser)
-    {
-      var tableServiceClient = new TableServiceClient(azuriteContainer.GetConnectionString());
-      tableServiceClient.CreateTableIfNotExists(OrganizationDao.UsersInOrganizationTableName);
-      var usersInOrganizationTableClient = new TableClient(azuriteContainer.GetConnectionString(), OrganizationDao.UsersInOrganizationTableName);
-      await usersInOrganizationTableClient.AddEntityAsync(new UserInOrganizationEntity
-      {
-        PartitionKey = organizationId,
-        RowKey = TestAuthHandler.TestUser,
-        OrganizationId = organizationId,
-        OrganizationName = "Organization"
-      });
-    }
-    return organizationId;
   }
 
   [Fact]
   public async Task GetsAllTitlesOfOrganization()
   {
     // GIVEN
-    var organizationId = await AddOrganizationWithTestUser();
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
     var otherOrganizationId = Guid.NewGuid().ToString();
 
     var tableServiceClient = new TableServiceClient(azuriteContainer.GetConnectionString());
@@ -71,7 +53,7 @@ public class TitleEndpointTests : EndpointTestBase, IClassFixture<WebApplication
   [Fact]
   public async Task FailsToGetAllTitlesOfForeignOrganization()
   {
-    var organizationId = await AddOrganizationWithTestUser(withUser: false);
+    var organizationId = Guid.NewGuid().ToString();
     var response = await httpClient.GetAsync($"/organizations/{organizationId}/titles");
     Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
   }
@@ -80,7 +62,8 @@ public class TitleEndpointTests : EndpointTestBase, IClassFixture<WebApplication
   public async Task CreatesTitle()
   {
     // GIVEN
-    var organizationId = await AddOrganizationWithTestUser();
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
     var dto = new TitleDto { Name = "New Title" };
 
     // WHEN
@@ -111,7 +94,7 @@ public class TitleEndpointTests : EndpointTestBase, IClassFixture<WebApplication
   [Fact]
   public async Task FailsToCreateTitleInForeignOrganization()
   {
-    var organizationId = await AddOrganizationWithTestUser(withUser: false);
+    var organizationId = Guid.NewGuid().ToString();
     var dto = new TitleDto { Name = "New Title" };
     var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles", dto);
     Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);

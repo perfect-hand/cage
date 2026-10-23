@@ -18,3 +18,7 @@ version).
 - Use Angular Material theming for color, typography, shape and density: configure it via `mat.theme()` in `styles.scss` and consume `--mat-sys-*` tokens. No hard-coded colors or font sizes.
 - Use the shared spacing tokens (`--app-space-*`) instead of ad-hoc rem values where one fits.
 - Component `.scss` files contain only rules specific to that component's markup.
+
+## C# conventions
+
+Do not use the "Base" suffix for base class names (e.g. EndpointTest, not EndpointTestBase), as per Microsoft's [Framework Design Guidelines](https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/).

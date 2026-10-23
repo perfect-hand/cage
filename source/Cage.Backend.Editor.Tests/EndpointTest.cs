@@ -7,10 +7,11 @@ using Testcontainers.Azurite;
 
 namespace Cage.Backend.Editor.Tests;
 
-public abstract class EndpointTestBase : IAsyncLifetime
+public abstract class EndpointTest : IAsyncLifetime
 {
   protected readonly HttpClient unauthorizedHttpClient;
   protected readonly HttpClient httpClient;
+  protected EndpointTestDao testDao = null!;
 
   // https://testcontainers.com/guides/getting-started-with-testcontainers-for-dotnet/
   // https://testcontainers.com/modules/azurite/?language=dotnet
@@ -20,6 +21,7 @@ public abstract class EndpointTestBase : IAsyncLifetime
   {
     await azuriteContainer.StartAsync();
     Environment.SetEnvironmentVariable("CAGE_TABLE_STORAGE_CONNECTION_STRING", azuriteContainer.GetConnectionString());
+    testDao = new EndpointTestDao(azuriteContainer.GetConnectionString());
   }
 
   public virtual Task DisposeAsync()
@@ -27,7 +29,7 @@ public abstract class EndpointTestBase : IAsyncLifetime
     return azuriteContainer.DisposeAsync().AsTask();
   }
 
-  protected EndpointTestBase(WebApplicationFactory<Program> factory)
+  protected EndpointTest(WebApplicationFactory<Program> factory)
   {
     unauthorizedHttpClient = factory.CreateClient();
 

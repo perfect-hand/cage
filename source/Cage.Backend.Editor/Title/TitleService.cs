@@ -5,14 +5,14 @@ namespace Cage.Backend.Editor.Title;
 public class TitleService
 {
   private readonly TitleMapper mapper;
-  private readonly TitleDao dao;
+  private readonly TitleDao titleDao;
   private readonly OrganizationDao organizationDao;
   private readonly ILogger<TitleService> logger;
 
   public TitleService(ILogger<TitleService> logger)
   {
     mapper = new TitleMapper();
-    dao = new TitleDao();
+    titleDao = new TitleDao();
     organizationDao = new OrganizationDao();
     this.logger = logger;
   }
@@ -22,7 +22,7 @@ public class TitleService
     await EnsureMembership(organizationId, user);
 
     var title = mapper.ToEntity(dto, organizationId);
-    await dao.AddTitle(title);
+    await titleDao.AddTitle(title);
 
     logger.LogInformation("Title {} created in organization {}.", title.RowKey, organizationId);
     return mapper.ToDto(title);
@@ -32,7 +32,7 @@ public class TitleService
   {
     await EnsureMembership(organizationId, user);
 
-    var titles = await dao.QueryByOrganization(organizationId);
+    var titles = await titleDao.QueryByOrganization(organizationId);
     return titles.Select(mapper.ToDto).ToList();
   }
 

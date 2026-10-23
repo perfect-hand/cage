@@ -1,9 +1,8 @@
 using Azure.Data.Tables;
-using Azure.Identity;
 
 namespace Cage.Backend.Editor.Title;
 
-public class TitleDao
+public class TitleDao : TableDao
 {
   public const string TitlesTableName = "Titles";
 
@@ -11,18 +10,7 @@ public class TitleDao
 
   public TitleDao()
   {
-    var storageUri = Environment.GetEnvironmentVariable("CAGE_TABLE_STORAGE_URI");
-    var storageConnectionString = Environment.GetEnvironmentVariable("CAGE_TABLE_STORAGE_CONNECTION_STRING") ?? "UseDevelopmentStorage=true";
-
-    var tableServiceClient = storageUri != null
-        ? new TableServiceClient(new Uri(storageUri), new DefaultAzureCredential())
-        : new TableServiceClient(storageConnectionString);
-
-    tableServiceClient.CreateTableIfNotExists(TitlesTableName);
-
-    titlesTableClient = storageUri != null
-        ? new TableClient(new Uri(storageUri), TitlesTableName, new DefaultAzureCredential())
-        : new TableClient(storageConnectionString, TitlesTableName);
+    titlesTableClient = CreateTableClient(TitlesTableName);
   }
 
   public async Task AddTitle(TitleEntity title)
