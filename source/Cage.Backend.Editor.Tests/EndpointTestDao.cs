@@ -6,15 +6,16 @@ namespace Cage.Backend.Editor.Tests;
 public class EndpointTestDao
 {
   private readonly string connectionString;
+  private readonly TableServiceClient tableServiceClient;
 
   public EndpointTestDao(string connectionString)
   {
     this.connectionString = connectionString;
+    tableServiceClient = new TableServiceClient(connectionString);
   }
 
   public async Task AddUserToOrganization(string userId, string organizationId, string organizationName)
   {
-    var tableServiceClient = new TableServiceClient(connectionString);
     tableServiceClient.CreateTableIfNotExists(OrganizationDao.UsersInOrganizationTableName);
     var usersInOrganizationTableClient = new TableClient(connectionString, OrganizationDao.UsersInOrganizationTableName);
 

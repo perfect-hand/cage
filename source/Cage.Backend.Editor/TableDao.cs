@@ -11,14 +11,18 @@ public abstract class TableDao
   // See https://learn.microsoft.com/en-us/azure/storage/common/storage-connect-azurite?tabs=table-storage
   private readonly string? storageUri = Environment.GetEnvironmentVariable("CAGE_TABLE_STORAGE_URI");
   private readonly string storageConnectionString = Environment.GetEnvironmentVariable("CAGE_TABLE_STORAGE_CONNECTION_STRING") ?? "UseDevelopmentStorage=true";
+  private readonly TableServiceClient tableServiceClient;
 
   // See https://learn.microsoft.com/en-us/dotnet/api/overview/azure/data.tables-readme?view=azure-dotnet
-  protected TableClient CreateTableClient(string tableName)
+  protected TableDao()
   {
-    var tableServiceClient = storageUri != null
+    tableServiceClient = storageUri != null
         ? new TableServiceClient(new Uri(storageUri), new DefaultAzureCredential())
         : new TableServiceClient(storageConnectionString);
+  }
 
+  protected TableClient CreateTableClient(string tableName)
+  {
     tableServiceClient.CreateTableIfNotExists(tableName);
 
     return storageUri != null
