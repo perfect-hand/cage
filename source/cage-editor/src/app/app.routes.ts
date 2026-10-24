@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { Home } from './home/home';
 import { CreateOrganization } from './organizations/create-organization';
+import { CreateTitle } from './titles/create-title';
+import { Titles } from './titles/titles';
 import { Organizations } from './organizations/organizations';
 
 export const routes: Routes = [
@@ -10,6 +12,8 @@ export const routes: Routes = [
     children: [
       { path: '', component: Organizations },
       { path: 'organizations/new', component: CreateOrganization },
+      { path: 'organizations/:organizationId/titles', component: Titles },
+      { path: 'organizations/:organizationId/titles/new', component: CreateTitle },
     ],
   },
 ];

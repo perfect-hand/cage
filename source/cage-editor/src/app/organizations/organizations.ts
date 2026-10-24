@@ -12,6 +12,7 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 
 interface Organization {
+  id: string;
   name: string;
 }
 

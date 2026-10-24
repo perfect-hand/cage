@@ -1,0 +1,22 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>New title</h2>
+    </div>
+
+    <form (submit)="createTitle(); $event.preventDefault()" novalidate>
+      <label for="title-name">Title name</label>
+      <input id="title-name" class="text-input" type="text" [formField]="nameForm" autocomplete="off" />
+      @if (nameForm().touched() && nameForm().invalid()) {
+      <p class="field-error" role="alert">Enter a title name.</p>
+      }
+
+      <div class="form-actions">
+        <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles']">Cancel</button>
+        <button mat-button type="submit" [disabled]="isSubmitting()">
+          {{ isSubmitting() ? 'Creating...' : 'Create title' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</main>

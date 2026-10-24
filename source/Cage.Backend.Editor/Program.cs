@@ -1,5 +1,6 @@
 using Cage.Backend.Editor.Info;
 using Cage.Backend.Editor.Organization;
+using Cage.Backend.Editor.Title;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 
@@ -42,6 +43,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddHttpLogging(options => { });
 builder.Services.AddScoped<InfoService>();
 builder.Services.AddScoped<OrganizationService>();
+builder.Services.AddScoped<TitleService>();
 
 var app = builder.Build();
 app.UseHttpsRedirection();
@@ -57,6 +59,9 @@ var organizations = app.MapGroup("/organizations").RequireAuthorization();
 organizations.MapGet("/", GetAllOrganizations);
 organizations.MapPost("/", CreateOrganization);
 
+organizations.MapGet("/{organizationId}/titles", GetAllTitles);
+organizations.MapPost("/{organizationId}/titles", CreateTitle);
+
 static async Task<IResult> GetInfo(InfoService infoService)
 {
   var info = infoService.GetInfo();
@@ -65,17 +70,64 @@ static async Task<IResult> GetInfo(InfoService infoService)
 
 static async Task<IResult> GetAllOrganizations(OrganizationService organizationService, HttpContext httpContext)
 {
-  // https://learn.microsoft.com/en-us/aspnet/core/fundamentals/use-http-context?view=aspnetcore-10.0
-  var user = httpContext.User.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
-  var organizations = await organizationService.ReadAll(user);
-  return TypedResults.Ok(organizations);
+  var user = GetUser(httpContext);
+  try
+  {
+    var organizations = await organizationService.ReadAll(user);
+    return TypedResults.Ok(organizations);
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
 }
 
 static async Task<IResult> CreateOrganization(OrganizationService organizationService, OrganizationDto dto, HttpContext httpContext)
 {
-  var user = httpContext.User.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
-  var organization = await organizationService.Create(dto, user);
-  return TypedResults.Created($"/organizations/{organization.Id}", organization);
+  var user = GetUser(httpContext);
+  try
+  {
+    var organization = await organizationService.Create(dto, user);
+    return TypedResults.Created($"/organizations/{organization.Id}", organization);
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+}
+
+static async Task<IResult> GetAllTitles(TitleService titleService, string organizationId, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    var titles = await titleService.ReadAll(organizationId, user);
+    return TypedResults.Ok(titles);
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+}
+
+static async Task<IResult> CreateTitle(TitleService titleService, string organizationId, TitleDto dto, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    var title = await titleService.Create(organizationId, dto, user);
+    return TypedResults.Created($"/organizations/{organizationId}/titles/{title.Id}", title);
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+}
+
+// https://learn.microsoft.com/en-us/aspnet/core/fundamentals/use-http-context?view=aspnetcore-10.0
+static string? GetUser(HttpContext httpContext)
+{
+  return httpContext.User.Claims.FirstOrDefault(c => c.Type == "preferred_username")?.Value;
 }
 
 app.Run();

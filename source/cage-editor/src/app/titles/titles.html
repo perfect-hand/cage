@@ -1,0 +1,27 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>Titles</h2>
+    </div>
+
+    @if (isLoading()) {
+    <div class="loading-state" aria-live="polite">
+      <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+      <span>Loading titles...</span>
+    </div>
+    } @else {
+    <ul class="item-list">
+      @for (title of titles(); track title.id) {
+      <li class="item-list-item">{{ title.name }}</li>
+      }
+    </ul>
+
+    <div class="form-actions">
+      <button mat-button type="button" routerLink="/">Back</button>
+      <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', 'new']">
+        New title
+      </button>
+    </div>
+    }
+  </section>
+</main>
