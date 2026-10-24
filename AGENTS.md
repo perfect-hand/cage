@@ -12,6 +12,9 @@ will be lifted once a test strategy has been established.
 In `cage-editor`, prefer `@Service()` over `@Injectable()` for services (the default in our Angular
 version).
 
+Do not use inline templates (`template: ...`) in components. Always put the markup in a dedicated
+`.html` file and reference it via `templateUrl`.
+
 ## Angular styling
 
 - Put recurring patterns (page/section layout, headers, lists, form actions, inputs, button spacing) in shared partials under `src/styles/` and import them from `src/styles.scss`. Do not copy them into component styles.

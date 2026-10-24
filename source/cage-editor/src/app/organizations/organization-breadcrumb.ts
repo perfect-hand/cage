@@ -11,23 +11,7 @@ interface Organization {
 @Component({
   selector: 'organization-breadcrumb',
   imports: [RouterLink],
-  template: `
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <ol>
-        <li><a routerLink="/">Organizations</a></li>
-        <li>
-          @if (current()) {
-          <a [routerLink]="['/organizations', organizationId(), 'titles']">{{ organizationName() }}</a>
-          } @else {
-          <span aria-current="page">{{ organizationName() }}</span>
-          }
-        </li>
-        @if (current()) {
-        <li><span aria-current="page">{{ current() }}</span></li>
-        }
-      </ol>
-    </nav>
-  `,
+  templateUrl: './organization-breadcrumb.html',
   changeDetection: ChangeDetectionStrategy.Eager,
 })
 export class OrganizationBreadcrumb implements OnInit {
