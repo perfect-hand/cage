@@ -11,6 +11,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { OrganizationBreadcrumb } from '../organizations/organization-breadcrumb';
 
 interface Title {
   id: string;
@@ -19,7 +20,7 @@ interface Title {
 
 @Component({
   selector: 'titles',
-  imports: [MatProgressSpinnerModule, MatButtonModule, RouterLink],
+  imports: [MatProgressSpinnerModule, MatButtonModule, RouterLink, OrganizationBreadcrumb],
   templateUrl: './titles.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './titles.scss',
