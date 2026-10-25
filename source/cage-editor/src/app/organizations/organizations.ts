@@ -10,11 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-
-interface Organization {
-  id: string;
-  name: string;
-}
+import { Organization, OrganizationService } from './organization-service';
 
 @Component({
   selector: 'organizations',
@@ -25,8 +21,9 @@ interface Organization {
 })
 export class Organizations implements OnInit {
   private readonly http = inject(HttpClient);
+  private readonly organizationService = inject(OrganizationService);
 
-  readonly organizations = signal<Organization[]>([]);
+  readonly organizations = this.organizationService.organizations;
   readonly isLoading = signal(false);
 
   ngOnInit(): void {
@@ -41,10 +38,10 @@ export class Organizations implements OnInit {
         this.http.get<Organization[]>('/organizations'),
       );
 
-      this.organizations.set(response ?? []);
+      this.organizationService.setOrganizations(response ?? []);
     } catch (error) {
       console.error('Failed to load organizations.', error);
-      this.organizations.set([]);
+      this.organizationService.setOrganizations([]);
     } finally {
       this.isLoading.set(false);
     }

@@ -31,6 +31,31 @@
     box-shadow: var(--mat-sys-level1);
 }
 
+.breadcrumb {
+    max-width: 48rem;
+    margin: 0 auto var(--app-space-md);
+    font: var(--mat-sys-body-medium);
+    color: var(--mat-sys-on-surface-variant);
+
+    ol {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--app-space-sm);
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    li:not(:last-child)::after {
+        content: '/';
+        margin-left: var(--app-space-sm);
+    }
+
+    [aria-current='page'] {
+        color: var(--mat-sys-on-surface);
+    }
+}
+
 .section-header h2 {
     margin: 0 0 var(--app-space-md);
     font: var(--mat-sys-headline-small);
