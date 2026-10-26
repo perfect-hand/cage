@@ -64,11 +64,6 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
     // GIVEN
     var organizationId = Guid.NewGuid().ToString();
     await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
-    for (var i = 0; i < TitleService.MaximumTitlesPerOrganization - 1; i++)
-    {
-      await testDao.AddTitle(organizationId, $"Title{i}");
-    }
-
     var dto = new TitleDto { Name = "New Title" };
 
     // WHEN

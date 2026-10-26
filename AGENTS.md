@@ -12,7 +12,7 @@ will be lifted once a test strategy has been established.
 In `cage-editor`, prefer `@Service()` over `@Injectable()` for services (the default in our Angular
 version).
 
-Reuse data cached in frontend services rather than issuing duplicate HTTP requests from create forms.
+Reuse data cached in frontend services rather than issuing duplicate HTTP requests.
 
 ## Angular styling
 
