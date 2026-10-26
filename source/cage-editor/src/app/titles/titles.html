@@ -19,9 +19,12 @@
 
     <div class="form-actions">
       <button mat-button type="button" routerLink="/">Back</button>
-      <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', 'new']">
+      <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', 'new']" [disabled]="titles().length >= 100">
         New title
       </button>
+      @if (titles().length >= 100) {
+      <span>Maximum of 100 titles reached.</span>
+      }
     </div>
     }
   </section>

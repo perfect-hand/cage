@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Cage.Backend.Editor.Tests;
 
+[Collection("Endpoint tests")]
 public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicationFactory<Program>>
 {
   public OrganizationEndpointTests(WebApplicationFactory<Program> factory) : base(factory)
@@ -65,6 +66,11 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
   public async Task CreatesOrganization()
   {
     // GIVEN
+    for (var i = 0; i < 9; i++)
+    {
+      await testDao.AddUserToOrganization(TestAuthHandler.TestUser, Guid.NewGuid().ToString(), $"Organization{i}");
+    }
+
     var dto = new OrganizationDto
     {
       Name = "New Organization"
@@ -85,6 +91,40 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
     var organizations = await httpClient.GetFromJsonAsync<List<OrganizationDto>>("/organizations");
     Assert.NotNull(organizations);
     Assert.Contains(organizations, o => o.Id == createdOrganization.Id);
+  }
+
+  [Fact]
+  public async Task CreatesOrganizationWithNameAtMaximumLength()
+  {
+    var dto = new OrganizationDto { Name = new string('a', 50) };
+
+    var response = await httpClient.PostAsJsonAsync("/organizations", dto);
+
+    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToCreateOrganizationWithNameOverMaximumLength()
+  {
+    var dto = new OrganizationDto { Name = new string('a', 51) };
+
+    var response = await httpClient.PostAsJsonAsync("/organizations", dto);
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToCreateMoreThanMaximumOrganizations()
+  {
+    for (var i = 0; i < 10; i++)
+    {
+      await testDao.AddUserToOrganization(TestAuthHandler.TestUser, Guid.NewGuid().ToString(), $"Organization{i}");
+    }
+
+    var dto = new OrganizationDto { Name = "Another organization" };
+    var response = await httpClient.PostAsJsonAsync("/organizations", dto);
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
   }
 
   [Fact]

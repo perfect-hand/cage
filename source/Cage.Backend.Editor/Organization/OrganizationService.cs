@@ -5,6 +5,9 @@ namespace Cage.Backend.Editor.Organization;
 
 public class OrganizationService
 {
+  private const int MaximumOrganizationsPerUser = 10;
+  private const int MaximumOrganizationNameLength = 50;
+
   private readonly OrganizationMapper mapper;
   private readonly OrganizationDao dao;
   private readonly ILogger<OrganizationService> logger;
@@ -21,6 +24,16 @@ public class OrganizationService
     if (string.IsNullOrEmpty(user))
     {
       throw new UnauthorizedAccessException();
+    }
+
+    if (dto.Name.Length > MaximumOrganizationNameLength)
+    {
+      throw new ArgumentException($"Organization names cannot exceed {MaximumOrganizationNameLength} characters.", nameof(dto));
+    }
+
+    if ((await dao.QueryByUser(user)).Count >= MaximumOrganizationsPerUser)
+    {
+      throw new ArgumentException($"Users cannot create more than {MaximumOrganizationsPerUser} organizations.", nameof(dto));
     }
 
     var organization = mapper.ToEntity(dto);

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Cage.Backend.Editor.Tests;
 
+[Collection("Endpoint tests")]
 public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFactory<Program>>
 {
   public TitleEndpointTests(WebApplicationFactory<Program> factory) : base(factory)
@@ -64,6 +65,19 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
     // GIVEN
     var organizationId = Guid.NewGuid().ToString();
     await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    var tableServiceClient = new TableServiceClient(azuriteContainer.GetConnectionString());
+    tableServiceClient.CreateTableIfNotExists(TitleDao.TitlesTableName);
+    var titlesTableClient = new TableClient(azuriteContainer.GetConnectionString(), TitleDao.TitlesTableName);
+    for (var i = 0; i < 99; i++)
+    {
+      await titlesTableClient.AddEntityAsync(new TitleEntity
+      {
+        PartitionKey = organizationId,
+        RowKey = Guid.NewGuid().ToString(),
+        Name = $"Title{i}"
+      });
+    }
+
     var dto = new TitleDto { Name = "New Title" };
 
     // WHEN
@@ -81,6 +95,55 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
     var titles = await httpClient.GetFromJsonAsync<List<TitleDto>>($"/organizations/{organizationId}/titles");
     Assert.NotNull(titles);
     Assert.Contains(titles, t => t.Id == createdTitle.Id);
+  }
+
+  [Fact]
+  public async Task CreatesTitleWithNameAtMaximumLength()
+  {
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    var dto = new TitleDto { Name = new string('a', 50) };
+
+    var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles", dto);
+
+    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToCreateTitleWithNameOverMaximumLength()
+  {
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    var dto = new TitleDto { Name = new string('a', 51) };
+
+    var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles", dto);
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToCreateMoreThanMaximumTitlesInOrganization()
+  {
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    var tableServiceClient = new TableServiceClient(azuriteContainer.GetConnectionString());
+    tableServiceClient.CreateTableIfNotExists(TitleDao.TitlesTableName);
+    var titlesTableClient = new TableClient(azuriteContainer.GetConnectionString(), TitleDao.TitlesTableName);
+
+    for (var i = 0; i < 100; i++)
+    {
+      await titlesTableClient.AddEntityAsync(new TitleEntity
+      {
+        PartitionKey = organizationId,
+        RowKey = Guid.NewGuid().ToString(),
+        Name = $"Title{i}"
+      });
+    }
+
+    var dto = new TitleDto { Name = "Another title" };
+    var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles", dto);
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
   }
 
   [Fact]

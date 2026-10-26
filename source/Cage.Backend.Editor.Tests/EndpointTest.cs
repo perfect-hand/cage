@@ -7,6 +7,11 @@ using Testcontainers.Azurite;
 
 namespace Cage.Backend.Editor.Tests;
 
+[CollectionDefinition("Endpoint tests", DisableParallelization = true)]
+public class EndpointTestCollection
+{
+}
+
 public abstract class EndpointTest : IAsyncLifetime
 {
   protected readonly HttpClient unauthorizedHttpClient;
