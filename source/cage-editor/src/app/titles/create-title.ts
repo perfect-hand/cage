@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { OrganizationBreadcrumb } from '../organizations/organization-breadcrumb';
+import { TitlesService } from './titles-service';
 
 @Component({
   selector: 'create-title',
@@ -16,6 +17,7 @@ import { OrganizationBreadcrumb } from '../organizations/organization-breadcrumb
 export class CreateTitle {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly titlesService = inject(TitlesService);
 
   readonly organizationId = input.required<string>();
   readonly isSubmitting = signal(false);
@@ -35,12 +37,7 @@ export class CreateTitle {
     this.isSubmitting.set(true);
 
     try {
-      const titles = await firstValueFrom(
-        this.http.get<{ id: string; name: string }[]>(
-          `/organizations/${this.organizationId()}/titles`,
-        ),
-      );
-      if (titles.length >= 100) {
+      if (this.titlesService.getTitles(this.organizationId()).length >= 100) {
         this.atLimit.set(true);
         return;
       }

@@ -12,6 +12,7 @@ public class EndpointTestCollection
 {
 }
 
+[Collection("Endpoint tests")]
 public abstract class EndpointTest : IAsyncLifetime
 {
   protected readonly HttpClient unauthorizedHttpClient;

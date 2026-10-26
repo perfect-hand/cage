@@ -1,22 +1,11 @@
 import { HttpClient } from '@angular/common/http';
-import {
-  ChangeDetectionStrategy,
-  Component,
-  inject,
-  input,
-  OnInit,
-  signal,
-} from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { OrganizationBreadcrumb } from '../organizations/organization-breadcrumb';
-
-interface Title {
-  id: string;
-  name: string;
-}
+import { Title, TitlesService } from './titles-service';
 
 @Component({
   selector: 'titles',
@@ -27,6 +16,7 @@ interface Title {
 })
 export class Titles implements OnInit {
   private readonly http = inject(HttpClient);
+  private readonly titlesService = inject(TitlesService);
 
   readonly organizationId = input.required<string>();
   readonly titles = signal<Title[]>([]);
@@ -45,9 +35,11 @@ export class Titles implements OnInit {
       );
 
       this.titles.set(response ?? []);
+      this.titlesService.setTitles(this.organizationId(), response ?? []);
     } catch (error) {
       console.error('Failed to load titles.', error);
       this.titles.set([]);
+      this.titlesService.setTitles(this.organizationId(), []);
     } finally {
       this.isLoading.set(false);
     }

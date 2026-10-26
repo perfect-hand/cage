@@ -5,8 +5,8 @@ namespace Cage.Backend.Editor.Organization;
 
 public class OrganizationService
 {
-  private const int MaximumOrganizationsPerUser = 10;
-  private const int MaximumOrganizationNameLength = 50;
+  public const int MaximumOrganizationsPerUser = 10;
+  public const int MaximumOrganizationNameLength = 50;
 
   private readonly OrganizationMapper mapper;
   private readonly OrganizationDao dao;

@@ -4,8 +4,8 @@ namespace Cage.Backend.Editor.Title;
 
 public class TitleService
 {
-  private const int MaximumTitlesPerOrganization = 100;
-  private const int MaximumTitleNameLength = 50;
+  public const int MaximumTitlesPerOrganization = 100;
+  public const int MaximumTitleNameLength = 50;
 
   private readonly TitleMapper mapper;
   private readonly TitleDao titleDao;

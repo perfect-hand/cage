@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Cage.Backend.Editor.Tests;
 
-[Collection("Endpoint tests")]
 public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicationFactory<Program>>
 {
   public OrganizationEndpointTests(WebApplicationFactory<Program> factory) : base(factory)
@@ -66,11 +65,6 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
   public async Task CreatesOrganization()
   {
     // GIVEN
-    for (var i = 0; i < 9; i++)
-    {
-      await testDao.AddUserToOrganization(TestAuthHandler.TestUser, Guid.NewGuid().ToString(), $"Organization{i}");
-    }
-
     var dto = new OrganizationDto
     {
       Name = "New Organization"
@@ -96,7 +90,7 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
   [Fact]
   public async Task CreatesOrganizationWithNameAtMaximumLength()
   {
-    var dto = new OrganizationDto { Name = new string('a', 50) };
+    var dto = new OrganizationDto { Name = new string('a', OrganizationService.MaximumOrganizationNameLength) };
 
     var response = await httpClient.PostAsJsonAsync("/organizations", dto);
 
@@ -106,7 +100,7 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
   [Fact]
   public async Task FailsToCreateOrganizationWithNameOverMaximumLength()
   {
-    var dto = new OrganizationDto { Name = new string('a', 51) };
+    var dto = new OrganizationDto { Name = new string('a', OrganizationService.MaximumOrganizationNameLength + 1) };
 
     var response = await httpClient.PostAsJsonAsync("/organizations", dto);
 
@@ -116,7 +110,7 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
   [Fact]
   public async Task FailsToCreateMoreThanMaximumOrganizations()
   {
-    for (var i = 0; i < 10; i++)
+    for (var i = 0; i < OrganizationService.MaximumOrganizationsPerUser; i++)
     {
       await testDao.AddUserToOrganization(TestAuthHandler.TestUser, Guid.NewGuid().ToString(), $"Organization{i}");
     }

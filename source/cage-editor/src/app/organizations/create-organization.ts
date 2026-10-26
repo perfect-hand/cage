@@ -4,6 +4,7 @@ import { form, FormField, maxLength, pattern, required } from '@angular/forms/si
 import { MatButtonModule } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { OrganizationService } from './organization-service';
 
 @Component({
   selector: 'create-organization',
@@ -15,6 +16,7 @@ import { firstValueFrom } from 'rxjs';
 export class CreateOrganization {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly organizationService = inject(OrganizationService);
 
   readonly isSubmitting = signal(false);
   readonly atLimit = signal(false);
@@ -33,10 +35,7 @@ export class CreateOrganization {
     this.isSubmitting.set(true);
 
     try {
-      const organizations = await firstValueFrom(
-        this.http.get<{ id: string; name: string }[]>('/organizations'),
-      );
-      if (organizations.length >= 10) {
+      if (this.organizationService.organizations().length >= 10) {
         this.atLimit.set(true);
         return;
       }

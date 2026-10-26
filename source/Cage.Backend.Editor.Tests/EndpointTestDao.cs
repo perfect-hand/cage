@@ -1,5 +1,6 @@
 using Azure.Data.Tables;
 using Cage.Backend.Editor.Organization;
+using Cage.Backend.Editor.Title;
 
 namespace Cage.Backend.Editor.Tests;
 
@@ -32,6 +33,18 @@ public class EndpointTestDao
       RowKey = organizationId,
       OrganizationId = organizationId,
       OrganizationName = organizationName
+    });
+  }
+
+  public async Task AddTitle(string organizationId, string name)
+  {
+    tableServiceClient.CreateTableIfNotExists(TitleDao.TitlesTableName);
+    var titlesTableClient = new TableClient(connectionString, TitleDao.TitlesTableName);
+    await titlesTableClient.AddEntityAsync(new TitleEntity
+    {
+      PartitionKey = organizationId,
+      RowKey = Guid.NewGuid().ToString(),
+      Name = name
     });
   }
 }
