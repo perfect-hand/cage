@@ -88,6 +88,40 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
   }
 
   [Fact]
+  public async Task CreatesOrganizationWithNameAtMaximumLength()
+  {
+    var dto = new OrganizationDto { Name = new string('a', OrganizationService.MaximumOrganizationNameLength) };
+
+    var response = await httpClient.PostAsJsonAsync("/organizations", dto);
+
+    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToCreateOrganizationWithNameOverMaximumLength()
+  {
+    var dto = new OrganizationDto { Name = new string('a', OrganizationService.MaximumOrganizationNameLength + 1) };
+
+    var response = await httpClient.PostAsJsonAsync("/organizations", dto);
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToCreateMoreThanMaximumOrganizations()
+  {
+    for (var i = 0; i < OrganizationService.MaximumOrganizationsPerUser; i++)
+    {
+      await testDao.AddUserToOrganization(TestAuthHandler.TestUser, Guid.NewGuid().ToString(), $"Organization{i}");
+    }
+
+    var dto = new OrganizationDto { Name = "Another organization" };
+    var response = await httpClient.PostAsJsonAsync("/organizations", dto);
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
   public async Task FailsToCreateOrganizationsWithoutAuthentication()
   {
     // GIVEN

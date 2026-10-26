@@ -94,6 +94,10 @@ static async Task<IResult> CreateOrganization(OrganizationService organizationSe
   {
     return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
   }
+  catch (ArgumentException)
+  {
+    return TypedResults.BadRequest();
+  }
 }
 
 static async Task<IResult> GetAllTitles(TitleService titleService, string organizationId, HttpContext httpContext)
@@ -121,6 +125,10 @@ static async Task<IResult> CreateTitle(TitleService titleService, string organiz
   catch (UnauthorizedAccessException)
   {
     return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (ArgumentException)
+  {
+    return TypedResults.BadRequest();
   }
 }
 

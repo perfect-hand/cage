@@ -9,12 +9,15 @@
       <label for="title-name">Title name</label>
       <input id="title-name" class="text-input" type="text" [formField]="nameForm" autocomplete="off" />
       @if (nameForm().touched() && nameForm().invalid()) {
-      <p class="field-error" role="alert">Enter a title name.</p>
+      <p class="field-error" role="alert">Enter a title name of at most 50 characters.</p>
+      }
+      @if (atLimit()) {
+      <p class="field-error" role="alert">An organization can have at most 100 titles.</p>
       }
 
       <div class="form-actions">
         <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles']">Cancel</button>
-        <button mat-button type="submit" [disabled]="isSubmitting()">
+        <button mat-button type="submit" [disabled]="isSubmitting() || atLimit()">
           {{ isSubmitting() ? 'Creating...' : 'Create title' }}
         </button>
       </div>

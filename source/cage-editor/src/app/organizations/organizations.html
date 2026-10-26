@@ -19,9 +19,12 @@
     </ul>
 
     <div class="form-actions">
-      <button mat-button type="button" routerLink="/organizations/new">
+      <button mat-button type="button" routerLink="/organizations/new" [disabled]="organizations().length >= 10">
         New organization
       </button>
+      @if (organizations().length >= 10) {
+      <span>Maximum of 10 organizations reached.</span>
+      }
     </div>
     }
   </section>

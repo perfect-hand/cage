@@ -12,6 +12,8 @@ will be lifted once a test strategy has been established.
 In `cage-editor`, prefer `@Service()` over `@Injectable()` for services (the default in our Angular
 version).
 
+Reuse data cached in frontend services rather than issuing duplicate HTTP requests.
+
 ## Angular styling
 
 - Put recurring patterns (page/section layout, headers, lists, form actions, inputs, button spacing) in shared partials under `src/styles/` and import them from `src/styles.scss`. Do not copy them into component styles.
@@ -22,3 +24,5 @@ version).
 ## C# conventions
 
 Do not use the "Base" suffix for base class names (e.g. EndpointTest, not EndpointTestBase), as per Microsoft's [Framework Design Guidelines](https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/).
+
+In tests, use service constants for configured data limits instead of repeating their numeric values.

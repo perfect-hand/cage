@@ -84,6 +84,46 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
   }
 
   [Fact]
+  public async Task CreatesTitleWithNameAtMaximumLength()
+  {
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    var dto = new TitleDto { Name = new string('a', TitleService.MaximumTitleNameLength) };
+
+    var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles", dto);
+
+    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToCreateTitleWithNameOverMaximumLength()
+  {
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    var dto = new TitleDto { Name = new string('a', TitleService.MaximumTitleNameLength + 1) };
+
+    var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles", dto);
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToCreateMoreThanMaximumTitlesInOrganization()
+  {
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    for (var i = 0; i < TitleService.MaximumTitlesPerOrganization; i++)
+    {
+      await testDao.AddTitle(organizationId, $"Title{i}");
+    }
+
+    var dto = new TitleDto { Name = "Another title" };
+    var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles", dto);
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
   public async Task FailsToCreateTitleWithoutAuthentication()
   {
     var dto = new TitleDto { Name = "New Title" };
