@@ -11,12 +11,14 @@ public class OrganizationService
 
   private readonly OrganizationMapper mapper;
   private readonly OrganizationDao dao;
+  private readonly TitleDao titleDao;
   private readonly ILogger<OrganizationService> logger;
 
   public OrganizationService(ILogger<OrganizationService> logger)
   {
     mapper = new OrganizationMapper();
     dao = new OrganizationDao();
+    titleDao = new TitleDao();
     this.logger = logger;
   }
 
@@ -27,10 +29,7 @@ public class OrganizationService
       throw new UnauthorizedAccessException();
     }
 
-    if (dto.Name.Length > MaximumOrganizationNameLength)
-    {
-      throw new ArgumentException($"Organization names cannot exceed {MaximumOrganizationNameLength} characters.", nameof(dto));
-    }
+    ValidateName(dto);
 
     if ((await dao.QueryByUser(user)).Count >= MaximumOrganizationsPerUser)
     {
@@ -85,7 +84,7 @@ public class OrganizationService
     var deleted = await dao.DeleteOrganization(organizationId);
     if (deleted)
     {
-      await new TitleDao().DeleteByOrganization(organizationId);
+      await titleDao.DeleteByOrganization(organizationId);
       logger.LogInformation("Organization {} deleted.", organizationId);
     }
 

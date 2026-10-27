@@ -13,30 +13,14 @@
     } @else {
     <ul class="item-list">
       @for (title of titles(); track title.id) {
-    <li class="item-list-item">
-      @if (editingTitleId() === title.id) {
-      <form (submit)="updateTitle(title.id); $event.preventDefault()" novalidate>
-        <label [for]="'title-name-' + title.id">Title name</label>
-        <input [id]="'title-name-' + title.id" class="text-input" type="text" [formField]="nameForm" autocomplete="off" />
-        @if (nameForm().touched() && nameForm().invalid()) {
-        <p class="field-error" role="alert">Enter a title name of at most 50 characters.</p>
-        }
-        <div class="form-actions">
-          <button mat-button type="button" (click)="cancelEditing()">Cancel</button>
-          <button mat-button type="submit" [disabled]="isSaving()">
-            {{ isSaving() ? 'Saving...' : 'Save' }}
-          </button>
-        </div>
-      </form>
-      } @else {
-      {{ title.name }}
-      <div class="form-actions">
-        <button mat-button type="button" (click)="startEditing(title.id, title.name)">Edit</button>
-        <button mat-button type="button" (click)="deleteTitle(title.id, title.name)" [disabled]="isDeleting()">Delete</button>
-      </div>
+        <li class="item-list-item">
+          {{ title.name }}
+          <div class="form-actions">
+            <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', title.id, 'edit']">Edit</button>
+            <button mat-button type="button" (click)="deleteTitle(title.id, title.name)" [disabled]="isDeleting()">Delete</button>
+          </div>
+        </li>
       }
-    </li>
-    }
     </ul>
 
     <div class="form-actions">

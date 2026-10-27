@@ -6,7 +6,6 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
-import { form, FormField, maxLength, pattern, required } from '@angular/forms/signals';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
@@ -15,7 +14,7 @@ import { Organization, OrganizationService } from './organization-service';
 
 @Component({
   selector: 'organizations',
-  imports: [FormField, MatProgressSpinnerModule, MatButtonModule, RouterLink],
+  imports: [MatProgressSpinnerModule, MatButtonModule, RouterLink],
   templateUrl: './organizations.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './organizations.scss',
@@ -26,15 +25,7 @@ export class Organizations implements OnInit {
 
   readonly organizations = this.organizationService.organizations;
   readonly isLoading = signal(false);
-  readonly editingOrganizationId = signal<string | null>(null);
-  readonly isSaving = signal(false);
   readonly isDeleting = signal(false);
-  readonly name = signal('');
-  readonly nameForm = form(this.name, (path) => {
-    required(path, { message: 'Enter an organization name.' });
-    pattern(path, /\S/, { message: 'Enter an organization name.' });
-    maxLength(path, 50, { message: 'Enter an organization name of at most 50 characters.' });
-  });
 
   ngOnInit(): void {
     void this.loadOrganizations();
@@ -54,40 +45,6 @@ export class Organizations implements OnInit {
       this.organizationService.setOrganizations([]);
     } finally {
       this.isLoading.set(false);
-    }
-  }
-
-  startEditing(organizationId: string, name: string): void {
-    this.name.set(name);
-    this.editingOrganizationId.set(organizationId);
-  }
-
-  cancelEditing(): void {
-    this.editingOrganizationId.set(null);
-  }
-
-  async updateOrganization(organizationId: string): Promise<void> {
-    if (this.nameForm().invalid() || this.isSaving()) {
-      return;
-    }
-
-    this.isSaving.set(true);
-
-    try {
-      const name = this.name().trim();
-      await firstValueFrom(
-        this.http.put(`/organizations/${organizationId}`, { name }),
-      );
-      this.organizationService.setOrganizations(
-        this.organizations().map((organization) =>
-          organization.id === organizationId ? { ...organization, name } : organization,
-        ),
-      );
-      this.editingOrganizationId.set(null);
-    } catch (error) {
-      console.error('Failed to update organization.', error);
-    } finally {
-      this.isSaving.set(false);
     }
   }
 

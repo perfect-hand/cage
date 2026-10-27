@@ -143,14 +143,17 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
   [Fact]
   public async Task UpdatesTitleName()
   {
+    // GIVEN
     var organizationId = Guid.NewGuid().ToString();
     await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
     var titleId = await testDao.AddTitle(organizationId, "Old name");
 
+    // WHEN
     var response = await httpClient.PutAsJsonAsync(
         $"/organizations/{organizationId}/titles/{titleId}",
         new TitleDto { Name = "New name" });
 
+    // THEN
     Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     var titles = await httpClient.GetFromJsonAsync<List<TitleDto>>($"/organizations/{organizationId}/titles");
     Assert.NotNull(titles);
@@ -161,26 +164,32 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
   [Fact]
   public async Task FailsToUpdateTitleNameOverMaximumLength()
   {
+    // GIVEN
     var organizationId = Guid.NewGuid().ToString();
     await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
     var titleId = await testDao.AddTitle(organizationId, "Title");
 
+    // WHEN
     var response = await httpClient.PutAsJsonAsync(
         $"/organizations/{organizationId}/titles/{titleId}",
         new TitleDto { Name = new string('a', TitleService.MaximumTitleNameLength + 1) });
 
+    // THEN
     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
   }
 
   [Fact]
   public async Task DeletesTitle()
   {
+    // GIVEN
     var organizationId = Guid.NewGuid().ToString();
     await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
     var titleId = await testDao.AddTitle(organizationId, "Title");
 
+    // WHEN
     var response = await httpClient.DeleteAsync($"/organizations/{organizationId}/titles/{titleId}");
 
+    // THEN
     Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     var titles = await httpClient.GetFromJsonAsync<List<TitleDto>>($"/organizations/{organizationId}/titles");
     Assert.NotNull(titles);
@@ -190,8 +199,15 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
   [Fact]
   public async Task FailsToDeleteTitleInForeignOrganization()
   {
+    // GIVEN
     var organizationId = Guid.NewGuid().ToString();
-    var response = await httpClient.DeleteAsync($"/organizations/{organizationId}/titles/{Guid.NewGuid()}");
+    var titleId = await testDao.AddTitle(organizationId, "Title");
+
+    // WHEN
+    var response = await httpClient.DeleteAsync($"/organizations/{organizationId}/titles/{titleId}");
+
+    // THEN
     Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    Assert.Single(testDao.QueryTitlesByOrganization(organizationId));
   }
 }

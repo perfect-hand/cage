@@ -49,4 +49,10 @@ public class EndpointTestDao
     await titlesTableClient.AddEntityAsync(title);
     return title.RowKey;
   }
+
+  public List<TitleEntity> QueryTitlesByOrganization(string organizationId)
+  {
+    var titlesTableClient = new TableClient(connectionString, TitleDao.TitlesTableName);
+    return titlesTableClient.Query<TitleEntity>(entity => entity.PartitionKey == organizationId).ToList();
+  }
 }

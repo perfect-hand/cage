@@ -1,0 +1,35 @@
+<main class="content-panel">
+  <organization-breadcrumb [organizationId]="organizationId()" current="Edit title" />
+  <section class="content-section">
+    <div class="section-header">
+      <h2>Edit title</h2>
+    </div>
+
+    @if (isLoading()) {
+    <div class="loading-state" aria-live="polite">
+      <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+      <span>Loading title...</span>
+    </div>
+    } @else if (notFound()) {
+    <p class="field-error" role="alert">Title not found.</p>
+    <div class="form-actions">
+      <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles']">Back</button>
+    </div>
+    } @else {
+    <form (submit)="updateTitle(); $event.preventDefault()" novalidate>
+      <label for="title-name">Title name</label>
+      <input id="title-name" class="text-input" type="text" [formField]="nameForm" autocomplete="off" />
+      @if (nameForm().touched() && nameForm().invalid()) {
+      <p class="field-error" role="alert">Enter a title name of at most 50 characters.</p>
+      }
+
+      <div class="form-actions">
+        <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles']">Cancel</button>
+        <button mat-button type="submit" [disabled]="isSubmitting()">
+          {{ isSubmitting() ? 'Saving...' : 'Save title' }}
+        </button>
+      </div>
+    </form>
+    }
+  </section>
+</main>
