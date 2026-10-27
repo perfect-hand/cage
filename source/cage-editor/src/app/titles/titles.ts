@@ -21,6 +21,7 @@ export class Titles implements OnInit {
   readonly organizationId = input.required<string>();
   readonly titles = signal<Title[]>([]);
   readonly isLoading = signal(false);
+  readonly isDeleting = signal(false);
 
   ngOnInit(): void {
     void this.loadTitles();
@@ -42,6 +43,27 @@ export class Titles implements OnInit {
       this.titlesService.setTitles(this.organizationId(), []);
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  async deleteTitle(titleId: string, name: string): Promise<void> {
+    if (this.isDeleting() || !window.confirm(`Delete "${name}"?`)) {
+      return;
+    }
+
+    this.isDeleting.set(true);
+
+    try {
+      await firstValueFrom(
+        this.http.delete(`/organizations/${this.organizationId()}/titles/${titleId}`),
+      );
+      const titles = this.titles().filter((title) => title.id !== titleId);
+      this.titles.set(titles);
+      this.titlesService.setTitles(this.organizationId(), titles);
+    } catch (error) {
+      console.error('Failed to delete title.', error);
+    } finally {
+      this.isDeleting.set(false);
     }
   }
 }

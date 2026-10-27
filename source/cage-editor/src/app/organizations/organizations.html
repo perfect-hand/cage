@@ -11,11 +11,15 @@
     </div>
     } @else {
     <ul class="item-list">
-      @for (organization of organizations(); track organization.name) {
-      <li class="item-list-item">
-        <a [routerLink]="['/organizations', organization.id, 'titles']">{{ organization.name }}</a>
-      </li>
-      }
+    @for (organization of organizations(); track organization.id) {
+    <li class="item-list-item">
+      <a [routerLink]="['/organizations', organization.id, 'titles']">{{ organization.name }}</a>
+      <div class="form-actions">
+        <button mat-button type="button" [routerLink]="['/organizations', organization.id, 'edit']">Edit</button>
+        <button mat-button type="button" (click)="deleteOrganization(organization.id, organization.name)" [disabled]="isDeleting()">Delete</button>
+      </div>
+    </li>
+    }
     </ul>
 
     <div class="form-actions">

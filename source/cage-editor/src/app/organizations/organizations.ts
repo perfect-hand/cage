@@ -25,6 +25,7 @@ export class Organizations implements OnInit {
 
   readonly organizations = this.organizationService.organizations;
   readonly isLoading = signal(false);
+  readonly isDeleting = signal(false);
 
   ngOnInit(): void {
     void this.loadOrganizations();
@@ -44,6 +45,25 @@ export class Organizations implements OnInit {
       this.organizationService.setOrganizations([]);
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  async deleteOrganization(organizationId: string, name: string): Promise<void> {
+    if (this.isDeleting() || !window.confirm(`Delete "${name}" and all its titles?`)) {
+      return;
+    }
+
+    this.isDeleting.set(true);
+
+    try {
+      await firstValueFrom(this.http.delete(`/organizations/${organizationId}`));
+      this.organizationService.setOrganizations(
+        this.organizations().filter((organization) => organization.id !== organizationId),
+      );
+    } catch (error) {
+      console.error('Failed to delete organization.', error);
+    } finally {
+      this.isDeleting.set(false);
     }
   }
 }

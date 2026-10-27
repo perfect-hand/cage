@@ -1,5 +1,6 @@
 using Azure.Data.Tables;
 using Azure.Identity;
+using Cage.Backend.Editor.Title;
 
 namespace Cage.Backend.Editor.Organization;
 
@@ -10,12 +11,14 @@ public class OrganizationService
 
   private readonly OrganizationMapper mapper;
   private readonly OrganizationDao dao;
+  private readonly TitleDao titleDao;
   private readonly ILogger<OrganizationService> logger;
 
   public OrganizationService(ILogger<OrganizationService> logger)
   {
     mapper = new OrganizationMapper();
     dao = new OrganizationDao();
+    titleDao = new TitleDao();
     this.logger = logger;
   }
 
@@ -26,10 +29,7 @@ public class OrganizationService
       throw new UnauthorizedAccessException();
     }
 
-    if (dto.Name.Length > MaximumOrganizationNameLength)
-    {
-      throw new ArgumentException($"Organization names cannot exceed {MaximumOrganizationNameLength} characters.", nameof(dto));
-    }
+    ValidateName(dto);
 
     if ((await dao.QueryByUser(user)).Count >= MaximumOrganizationsPerUser)
     {
@@ -69,5 +69,46 @@ public class OrganizationService
 
     var usersInOrganizations = await dao.QueryByUser(user);
     return usersInOrganizations.Select(mapper.ToDto).ToList();
+  }
+
+  public async Task<bool> Update(string organizationId, OrganizationDto dto, string? user)
+  {
+    await EnsureMembership(organizationId, user);
+    ValidateName(dto);
+    return await dao.UpdateOrganizationName(organizationId, dto.Name);
+  }
+
+  public async Task<bool> Delete(string organizationId, string? user)
+  {
+    await EnsureMembership(organizationId, user);
+    var deleted = await dao.DeleteOrganization(organizationId);
+    if (deleted)
+    {
+      await titleDao.DeleteByOrganization(organizationId);
+      logger.LogInformation("Organization {} deleted.", organizationId);
+    }
+
+    return deleted;
+  }
+
+  private static void ValidateName(OrganizationDto dto)
+  {
+    if (dto.Name.Length > MaximumOrganizationNameLength)
+    {
+      throw new ArgumentException($"Organization names cannot exceed {MaximumOrganizationNameLength} characters.", nameof(dto));
+    }
+  }
+
+  private async Task EnsureMembership(string organizationId, string? user)
+  {
+    if (string.IsNullOrEmpty(user))
+    {
+      throw new UnauthorizedAccessException();
+    }
+
+    if (!await dao.IsUserInOrganization(organizationId, user))
+    {
+      throw new UnauthorizedAccessException();
+    }
   }
 }

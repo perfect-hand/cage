@@ -13,7 +13,13 @@
     } @else {
     <ul class="item-list">
       @for (title of titles(); track title.id) {
-      <li class="item-list-item">{{ title.name }}</li>
+        <li class="item-list-item">
+          {{ title.name }}
+          <div class="form-actions">
+            <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', title.id, 'edit']">Edit</button>
+            <button mat-button type="button" (click)="deleteTitle(title.id, title.name)" [disabled]="isDeleting()">Delete</button>
+          </div>
+        </li>
       }
     </ul>
 

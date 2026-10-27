@@ -26,3 +26,7 @@ Reuse data cached in frontend services rather than issuing duplicate HTTP reques
 Do not use the "Base" suffix for base class names (e.g. EndpointTest, not EndpointTestBase), as per Microsoft's [Framework Design Guidelines](https://learn.microsoft.com/en-us/dotnet/standard/design-guidelines/).
 
 In tests, use service constants for configured data limits instead of repeating their numeric values.
+
+Structure backend tests with `GIVEN`, `WHEN`, and `THEN` comments.
+
+In endpoint tests, use `EndpointTestDao` for all `GIVEN` setup and `THEN` verification; use HTTP requests only for the `WHEN` action being tested.

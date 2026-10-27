@@ -1,0 +1,34 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>Edit organization</h2>
+    </div>
+
+    @if (isLoading()) {
+    <div class="loading-state" aria-live="polite">
+      <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+      <span>Loading organization...</span>
+    </div>
+    } @else if (notFound()) {
+    <p class="field-error" role="alert">Organization not found.</p>
+    <div class="form-actions">
+      <button mat-button type="button" routerLink="/">Back</button>
+    </div>
+    } @else {
+    <form (submit)="updateOrganization(); $event.preventDefault()" novalidate>
+      <label for="organization-name">Organization name</label>
+      <input id="organization-name" class="text-input" type="text" [formField]="nameForm" autocomplete="organization" />
+      @if (nameForm().touched() && nameForm().invalid()) {
+      <p class="field-error" role="alert">Enter an organization name of at most 50 characters.</p>
+      }
+
+      <div class="form-actions">
+        <button mat-button type="button" routerLink="/">Cancel</button>
+        <button mat-button type="submit" [disabled]="isSubmitting()">
+          {{ isSubmitting() ? 'Saving...' : 'Save organization' }}
+        </button>
+      </div>
+    </form>
+    }
+  </section>
+</main>

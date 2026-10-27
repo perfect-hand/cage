@@ -58,9 +58,13 @@ info.MapGet("/", GetInfo);
 var organizations = app.MapGroup("/organizations").RequireAuthorization();
 organizations.MapGet("/", GetAllOrganizations);
 organizations.MapPost("/", CreateOrganization);
+organizations.MapPut("/{organizationId}", UpdateOrganization);
+organizations.MapDelete("/{organizationId}", DeleteOrganization);
 
 organizations.MapGet("/{organizationId}/titles", GetAllTitles);
 organizations.MapPost("/{organizationId}/titles", CreateTitle);
+organizations.MapPut("/{organizationId}/titles/{titleId}", UpdateTitle);
+organizations.MapDelete("/{organizationId}/titles/{titleId}", DeleteTitle);
 
 static async Task<IResult> GetInfo(InfoService infoService)
 {
@@ -100,6 +104,40 @@ static async Task<IResult> CreateOrganization(OrganizationService organizationSe
   }
 }
 
+static async Task<IResult> UpdateOrganization(OrganizationService organizationService, string organizationId, OrganizationDto dto, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await organizationService.Update(organizationId, dto, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (ArgumentException)
+  {
+    return TypedResults.BadRequest();
+  }
+}
+
+static async Task<IResult> DeleteOrganization(OrganizationService organizationService, string organizationId, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await organizationService.Delete(organizationId, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+}
+
 static async Task<IResult> GetAllTitles(TitleService titleService, string organizationId, HttpContext httpContext)
 {
   var user = GetUser(httpContext);
@@ -129,6 +167,40 @@ static async Task<IResult> CreateTitle(TitleService titleService, string organiz
   catch (ArgumentException)
   {
     return TypedResults.BadRequest();
+  }
+}
+
+static async Task<IResult> UpdateTitle(TitleService titleService, string organizationId, string titleId, TitleDto dto, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await titleService.Update(organizationId, titleId, dto, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (ArgumentException)
+  {
+    return TypedResults.BadRequest();
+  }
+}
+
+static async Task<IResult> DeleteTitle(TitleService titleService, string organizationId, string titleId, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await titleService.Delete(organizationId, titleId, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
   }
 }
 
