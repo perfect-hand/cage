@@ -36,15 +36,17 @@ public class EndpointTestDao
     });
   }
 
-  public async Task AddTitle(string organizationId, string name)
+  public async Task<string> AddTitle(string organizationId, string name)
   {
     tableServiceClient.CreateTableIfNotExists(TitleDao.TitlesTableName);
     var titlesTableClient = new TableClient(connectionString, TitleDao.TitlesTableName);
-    await titlesTableClient.AddEntityAsync(new TitleEntity
+    var title = new TitleEntity
     {
       PartitionKey = organizationId,
       RowKey = Guid.NewGuid().ToString(),
       Name = name
-    });
+    };
+    await titlesTableClient.AddEntityAsync(title);
+    return title.RowKey;
   }
 }

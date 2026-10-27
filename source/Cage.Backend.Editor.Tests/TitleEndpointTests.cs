@@ -139,4 +139,59 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
     var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles", dto);
     Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
   }
+
+  [Fact]
+  public async Task UpdatesTitleName()
+  {
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    var titleId = await testDao.AddTitle(organizationId, "Old name");
+
+    var response = await httpClient.PutAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}",
+        new TitleDto { Name = "New name" });
+
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    var titles = await httpClient.GetFromJsonAsync<List<TitleDto>>($"/organizations/{organizationId}/titles");
+    Assert.NotNull(titles);
+    var updatedTitle = Assert.Single(titles);
+    Assert.Equal("New name", updatedTitle.Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateTitleNameOverMaximumLength()
+  {
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    var titleId = await testDao.AddTitle(organizationId, "Title");
+
+    var response = await httpClient.PutAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}",
+        new TitleDto { Name = new string('a', TitleService.MaximumTitleNameLength + 1) });
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task DeletesTitle()
+  {
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    var titleId = await testDao.AddTitle(organizationId, "Title");
+
+    var response = await httpClient.DeleteAsync($"/organizations/{organizationId}/titles/{titleId}");
+
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    var titles = await httpClient.GetFromJsonAsync<List<TitleDto>>($"/organizations/{organizationId}/titles");
+    Assert.NotNull(titles);
+    Assert.Empty(titles);
+  }
+
+  [Fact]
+  public async Task FailsToDeleteTitleInForeignOrganization()
+  {
+    var organizationId = Guid.NewGuid().ToString();
+    var response = await httpClient.DeleteAsync($"/organizations/{organizationId}/titles/{Guid.NewGuid()}");
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+  }
 }

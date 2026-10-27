@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using Azure.Data.Tables;
 using Cage.Backend.Editor.Organization;
+using Cage.Backend.Editor.Title;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Cage.Backend.Editor.Tests;
@@ -135,5 +136,85 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
 
     // THEN
     Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task UpdatesOrganizationName()
+  {
+    var organization = new OrganizationEntity
+    {
+      PartitionKey = "Organization",
+      RowKey = Guid.NewGuid().ToString(),
+      Name = "Old name"
+    };
+    await new OrganizationDao().AddOrganization(organization);
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organization.RowKey, organization.Name);
+
+    var response = await httpClient.PutAsJsonAsync($"/organizations/{organization.RowKey}", new OrganizationDto { Name = "New name" });
+
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    var organizations = await httpClient.GetFromJsonAsync<List<OrganizationDto>>("/organizations");
+    Assert.NotNull(organizations);
+    var updatedOrganization = Assert.Single(organizations);
+    Assert.Equal("New name", updatedOrganization.Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateOrganizationNameOverMaximumLength()
+  {
+    var organization = new OrganizationEntity
+    {
+      PartitionKey = "Organization",
+      RowKey = Guid.NewGuid().ToString(),
+      Name = "Organization"
+    };
+    await new OrganizationDao().AddOrganization(organization);
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organization.RowKey, organization.Name);
+
+    var response = await httpClient.PutAsJsonAsync(
+        $"/organizations/{organization.RowKey}",
+        new OrganizationDto { Name = new string('a', OrganizationService.MaximumOrganizationNameLength + 1) });
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task DeletesOrganizationAndItsTitles()
+  {
+    var organization = new OrganizationEntity
+    {
+      PartitionKey = "Organization",
+      RowKey = Guid.NewGuid().ToString(),
+      Name = "Organization"
+    };
+    await new OrganizationDao().AddOrganization(organization);
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organization.RowKey, organization.Name);
+    await testDao.AddTitle(organization.RowKey, "Title");
+
+    var response = await httpClient.DeleteAsync($"/organizations/{organization.RowKey}");
+
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    var organizations = await httpClient.GetFromJsonAsync<List<OrganizationDto>>("/organizations");
+    Assert.NotNull(organizations);
+    Assert.Empty(organizations);
+
+    var titlesTableClient = new TableClient(azuriteContainer.GetConnectionString(), TitleDao.TitlesTableName);
+    Assert.Empty(titlesTableClient.Query<TitleEntity>(entity => entity.PartitionKey == organization.RowKey));
+  }
+
+  [Fact]
+  public async Task FailsToDeleteForeignOrganization()
+  {
+    var organization = new OrganizationEntity
+    {
+      PartitionKey = "Organization",
+      RowKey = Guid.NewGuid().ToString(),
+      Name = "Organization"
+    };
+    await new OrganizationDao().AddOrganization(organization);
+
+    var response = await httpClient.DeleteAsync($"/organizations/{organization.RowKey}");
+
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
   }
 }

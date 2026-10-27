@@ -1,5 +1,6 @@
 using Azure.Data.Tables;
 using Azure.Identity;
+using Cage.Backend.Editor.Title;
 
 namespace Cage.Backend.Editor.Organization;
 
@@ -69,5 +70,46 @@ public class OrganizationService
 
     var usersInOrganizations = await dao.QueryByUser(user);
     return usersInOrganizations.Select(mapper.ToDto).ToList();
+  }
+
+  public async Task<bool> Update(string organizationId, OrganizationDto dto, string? user)
+  {
+    await EnsureMembership(organizationId, user);
+    ValidateName(dto);
+    return await dao.UpdateOrganizationName(organizationId, dto.Name);
+  }
+
+  public async Task<bool> Delete(string organizationId, string? user)
+  {
+    await EnsureMembership(organizationId, user);
+    var deleted = await dao.DeleteOrganization(organizationId);
+    if (deleted)
+    {
+      await new TitleDao().DeleteByOrganization(organizationId);
+      logger.LogInformation("Organization {} deleted.", organizationId);
+    }
+
+    return deleted;
+  }
+
+  private static void ValidateName(OrganizationDto dto)
+  {
+    if (dto.Name.Length > MaximumOrganizationNameLength)
+    {
+      throw new ArgumentException($"Organization names cannot exceed {MaximumOrganizationNameLength} characters.", nameof(dto));
+    }
+  }
+
+  private async Task EnsureMembership(string organizationId, string? user)
+  {
+    if (string.IsNullOrEmpty(user))
+    {
+      throw new UnauthorizedAccessException();
+    }
+
+    if (!await dao.IsUserInOrganization(organizationId, user))
+    {
+      throw new UnauthorizedAccessException();
+    }
   }
 }

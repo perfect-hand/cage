@@ -49,6 +49,24 @@ public class TitleService
     return titles.Select(mapper.ToDto).ToList();
   }
 
+  public async Task<bool> Update(string organizationId, string titleId, TitleDto dto, string? user)
+  {
+    await EnsureMembership(organizationId, user);
+
+    if (dto.Name.Length > MaximumTitleNameLength)
+    {
+      throw new ArgumentException($"Title names cannot exceed {MaximumTitleNameLength} characters.", nameof(dto));
+    }
+
+    return await titleDao.UpdateTitleName(organizationId, titleId, dto.Name);
+  }
+
+  public async Task<bool> Delete(string organizationId, string titleId, string? user)
+  {
+    await EnsureMembership(organizationId, user);
+    return await titleDao.DeleteTitle(organizationId, titleId);
+  }
+
   private async Task EnsureMembership(string organizationId, string? user)
   {
     if (string.IsNullOrEmpty(user))

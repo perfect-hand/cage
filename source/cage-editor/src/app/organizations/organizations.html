@@ -11,11 +11,31 @@
     </div>
     } @else {
     <ul class="item-list">
-      @for (organization of organizations(); track organization.name) {
+    @for (organization of organizations(); track organization.id) {
       <li class="item-list-item">
-        <a [routerLink]="['/organizations', organization.id, 'titles']">{{ organization.name }}</a>
-      </li>
+      @if (editingOrganizationId() === organization.id) {
+      <form (submit)="updateOrganization(organization.id); $event.preventDefault()" novalidate>
+        <label [for]="'organization-name-' + organization.id">Organization name</label>
+        <input [id]="'organization-name-' + organization.id" class="text-input" type="text" [formField]="nameForm" autocomplete="organization" />
+        @if (nameForm().touched() && nameForm().invalid()) {
+        <p class="field-error" role="alert">Enter an organization name of at most 50 characters.</p>
+        }
+        <div class="form-actions">
+          <button mat-button type="button" (click)="cancelEditing()">Cancel</button>
+          <button mat-button type="submit" [disabled]="isSaving()">
+            {{ isSaving() ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
+      </form>
+      } @else {
+      <a [routerLink]="['/organizations', organization.id, 'titles']">{{ organization.name }}</a>
+      <div class="form-actions">
+        <button mat-button type="button" (click)="startEditing(organization.id, organization.name)">Edit</button>
+        <button mat-button type="button" (click)="deleteOrganization(organization.id, organization.name)" [disabled]="isDeleting()">Delete</button>
+      </div>
       }
+    </li>
+    }
     </ul>
 
     <div class="form-actions">
