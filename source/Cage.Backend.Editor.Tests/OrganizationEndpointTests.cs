@@ -1,8 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
-using Azure.Data.Tables;
 using Cage.Backend.Editor.Organization;
-using Cage.Backend.Editor.Title;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace Cage.Backend.Editor.Tests;
@@ -17,27 +15,8 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
   public async Task GetsAllOrganizations()
   {
     // GIVEN
-    var tableServiceClient = new TableServiceClient(azuriteContainer.GetConnectionString());
-
-    tableServiceClient.CreateTableIfNotExists(OrganizationDao.OrganizationsTableName);
-
-    var organizationsTableClient = new TableClient(azuriteContainer.GetConnectionString(), OrganizationDao.OrganizationsTableName);
-
-    var organization1 = new OrganizationEntity
-    {
-      PartitionKey = "Organization",
-      RowKey = Guid.NewGuid().ToString(),
-      Name = "Organization1"
-    };
-    var organization2 = new OrganizationEntity
-    {
-      PartitionKey = "Organization",
-      RowKey = Guid.NewGuid().ToString(),
-      Name = "Organization2"
-    };
-
-    await organizationsTableClient.AddEntityAsync(organization1);
-    await organizationsTableClient.AddEntityAsync(organization2);
+    var organization1 = await testDao.AddOrganization("Organization1");
+    await testDao.AddOrganization("Organization2");
 
     await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organization1.RowKey, organization1.Name);
 
@@ -83,9 +62,10 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
     Assert.NotNull(createdOrganization.Id);
     Assert.Equal(dto.Name, createdOrganization.Name);
 
-    var organizations = await httpClient.GetFromJsonAsync<List<OrganizationDto>>("/organizations");
+    var organizations = testDao.QueryOrganizationsByUser(TestAuthHandler.TestUser);
     Assert.NotNull(organizations);
-    Assert.Contains(organizations, o => o.Id == createdOrganization.Id);
+    Assert.Contains(organizations, o => o.OrganizationId == createdOrganization.Id);
+    Assert.Equal(dto.Name, testDao.QueryOrganization(createdOrganization.Id!)?.Name);
   }
 
   [Fact]
@@ -142,13 +122,7 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
   public async Task UpdatesOrganizationName()
   {
     // GIVEN
-    var organization = new OrganizationEntity
-    {
-      PartitionKey = "Organization",
-      RowKey = Guid.NewGuid().ToString(),
-      Name = "Old name"
-    };
-    await new OrganizationDao().AddOrganization(organization);
+    var organization = await testDao.AddOrganization("Old name");
     await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organization.RowKey, organization.Name);
 
     // WHEN
@@ -156,23 +130,16 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
 
     // THEN
     Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-    var organizations = await httpClient.GetFromJsonAsync<List<OrganizationDto>>("/organizations");
-    Assert.NotNull(organizations);
-    var updatedOrganization = Assert.Single(organizations);
-    Assert.Equal("New name", updatedOrganization.Name);
+    Assert.Equal("New name", testDao.QueryOrganization(organization.RowKey)?.Name);
+    var userOrganizations = testDao.QueryOrganizationsByUser(TestAuthHandler.TestUser);
+    Assert.Equal("New name", Assert.Single(userOrganizations).OrganizationName);
   }
 
   [Fact]
   public async Task FailsToUpdateOrganizationNameOverMaximumLength()
   {
     // GIVEN
-    var organization = new OrganizationEntity
-    {
-      PartitionKey = "Organization",
-      RowKey = Guid.NewGuid().ToString(),
-      Name = "Organization"
-    };
-    await new OrganizationDao().AddOrganization(organization);
+    var organization = await testDao.AddOrganization("Organization");
     await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organization.RowKey, organization.Name);
 
     // WHEN
@@ -188,13 +155,7 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
   public async Task FailsToUpdateForeignOrganization()
   {
     // GIVEN
-    var organization = new OrganizationEntity
-    {
-      PartitionKey = "Organization",
-      RowKey = Guid.NewGuid().ToString(),
-      Name = "Organization"
-    };
-    await new OrganizationDao().AddOrganization(organization);
+    var organization = await testDao.AddOrganization("Organization");
 
     // WHEN
     var response = await httpClient.PutAsJsonAsync(
@@ -209,13 +170,7 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
   public async Task DeletesOrganizationAndItsTitles()
   {
     // GIVEN
-    var organization = new OrganizationEntity
-    {
-      PartitionKey = "Organization",
-      RowKey = Guid.NewGuid().ToString(),
-      Name = "Organization"
-    };
-    await new OrganizationDao().AddOrganization(organization);
+    var organization = await testDao.AddOrganization("Organization");
     await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organization.RowKey, organization.Name);
     await testDao.AddTitle(organization.RowKey, "Title");
 
@@ -224,10 +179,8 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
 
     // THEN
     Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-    var organizations = await httpClient.GetFromJsonAsync<List<OrganizationDto>>("/organizations");
-    Assert.NotNull(organizations);
-    Assert.Empty(organizations);
-
+    Assert.Null(testDao.QueryOrganization(organization.RowKey));
+    Assert.Empty(testDao.QueryOrganizationsByUser(TestAuthHandler.TestUser));
     Assert.Empty(testDao.QueryTitlesByOrganization(organization.RowKey));
   }
 
@@ -235,13 +188,7 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
   public async Task FailsToDeleteForeignOrganization()
   {
     // GIVEN
-    var organization = new OrganizationEntity
-    {
-      PartitionKey = "Organization",
-      RowKey = Guid.NewGuid().ToString(),
-      Name = "Organization"
-    };
-    await new OrganizationDao().AddOrganization(organization);
+    var organization = await testDao.AddOrganization("Organization");
 
     // WHEN
     var response = await httpClient.DeleteAsync($"/organizations/{organization.RowKey}");

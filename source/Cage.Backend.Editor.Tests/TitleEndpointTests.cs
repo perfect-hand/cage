@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Azure.Data.Tables;
 using Cage.Backend.Editor.Organization;
 using Cage.Backend.Editor.Title;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -20,14 +19,8 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
     var organizationId = Guid.NewGuid().ToString();
     await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
     var otherOrganizationId = Guid.NewGuid().ToString();
-
-    var tableServiceClient = new TableServiceClient(azuriteContainer.GetConnectionString());
-    tableServiceClient.CreateTableIfNotExists(TitleDao.TitlesTableName);
-    var titlesTableClient = new TableClient(azuriteContainer.GetConnectionString(), TitleDao.TitlesTableName);
-
-    var title = new TitleEntity { PartitionKey = organizationId, RowKey = Guid.NewGuid().ToString(), Name = "Title1" };
-    await titlesTableClient.AddEntityAsync(title);
-    await titlesTableClient.AddEntityAsync(new TitleEntity { PartitionKey = otherOrganizationId, RowKey = Guid.NewGuid().ToString(), Name = "Other" });
+    var titleId = await testDao.AddTitle(organizationId, "Title1");
+    await testDao.AddTitle(otherOrganizationId, "Other");
 
     // WHEN
     var response = await httpClient.GetAsync($"/organizations/{organizationId}/titles");
@@ -39,8 +32,8 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
 
     Assert.NotNull(titles);
     var foundTitle = Assert.Single(titles);
-    Assert.Equal(title.RowKey, foundTitle.Id);
-    Assert.Equal(title.Name, foundTitle.Name);
+    Assert.Equal(titleId, foundTitle.Id);
+    Assert.Equal("Title1", foundTitle.Name);
   }
 
   [Fact]
@@ -78,9 +71,7 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
     Assert.NotNull(createdTitle.Id);
     Assert.Equal(dto.Name, createdTitle.Name);
 
-    var titles = await httpClient.GetFromJsonAsync<List<TitleDto>>($"/organizations/{organizationId}/titles");
-    Assert.NotNull(titles);
-    Assert.Contains(titles, t => t.Id == createdTitle.Id);
+    Assert.Contains(testDao.QueryTitlesByOrganization(organizationId), title => title.RowKey == createdTitle.Id);
   }
 
   [Fact]
@@ -155,9 +146,7 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
 
     // THEN
     Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-    var titles = await httpClient.GetFromJsonAsync<List<TitleDto>>($"/organizations/{organizationId}/titles");
-    Assert.NotNull(titles);
-    var updatedTitle = Assert.Single(titles);
+    var updatedTitle = Assert.Single(testDao.QueryTitlesByOrganization(organizationId));
     Assert.Equal("New name", updatedTitle.Name);
   }
 
@@ -191,9 +180,7 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
 
     // THEN
     Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-    var titles = await httpClient.GetFromJsonAsync<List<TitleDto>>($"/organizations/{organizationId}/titles");
-    Assert.NotNull(titles);
-    Assert.Empty(titles);
+    Assert.Empty(testDao.QueryTitlesByOrganization(organizationId));
   }
 
   [Fact]

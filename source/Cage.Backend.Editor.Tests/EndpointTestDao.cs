@@ -6,20 +6,35 @@ namespace Cage.Backend.Editor.Tests;
 
 public class EndpointTestDao
 {
-  private readonly string connectionString;
-  private readonly TableServiceClient tableServiceClient;
+  private readonly TableClient organizationsTableClient;
+  private readonly TableClient usersInOrganizationTableClient;
+  private readonly TableClient titlesTableClient;
 
   public EndpointTestDao(string connectionString)
   {
-    this.connectionString = connectionString;
-    tableServiceClient = new TableServiceClient(connectionString);
+    var tableServiceClient = new TableServiceClient(connectionString);
+    tableServiceClient.CreateTableIfNotExists(OrganizationDao.OrganizationsTableName);
+    tableServiceClient.CreateTableIfNotExists(OrganizationDao.UsersInOrganizationTableName);
+    tableServiceClient.CreateTableIfNotExists(TitleDao.TitlesTableName);
+    organizationsTableClient = tableServiceClient.GetTableClient(OrganizationDao.OrganizationsTableName);
+    usersInOrganizationTableClient = tableServiceClient.GetTableClient(OrganizationDao.UsersInOrganizationTableName);
+    titlesTableClient = tableServiceClient.GetTableClient(TitleDao.TitlesTableName);
+  }
+
+  public async Task<OrganizationEntity> AddOrganization(string name)
+  {
+    var organization = new OrganizationEntity
+    {
+      PartitionKey = "Organization",
+      RowKey = Guid.NewGuid().ToString(),
+      Name = name
+    };
+    await organizationsTableClient.AddEntityAsync(organization);
+    return organization;
   }
 
   public async Task AddUserToOrganization(string userId, string organizationId, string organizationName)
   {
-    tableServiceClient.CreateTableIfNotExists(OrganizationDao.UsersInOrganizationTableName);
-    var usersInOrganizationTableClient = new TableClient(connectionString, OrganizationDao.UsersInOrganizationTableName);
-
     await usersInOrganizationTableClient.AddEntityAsync(new UserInOrganizationEntity
     {
       PartitionKey = organizationId,
@@ -38,8 +53,6 @@ public class EndpointTestDao
 
   public async Task<string> AddTitle(string organizationId, string name)
   {
-    tableServiceClient.CreateTableIfNotExists(TitleDao.TitlesTableName);
-    var titlesTableClient = new TableClient(connectionString, TitleDao.TitlesTableName);
     var title = new TitleEntity
     {
       PartitionKey = organizationId,
@@ -52,7 +65,18 @@ public class EndpointTestDao
 
   public List<TitleEntity> QueryTitlesByOrganization(string organizationId)
   {
-    var titlesTableClient = new TableClient(connectionString, TitleDao.TitlesTableName);
     return titlesTableClient.Query<TitleEntity>(entity => entity.PartitionKey == organizationId).ToList();
+  }
+
+  public OrganizationEntity? QueryOrganization(string organizationId)
+  {
+    return organizationsTableClient
+        .Query<OrganizationEntity>(entity => entity.PartitionKey == "Organization" && entity.RowKey == organizationId)
+        .SingleOrDefault();
+  }
+
+  public List<UserInOrganizationEntity> QueryOrganizationsByUser(string userId)
+  {
+    return usersInOrganizationTableClient.Query<UserInOrganizationEntity>(entity => entity.PartitionKey == userId).ToList();
   }
 }

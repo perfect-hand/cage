@@ -28,3 +28,5 @@ Do not use the "Base" suffix for base class names (e.g. EndpointTest, not Endpoi
 In tests, use service constants for configured data limits instead of repeating their numeric values.
 
 Structure backend tests with `GIVEN`, `WHEN`, and `THEN` comments.
+
+In endpoint tests, use `EndpointTestDao` for all `GIVEN` setup and `THEN` verification; use HTTP requests only for the `WHEN` action being tested.
