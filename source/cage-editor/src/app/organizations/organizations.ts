@@ -9,6 +9,7 @@ import {
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
@@ -16,7 +17,7 @@ import { Organization, OrganizationService } from './organization-service';
 
 @Component({
   selector: 'organizations',
-  imports: [MatProgressSpinnerModule, MatButtonModule, RouterLink],
+  imports: [MatProgressSpinnerModule, MatButtonModule, MatIconModule, RouterLink],
   templateUrl: './organizations.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './organizations.scss',
