@@ -15,8 +15,23 @@
     <li class="item-list-item">
       <a [routerLink]="['/organizations', organization.id, 'titles']">{{ organization.name }}</a>
       <div class="form-actions">
-        <button mat-button type="button" [routerLink]="['/organizations', organization.id, 'edit']">Edit</button>
-        <button mat-button type="button" (click)="deleteOrganization(organization.id, organization.name)" [disabled]="isDeleting()">Delete</button>
+        <button
+          mat-icon-button
+          type="button"
+          [routerLink]="['/organizations', organization.id, 'edit']"
+          [attr.aria-label]="'Edit organization ' + organization.name"
+        >
+          <mat-icon aria-hidden="true">edit</mat-icon>
+        </button>
+        <button
+          mat-icon-button
+          type="button"
+          (click)="deleteOrganization(organization.id, organization.name)"
+          [disabled]="isDeleting()"
+          [attr.aria-label]="'Delete organization ' + organization.name"
+        >
+          <mat-icon aria-hidden="true">delete</mat-icon>
+        </button>
       </div>
     </li>
     }
