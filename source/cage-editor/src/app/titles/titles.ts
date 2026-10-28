@@ -1,9 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
 import { OrganizationBreadcrumb } from '../organizations/organization-breadcrumb';
 import { Title, TitlesService } from './titles-service';
 
@@ -16,6 +18,7 @@ import { Title, TitlesService } from './titles-service';
 })
 export class Titles implements OnInit {
   private readonly http = inject(HttpClient);
+  private readonly dialog = inject(MatDialog);
   private readonly titlesService = inject(TitlesService);
 
   readonly organizationId = input.required<string>();
@@ -47,7 +50,22 @@ export class Titles implements OnInit {
   }
 
   async deleteTitle(titleId: string, name: string): Promise<void> {
-    if (this.isDeleting() || !window.confirm(`Delete "${name}"?`)) {
+    if (this.isDeleting()) {
+      return;
+    }
+
+    const confirmed = await firstValueFrom(
+      this.dialog
+        .open(ConfirmDeleteDialog, {
+          data: {
+            name,
+            consequence: 'All attributes, tags, cards and triggers of that title will be lost.',
+          },
+        })
+        .afterClosed(),
+    );
+
+    if (!confirmed) {
       return;
     }
 

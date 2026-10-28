@@ -8,8 +8,10 @@ import {
 } from '@angular/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
 import { Organization, OrganizationService } from './organization-service';
 
 @Component({
@@ -21,6 +23,7 @@ import { Organization, OrganizationService } from './organization-service';
 })
 export class Organizations implements OnInit {
   private readonly http = inject(HttpClient);
+  private readonly dialog = inject(MatDialog);
   private readonly organizationService = inject(OrganizationService);
 
   readonly organizations = this.organizationService.organizations;
@@ -49,7 +52,19 @@ export class Organizations implements OnInit {
   }
 
   async deleteOrganization(organizationId: string, name: string): Promise<void> {
-    if (this.isDeleting() || !window.confirm(`Delete "${name}" and all its titles?`)) {
+    if (this.isDeleting()) {
+      return;
+    }
+
+    const confirmed = await firstValueFrom(
+      this.dialog
+        .open(ConfirmDeleteDialog, {
+          data: { name, consequence: 'All titles of that organization will be deleted as well.' },
+        })
+        .afterClosed(),
+    );
+
+    if (!confirmed) {
       return;
     }
 
