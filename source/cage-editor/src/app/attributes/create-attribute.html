@@ -1,0 +1,33 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>New attribute</h2>
+    </div>
+
+    <form (submit)="createAttribute(); $event.preventDefault()" novalidate>
+      <label for="attribute-name">Attribute name</label>
+      <input id="attribute-name" class="text-input" type="text" [formField]="attributeForm.name" autocomplete="off" />
+      @if (attributeForm.name().touched() && attributeForm.name().invalid()) {
+      <p class="field-error" role="alert">Enter an attribute name of at most 50 characters.</p>
+      }
+
+      <label for="attribute-type">Attribute type</label>
+      <select id="attribute-type" class="text-input" [formField]="attributeForm.type">
+        @for (type of attributeTypes; track type) {
+        <option [value]="type">{{ type }}</option>
+        }
+      </select>
+
+      @if (atLimit()) {
+      <p class="field-error" role="alert">A title can have at most {{ maximumAttributes }} attributes.</p>
+      }
+
+      <div class="form-actions">
+        <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'attributes']">Cancel</button>
+        <button mat-button type="submit" [disabled]="isSubmitting() || atLimit()">
+          {{ isSubmitting() ? 'Creating...' : 'Create attribute' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</main>

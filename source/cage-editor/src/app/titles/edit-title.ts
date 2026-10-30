@@ -5,12 +5,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { OrganizationBreadcrumb } from '../organizations/organization-breadcrumb';
 import { Title, TitlesService } from './titles-service';
 
 @Component({
   selector: 'edit-title',
-  imports: [FormField, MatButtonModule, MatProgressSpinnerModule, RouterLink, OrganizationBreadcrumb],
+  imports: [FormField, MatButtonModule, MatProgressSpinnerModule, RouterLink],
   templateUrl: './edit-title.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './edit-title.scss',

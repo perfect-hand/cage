@@ -5,15 +5,21 @@
 
 .home-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: var(--app-space-md);
   padding: var(--app-space-lg) var(--app-space-xl);
   border-bottom: 1px solid var(--app-outline-subtle);
 }
 
-.brand {
-  font: var(--mat-sys-headline-large);
-  font-weight: 700;
+.breadcrumb {
+  margin: 0;
+  max-width: none;
+}
+
+.feature-buttons {
+  display: flex;
+  flex: 1;
+  gap: var(--app-space-sm);
 }
 
 .user-menu {

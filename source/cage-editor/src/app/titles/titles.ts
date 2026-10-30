@@ -7,7 +7,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
-import { OrganizationBreadcrumb } from '../organizations/organization-breadcrumb';
 import { Title, TitlesService } from './titles-service';
 
 @Component({
@@ -17,7 +16,6 @@ import { Title, TitlesService } from './titles-service';
     MatButtonModule,
     MatIconModule,
     RouterLink,
-    OrganizationBreadcrumb,
   ],
   templateUrl: './titles.html',
   changeDetection: ChangeDetectionStrategy.Eager,

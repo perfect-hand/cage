@@ -1,6 +1,8 @@
 using Azure.Data.Tables;
+using Cage.Backend.Editor.Attribute;
 using Cage.Backend.Editor.Organization;
 using Cage.Backend.Editor.Title;
+using Cage.Simulation.Types;
 
 namespace Cage.Backend.Editor.Tests;
 
@@ -9,6 +11,7 @@ public class EndpointTestDao
   private readonly TableClient organizationsTableClient;
   private readonly TableClient usersInOrganizationTableClient;
   private readonly TableClient titlesTableClient;
+  private readonly TableClient attributesTableClient;
 
   public EndpointTestDao(string connectionString)
   {
@@ -16,6 +19,8 @@ public class EndpointTestDao
     tableServiceClient.CreateTableIfNotExists(OrganizationDao.OrganizationsTableName);
     tableServiceClient.CreateTableIfNotExists(OrganizationDao.UsersInOrganizationTableName);
     tableServiceClient.CreateTableIfNotExists(TitleDao.TitlesTableName);
+    tableServiceClient.CreateTableIfNotExists(AttributeDao.AttributesTableName);
+    attributesTableClient = tableServiceClient.GetTableClient(AttributeDao.AttributesTableName);
     organizationsTableClient = tableServiceClient.GetTableClient(OrganizationDao.OrganizationsTableName);
     usersInOrganizationTableClient = tableServiceClient.GetTableClient(OrganizationDao.UsersInOrganizationTableName);
     titlesTableClient = tableServiceClient.GetTableClient(TitleDao.TitlesTableName);
@@ -61,6 +66,24 @@ public class EndpointTestDao
     };
     await titlesTableClient.AddEntityAsync(title);
     return title.RowKey;
+  }
+
+  public async Task<string> AddAttribute(string titleId, string name, CageType type)
+  {
+    var attribute = new AttributeEntity
+    {
+      PartitionKey = titleId,
+      RowKey = Guid.NewGuid().ToString(),
+      Name = name,
+      Type = type
+    };
+    await attributesTableClient.AddEntityAsync(attribute);
+    return attribute.RowKey;
+  }
+
+  public List<AttributeEntity> QueryAttributesByTitle(string titleId)
+  {
+    return attributesTableClient.Query<AttributeEntity>(entity => entity.PartitionKey == titleId).ToList();
   }
 
   public List<TitleEntity> QueryTitlesByOrganization(string organizationId)
