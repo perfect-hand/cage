@@ -265,17 +265,16 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   public async Task FailsToDeleteAttributeOfTitleInForeignOrganization()
   {
     // GIVEN
-    var organizationId = Guid.NewGuid().ToString();
-    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
-    var foreignTitleId = await testDao.AddTitle(Guid.NewGuid().ToString(), "Title");
-    var attributeId = await testDao.AddAttribute(foreignTitleId, "Health", CageType.Int);
+    var foreignOrganizationId = Guid.NewGuid().ToString();
+    var titleId = await testDao.AddTitle(foreignOrganizationId, "Title");
+    var attributeId = await testDao.AddAttribute(titleId, "Health", CageType.Int);
 
     // WHEN
-    var response = await httpClient.DeleteAsync($"/organizations/{organizationId}/titles/{foreignTitleId}/attributes/{attributeId}");
+    var response = await httpClient.DeleteAsync($"/organizations/{foreignOrganizationId}/titles/{titleId}/attributes/{attributeId}");
 
     // THEN
     Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    Assert.Single(testDao.QueryAttributesByTitle(foreignTitleId));
+    Assert.Single(testDao.QueryAttributesByTitle(titleId));
   }
 
   [Fact]
