@@ -202,19 +202,18 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   public async Task FailsToUpdateAttributeOfTitleInForeignOrganization()
   {
     // GIVEN
-    var organizationId = Guid.NewGuid().ToString();
-    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
-    var foreignTitleId = await testDao.AddTitle(Guid.NewGuid().ToString(), "Title");
-    var attributeId = await testDao.AddAttribute(foreignTitleId, "Old", CageType.Int);
+    var foreignOrganizationId = Guid.NewGuid().ToString();
+    var titleId = await testDao.AddTitle(foreignOrganizationId, "Title");
+    var attributeId = await testDao.AddAttribute(titleId, "Old", CageType.Int);
 
     // WHEN
     var response = await httpClient.PutAsJsonAsync(
-        $"/organizations/{organizationId}/titles/{foreignTitleId}/attributes/{attributeId}",
+        $"/organizations/{foreignOrganizationId}/titles/{titleId}/attributes/{attributeId}",
         new AttributeDto { Name = "New", Type = CageType.String });
 
     // THEN
     Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    Assert.Equal("Old", Assert.Single(testDao.QueryAttributesByTitle(foreignTitleId)).Name);
+    Assert.Equal("Old", Assert.Single(testDao.QueryAttributesByTitle(titleId)).Name);
   }
 
   [Fact]
