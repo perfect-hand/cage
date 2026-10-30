@@ -53,13 +53,26 @@ public class AttributeService
     await EnsureAccess(organizationId, titleId, user);
     ValidateDto(dto);
 
-    return await attributeDao.UpdateAttribute(titleId, attributeId, dto.Name, dto.Type);
+    var updated = await attributeDao.UpdateAttribute(titleId, attributeId, dto.Name, dto.Type);
+    if (updated)
+    {
+      logger.LogInformation("Attribute {} updated in title {}.", attributeId, titleId);
+    }
+
+    return updated;
   }
 
   public async Task<bool> Delete(string organizationId, string titleId, string attributeId, string? user)
   {
     await EnsureAccess(organizationId, titleId, user);
-    return await attributeDao.DeleteAttribute(titleId, attributeId);
+
+    var deleted = await attributeDao.DeleteAttribute(titleId, attributeId);
+    if (deleted)
+    {
+      logger.LogInformation("Attribute {} deleted from title {}.", attributeId, titleId);
+    }
+
+    return deleted;
   }
 
   private static void ValidateDto(AttributeDto dto)

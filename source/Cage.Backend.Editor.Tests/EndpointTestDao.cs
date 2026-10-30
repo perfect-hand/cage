@@ -68,6 +68,14 @@ public class EndpointTestDao
     return title.RowKey;
   }
 
+  public async Task<(string OrganizationId, string TitleId)> AddTitleToOwnOrganization()
+  {
+    var organizationId = Guid.NewGuid().ToString();
+    await AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    var titleId = await AddTitle(organizationId, "Title");
+    return (organizationId, titleId);
+  }
+
   public async Task<string> AddAttribute(string titleId, string name, CageType type)
   {
     var attribute = new AttributeEntity

@@ -12,19 +12,11 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   {
   }
 
-  private async Task<(string OrganizationId, string TitleId)> AddOwnTitle()
-  {
-    var organizationId = Guid.NewGuid().ToString();
-    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
-    var titleId = await testDao.AddTitle(organizationId, "Title");
-    return (organizationId, titleId);
-  }
-
   [Fact]
   public async Task GetsAllAttributesOfTitle()
   {
     // GIVEN
-    var (organizationId, titleId) = await AddOwnTitle();
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
     var attributeId = await testDao.AddAttribute(titleId, "Health", CageType.Int);
     await testDao.AddAttribute(Guid.NewGuid().ToString(), "Other", CageType.String);
 
@@ -44,15 +36,15 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   [Fact]
   public async Task FailsToGetAllAttributesWithoutAuthentication()
   {
-    var response = await unauthorizedHttpClient.GetAsync($"/organizations/{Guid.NewGuid()}/titles/{Guid.NewGuid()}/attributes");
-    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-  }
+    // GIVEN
+    var organizationId = Guid.NewGuid();
+    var titleId = Guid.NewGuid();
 
-  [Fact]
-  public async Task FailsToGetAllAttributesOfForeignOrganization()
-  {
-    var response = await httpClient.GetAsync($"/organizations/{Guid.NewGuid()}/titles/{Guid.NewGuid()}/attributes");
-    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    // WHEN
+    var response = await unauthorizedHttpClient.GetAsync($"/organizations/{organizationId}/titles/{titleId}/attributes");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
   }
 
   [Fact]
@@ -74,7 +66,7 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   public async Task CreatesAttribute()
   {
     // GIVEN
-    var (organizationId, titleId) = await AddOwnTitle();
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
     var dto = new AttributeDto { Name = "Health", Type = CageType.Int };
 
     // WHEN
@@ -96,34 +88,61 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   [Fact]
   public async Task FailsToCreateAttributeWithNameOverMaximumLength()
   {
-    var (organizationId, titleId) = await AddOwnTitle();
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
     var dto = new AttributeDto { Name = new string('a', AttributeService.MaximumAttributeNameLength + 1), Type = CageType.Int };
 
+    // WHEN
     var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/attributes", dto);
 
+    // THEN
     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
   }
 
   [Fact]
   public async Task FailsToCreateMoreThanMaximumAttributesInTitle()
   {
-    var (organizationId, titleId) = await AddOwnTitle();
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
     for (var i = 0; i < AttributeService.MaximumAttributesPerTitle; i++)
     {
       await testDao.AddAttribute(titleId, $"Attribute{i}", CageType.Int);
     }
 
     var dto = new AttributeDto { Name = "Another", Type = CageType.Int };
+
+    // WHEN
     var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/attributes", dto);
 
+    // THEN
     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToCreateAttributeWithoutAuthentication()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var dto = new AttributeDto { Name = "Health", Type = CageType.Int };
+
+    // WHEN
+    var response = await unauthorizedHttpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/attributes", dto);
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    Assert.Empty(testDao.QueryAttributesByTitle(titleId));
   }
 
   [Fact]
   public async Task FailsToCreateAttributeInForeignOrganization()
   {
+    // GIVEN
     var dto = new AttributeDto { Name = "Health", Type = CageType.Int };
+
+    // WHEN
     var response = await httpClient.PostAsJsonAsync($"/organizations/{Guid.NewGuid()}/titles/{Guid.NewGuid()}/attributes", dto);
+
+    // THEN
     Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
   }
 
@@ -131,7 +150,7 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   public async Task UpdatesAttribute()
   {
     // GIVEN
-    var (organizationId, titleId) = await AddOwnTitle();
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
     var attributeId = await testDao.AddAttribute(titleId, "Old", CageType.Int);
 
     // WHEN
@@ -147,14 +166,69 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   }
 
   [Fact]
+  public async Task FailsToUpdateAttributeWithNameOverMaximumLength()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var attributeId = await testDao.AddAttribute(titleId, "Old", CageType.Int);
+    var dto = new AttributeDto { Name = new string('a', AttributeService.MaximumAttributeNameLength + 1), Type = CageType.Int };
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/attributes/{attributeId}", dto);
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryAttributesByTitle(titleId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateAttributeWithoutAuthentication()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var attributeId = await testDao.AddAttribute(titleId, "Old", CageType.Int);
+
+    // WHEN
+    var response = await unauthorizedHttpClient.PutAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/attributes/{attributeId}",
+        new AttributeDto { Name = "New", Type = CageType.String });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryAttributesByTitle(titleId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateAttributeOfTitleInForeignOrganization()
+  {
+    // GIVEN
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    var foreignTitleId = await testDao.AddTitle(Guid.NewGuid().ToString(), "Title");
+    var attributeId = await testDao.AddAttribute(foreignTitleId, "Old", CageType.Int);
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{foreignTitleId}/attributes/{attributeId}",
+        new AttributeDto { Name = "New", Type = CageType.String });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryAttributesByTitle(foreignTitleId)).Name);
+  }
+
+  [Fact]
   public async Task FailsToUpdateMissingAttribute()
   {
-    var (organizationId, titleId) = await AddOwnTitle();
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
 
+    // WHEN
     var response = await httpClient.PutAsJsonAsync(
         $"/organizations/{organizationId}/titles/{titleId}/attributes/{Guid.NewGuid()}",
         new AttributeDto { Name = "New", Type = CageType.String });
 
+    // THEN
     Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
   }
 
@@ -162,7 +236,7 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   public async Task DeletesAttribute()
   {
     // GIVEN
-    var (organizationId, titleId) = await AddOwnTitle();
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
     var attributeId = await testDao.AddAttribute(titleId, "Health", CageType.Int);
 
     // WHEN
@@ -174,10 +248,42 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   }
 
   [Fact]
+  public async Task FailsToDeleteAttributeWithoutAuthentication()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var attributeId = await testDao.AddAttribute(titleId, "Health", CageType.Int);
+
+    // WHEN
+    var response = await unauthorizedHttpClient.DeleteAsync($"/organizations/{organizationId}/titles/{titleId}/attributes/{attributeId}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    Assert.Single(testDao.QueryAttributesByTitle(titleId));
+  }
+
+  [Fact]
+  public async Task FailsToDeleteAttributeOfTitleInForeignOrganization()
+  {
+    // GIVEN
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    var foreignTitleId = await testDao.AddTitle(Guid.NewGuid().ToString(), "Title");
+    var attributeId = await testDao.AddAttribute(foreignTitleId, "Health", CageType.Int);
+
+    // WHEN
+    var response = await httpClient.DeleteAsync($"/organizations/{organizationId}/titles/{foreignTitleId}/attributes/{attributeId}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    Assert.Single(testDao.QueryAttributesByTitle(foreignTitleId));
+  }
+
+  [Fact]
   public async Task DeletesAttributesWhenDeletingTitle()
   {
     // GIVEN
-    var (organizationId, titleId) = await AddOwnTitle();
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
     await testDao.AddAttribute(titleId, "Health", CageType.Int);
 
     // WHEN
