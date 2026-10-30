@@ -4,12 +4,11 @@ import { form, FormField, maxLength, pattern, required } from '@angular/forms/si
 import { MatButtonModule } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { OrganizationBreadcrumb } from '../organizations/organization-breadcrumb';
 import { TitlesService } from './titles-service';
 
 @Component({
   selector: 'create-title',
-  imports: [FormField, MatButtonModule, RouterLink, OrganizationBreadcrumb],
+  imports: [FormField, MatButtonModule, RouterLink],
   templateUrl: './create-title.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './create-title.scss',

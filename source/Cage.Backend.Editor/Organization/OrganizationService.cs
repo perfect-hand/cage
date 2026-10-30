@@ -1,5 +1,6 @@
 using Azure.Data.Tables;
 using Azure.Identity;
+using Cage.Backend.Editor.Attribute;
 using Cage.Backend.Editor.Title;
 
 namespace Cage.Backend.Editor.Organization;
@@ -12,6 +13,7 @@ public class OrganizationService
   private readonly OrganizationMapper mapper;
   private readonly OrganizationDao dao;
   private readonly TitleDao titleDao;
+  private readonly AttributeDao attributeDao;
   private readonly ILogger<OrganizationService> logger;
 
   public OrganizationService(ILogger<OrganizationService> logger)
@@ -19,6 +21,7 @@ public class OrganizationService
     mapper = new OrganizationMapper();
     dao = new OrganizationDao();
     titleDao = new TitleDao();
+    attributeDao = new AttributeDao();
     this.logger = logger;
   }
 
@@ -84,6 +87,11 @@ public class OrganizationService
     var deleted = await dao.DeleteOrganization(organizationId);
     if (deleted)
     {
+      foreach (var title in await titleDao.QueryByOrganization(organizationId))
+      {
+        await attributeDao.DeleteByTitle(title.RowKey);
+      }
+
       await titleDao.DeleteByOrganization(organizationId);
       logger.LogInformation("Organization {} deleted.", organizationId);
     }

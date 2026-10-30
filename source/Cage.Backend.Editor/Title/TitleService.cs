@@ -1,3 +1,4 @@
+using Cage.Backend.Editor.Attribute;
 using Cage.Backend.Editor.Organization;
 
 namespace Cage.Backend.Editor.Title;
@@ -9,6 +10,7 @@ public class TitleService
 
   private readonly TitleMapper mapper;
   private readonly TitleDao titleDao;
+  private readonly AttributeDao attributeDao;
   private readonly OrganizationDao organizationDao;
   private readonly ILogger<TitleService> logger;
 
@@ -16,6 +18,7 @@ public class TitleService
   {
     mapper = new TitleMapper();
     titleDao = new TitleDao();
+    attributeDao = new AttributeDao();
     organizationDao = new OrganizationDao();
     this.logger = logger;
   }
@@ -64,7 +67,13 @@ public class TitleService
   public async Task<bool> Delete(string organizationId, string titleId, string? user)
   {
     await EnsureMembership(organizationId, user);
-    return await titleDao.DeleteTitle(organizationId, titleId);
+    var deleted = await titleDao.DeleteTitle(organizationId, titleId);
+    if (deleted)
+    {
+      await attributeDao.DeleteByTitle(titleId);
+    }
+
+    return deleted;
   }
 
   private async Task EnsureMembership(string organizationId, string? user)

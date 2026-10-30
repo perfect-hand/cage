@@ -1,0 +1,50 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>Attributes</h2>
+    </div>
+
+    @if (isLoading()) {
+    <div class="loading-state" aria-live="polite">
+      <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+      <span>Loading attributes...</span>
+    </div>
+    } @else {
+    <ul class="item-list">
+      @for (attribute of attributes(); track attribute.id) {
+        <li class="item-list-item">
+          {{ attribute.name }} ({{ attribute.type }})
+          <div class="form-actions">
+            <button
+              mat-icon-button
+              type="button"
+              [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'attributes', attribute.id, 'edit']"
+              [attr.aria-label]="'Edit attribute ' + attribute.name"
+            >
+              <mat-icon aria-hidden="true">edit</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              type="button"
+              (click)="deleteAttribute(attribute.id, attribute.name)"
+              [disabled]="isDeleting()"
+              [attr.aria-label]="'Delete attribute ' + attribute.name"
+            >
+              <mat-icon aria-hidden="true">delete</mat-icon>
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+
+    <div class="form-actions">
+      <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'attributes', 'new']" [disabled]="attributes().length >= maximumAttributes">
+        New attribute
+      </button>
+      @if (attributes().length >= maximumAttributes) {
+      <span>Maximum of {{ maximumAttributes }} attributes reached.</span>
+      }
+    </div>
+    }
+  </section>
+</main>

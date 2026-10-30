@@ -4,6 +4,9 @@ import { CreateOrganization } from './organizations/create-organization';
 import { EditOrganization } from './organizations/edit-organization';
 import { CreateTitle } from './titles/create-title';
 import { EditTitle } from './titles/edit-title';
+import { Attributes } from './attributes/attributes';
+import { CreateAttribute } from './attributes/create-attribute';
+import { EditAttribute } from './attributes/edit-attribute';
 import { Titles } from './titles/titles';
 import { Organizations } from './organizations/organizations';
 
@@ -18,6 +21,9 @@ export const routes: Routes = [
       { path: 'organizations/:organizationId/titles', component: Titles },
       { path: 'organizations/:organizationId/titles/new', component: CreateTitle },
       { path: 'organizations/:organizationId/titles/:titleId/edit', component: EditTitle },
+      { path: 'organizations/:organizationId/titles/:titleId/attributes', component: Attributes },
+      { path: 'organizations/:organizationId/titles/:titleId/attributes/new', component: CreateAttribute },
+      { path: 'organizations/:organizationId/titles/:titleId/attributes/:attributeId/edit', component: EditAttribute },
     ],
   },
 ];

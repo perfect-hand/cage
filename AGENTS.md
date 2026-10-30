@@ -30,3 +30,5 @@ In tests, use service constants for configured data limits instead of repeating 
 Structure backend tests with `GIVEN`, `WHEN`, and `THEN` comments.
 
 In endpoint tests, use `EndpointTestDao` for all `GIVEN` setup and `THEN` verification; use HTTP requests only for the `WHEN` action being tested.
+
+On the backend, all service methods that create, update or delete entities must log these actions.

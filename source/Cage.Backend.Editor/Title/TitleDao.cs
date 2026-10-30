@@ -19,6 +19,11 @@ public class TitleDao : TableDao
     await titlesTableClient.AddEntityAsync(title);
   }
 
+  public async Task<bool> TitleExists(string organizationId, string titleId)
+  {
+    return (await titlesTableClient.GetEntityIfExistsAsync<TitleEntity>(organizationId, titleId)).HasValue;
+  }
+
   public async Task<List<TitleEntity>> QueryByOrganization(string organizationId)
   {
     return titlesTableClient.Query<TitleEntity>(ent => ent.PartitionKey == organizationId).ToList();

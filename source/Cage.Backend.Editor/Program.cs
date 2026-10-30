@@ -1,3 +1,4 @@
+using Cage.Backend.Editor.Attribute;
 using Cage.Backend.Editor.Info;
 using Cage.Backend.Editor.Organization;
 using Cage.Backend.Editor.Title;
@@ -44,6 +45,7 @@ builder.Services.AddHttpLogging(options => { });
 builder.Services.AddScoped<InfoService>();
 builder.Services.AddScoped<OrganizationService>();
 builder.Services.AddScoped<TitleService>();
+builder.Services.AddScoped<AttributeService>();
 
 var app = builder.Build();
 app.UseHttpsRedirection();
@@ -65,6 +67,11 @@ organizations.MapGet("/{organizationId}/titles", GetAllTitles);
 organizations.MapPost("/{organizationId}/titles", CreateTitle);
 organizations.MapPut("/{organizationId}/titles/{titleId}", UpdateTitle);
 organizations.MapDelete("/{organizationId}/titles/{titleId}", DeleteTitle);
+
+organizations.MapGet("/{organizationId}/titles/{titleId}/attributes", GetAllAttributes);
+organizations.MapPost("/{organizationId}/titles/{titleId}/attributes", CreateAttribute);
+organizations.MapPut("/{organizationId}/titles/{titleId}/attributes/{attributeId}", UpdateAttribute);
+organizations.MapDelete("/{organizationId}/titles/{titleId}/attributes/{attributeId}", DeleteAttribute);
 
 static async Task<IResult> GetInfo(InfoService infoService)
 {
@@ -195,6 +202,72 @@ static async Task<IResult> DeleteTitle(TitleService titleService, string organiz
   try
   {
     return await titleService.Delete(organizationId, titleId, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+}
+
+static async Task<IResult> GetAllAttributes(AttributeService attributeService, string organizationId, string titleId, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    var attributes = await attributeService.ReadAll(organizationId, titleId, user);
+    return TypedResults.Ok(attributes);
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+}
+
+static async Task<IResult> CreateAttribute(AttributeService attributeService, string organizationId, string titleId, AttributeDto dto, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    var attribute = await attributeService.Create(organizationId, titleId, dto, user);
+    return TypedResults.Created($"/organizations/{organizationId}/titles/{titleId}/attributes/{attribute.Id}", attribute);
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (ArgumentException)
+  {
+    return TypedResults.BadRequest();
+  }
+}
+
+static async Task<IResult> UpdateAttribute(AttributeService attributeService, string organizationId, string titleId, string attributeId, AttributeDto dto, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await attributeService.Update(organizationId, titleId, attributeId, dto, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (ArgumentException)
+  {
+    return TypedResults.BadRequest();
+  }
+}
+
+static async Task<IResult> DeleteAttribute(AttributeService attributeService, string organizationId, string titleId, string attributeId, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await attributeService.Delete(organizationId, titleId, attributeId, user)
         ? TypedResults.NoContent()
         : TypedResults.NotFound();
   }

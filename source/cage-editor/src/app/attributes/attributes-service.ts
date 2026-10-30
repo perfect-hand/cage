@@ -1,0 +1,27 @@
+import { Service, signal } from '@angular/core';
+
+export type AttributeType = 'Int' | 'String' | 'Entity' | 'EntityList';
+
+export const attributeTypes: AttributeType[] = ['Int', 'String', 'Entity', 'EntityList'];
+
+export interface Attribute {
+  id: string;
+  name: string;
+  type: AttributeType;
+}
+
+@Service()
+export class AttributesService {
+  private readonly attributesByTitle = signal<Record<string, Attribute[]>>({});
+
+  getAttributes(titleId: string): Attribute[] {
+    return this.attributesByTitle()[titleId] ?? [];
+  }
+
+  setAttributes(titleId: string, attributes: Attribute[]): void {
+    this.attributesByTitle.update((attributesByTitle) => ({
+      ...attributesByTitle,
+      [titleId]: attributes,
+    }));
+  }
+}

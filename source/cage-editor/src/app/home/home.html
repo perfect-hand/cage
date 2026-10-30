@@ -1,5 +1,30 @@
 <header class="home-header">
-  <div class="brand">CaGE Editor</div>
+  <a class="home-button" mat-icon-button routerLink="/" aria-label="Home">
+    <mat-icon aria-hidden="true">home</mat-icon>
+  </a>
+
+  @if (organizationId(); as organizationId) {
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <ol>
+      <li><a [routerLink]="['/organizations', organizationId, 'titles']">{{ organizationName() }}</a></li>
+      @if (activeTitleId(); as titleId) {
+      <li>
+        <a [routerLink]="['/organizations', organizationId, 'titles', titleId, 'attributes']">{{ titleName() }}</a>
+      </li>
+      }
+    </ol>
+  </nav>
+  }
+
+  <nav class="feature-buttons" aria-label="Title features">
+    @if (organizationId(); as organizationId) {
+    @if (activeTitleId(); as titleId) {
+    <a mat-button [routerLink]="['/organizations', organizationId, 'titles', titleId, 'attributes']">
+      Attributes
+    </a>
+    }
+    }
+  </nav>
 
   <div class="user-menu">
     <div class="user-info">
