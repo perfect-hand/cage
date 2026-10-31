@@ -86,6 +86,23 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   }
 
   [Fact]
+  public async Task CreatesAttributeWithNameAtMaximumLength()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var name = new string('a', AttributeService.MaximumAttributeNameLength);
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/attributes",
+        new AttributeDto { Name = name, Type = CageType.Int });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    Assert.Equal(name, Assert.Single(testDao.QueryAttributesByTitle(titleId)).Name);
+  }
+
+  [Fact]
   public async Task FailsToCreateAttributeWithNameOverMaximumLength()
   {
     // GIVEN

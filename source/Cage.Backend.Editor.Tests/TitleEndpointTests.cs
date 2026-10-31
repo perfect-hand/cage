@@ -168,6 +168,41 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
   }
 
   [Fact]
+  public async Task FailsToUpdateTitleWithoutAuthentication()
+  {
+    // GIVEN
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    var titleId = await testDao.AddTitle(organizationId, "Title");
+
+    // WHEN
+    var response = await unauthorizedHttpClient.PutAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}",
+        new TitleDto { Name = "New name" });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    Assert.Equal("Title", Assert.Single(testDao.QueryTitlesByOrganization(organizationId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateTitleInForeignOrganization()
+  {
+    // GIVEN
+    var organizationId = Guid.NewGuid().ToString();
+    var titleId = await testDao.AddTitle(organizationId, "Title");
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}",
+        new TitleDto { Name = "New name" });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    Assert.Equal("Title", Assert.Single(testDao.QueryTitlesByOrganization(organizationId)).Name);
+  }
+
+  [Fact]
   public async Task DeletesTitle()
   {
     // GIVEN
@@ -181,6 +216,22 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
     // THEN
     Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     Assert.Empty(testDao.QueryTitlesByOrganization(organizationId));
+  }
+
+  [Fact]
+  public async Task FailsToDeleteTitleWithoutAuthentication()
+  {
+    // GIVEN
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
+    var titleId = await testDao.AddTitle(organizationId, "Title");
+
+    // WHEN
+    var response = await unauthorizedHttpClient.DeleteAsync($"/organizations/{organizationId}/titles/{titleId}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    Assert.Single(testDao.QueryTitlesByOrganization(organizationId));
   }
 
   [Fact]

@@ -136,6 +136,23 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
   }
 
   [Fact]
+  public async Task FailsToUpdateOrganizationWithoutAuthentication()
+  {
+    // GIVEN
+    var organization = await testDao.AddOrganization("Organization");
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organization.RowKey, organization.Name);
+
+    // WHEN
+    var response = await unauthorizedHttpClient.PutAsJsonAsync(
+        $"/organizations/{organization.RowKey}",
+        new OrganizationDto { Name = "New name" });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    Assert.Equal("Organization", testDao.QueryOrganization(organization.RowKey)?.Name);
+  }
+
+  [Fact]
   public async Task FailsToUpdateOrganizationNameOverMaximumLength()
   {
     // GIVEN
@@ -182,6 +199,21 @@ public class OrganizationEndpointTests : EndpointTest, IClassFixture<WebApplicat
     Assert.Null(testDao.QueryOrganization(organization.RowKey));
     Assert.Empty(testDao.QueryOrganizationsByUser(TestAuthHandler.TestUser));
     Assert.Empty(testDao.QueryTitlesByOrganization(organization.RowKey));
+  }
+
+  [Fact]
+  public async Task FailsToDeleteOrganizationWithoutAuthentication()
+  {
+    // GIVEN
+    var organization = await testDao.AddOrganization("Organization");
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organization.RowKey, organization.Name);
+
+    // WHEN
+    var response = await unauthorizedHttpClient.DeleteAsync($"/organizations/{organization.RowKey}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    Assert.NotNull(testDao.QueryOrganization(organization.RowKey));
   }
 
   [Fact]
