@@ -13,7 +13,7 @@
     <ul class="item-list">
       @for (title of titles(); track title.id) {
         <li class="item-list-item">
-          {{ title.name }}
+          <a [routerLink]="['/organizations', organizationId(), 'titles', title.id, 'attributes']">{{ title.name }}</a>
           <div class="form-actions">
             <button
               mat-icon-button
