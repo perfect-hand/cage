@@ -64,6 +64,7 @@ export class Titles implements OnInit {
         .open(ConfirmDeleteDialog, {
           data: {
             name,
+            requireNameConfirmation: true,
             consequence: 'All attributes, tags, cards and triggers of that title will be lost.',
           },
         })

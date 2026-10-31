@@ -8,7 +8,7 @@
     <p>{{ data.consequence }}</p>
   }
   <p>You cannot undo this operation.</p>
-  @if (data.requireNameConfirmation !== false) {
+  @if (data.requireNameConfirmation === true) {
     <p>
       To confirm, type <strong>{{ data.name }}</strong> in the box below.
     </p>
@@ -29,7 +29,7 @@
     mat-button
     type="button"
     [mat-dialog-close]="true"
-    [disabled]="data.requireNameConfirmation !== false && typedName() !== data.name"
+    [disabled]="data.requireNameConfirmation === true && typedName() !== data.name"
   >
     Delete
   </button>

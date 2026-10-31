@@ -66,7 +66,6 @@ export class Attributes implements OnInit {
         .open(ConfirmDeleteDialog, {
           data: {
             name,
-            requireNameConfirmation: false,
           },
         })
         .afterClosed(),
