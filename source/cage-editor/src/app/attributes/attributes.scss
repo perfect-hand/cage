@@ -1,3 +1,21 @@
 :host {
   display: block;
 }
+
+.attribute-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+
+  th,
+  td {
+    padding: var(--app-space-sm) var(--app-space-md);
+    border-bottom: 1px solid var(--app-outline-subtle);
+  }
+}
+
+.attribute-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--app-space-xs);
+}
