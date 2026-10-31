@@ -1,13 +1,36 @@
 <h2 mat-dialog-title>Delete {{ data.name }}?</h2>
 <mat-dialog-content>
-  <p>Are you sure you want to delete <strong>{{ data.name }}</strong>? {{ data.consequence }} You cannot undo this operation.</p>
-  <p>To confirm, type <strong>{{ data.name }}</strong> in the box below.</p>
-  <mat-form-field>
-    <mat-label>Name</mat-label>
-    <input matInput autocomplete="off" [value]="typedName()" (input)="typedName.set($any($event.target).value)" />
-  </mat-form-field>
+  <p>
+    Are you sure you want to delete <strong>{{ data.name }}</strong
+    >?
+  </p>
+  @if (data.consequence) {
+    <p>{{ data.consequence }}</p>
+  }
+  <p>You cannot undo this operation.</p>
+  @if (data.requireNameConfirmation !== false) {
+    <p>
+      To confirm, type <strong>{{ data.name }}</strong> in the box below.
+    </p>
+    <mat-form-field>
+      <mat-label>Name</mat-label>
+      <input
+        matInput
+        autocomplete="off"
+        [value]="typedName()"
+        (input)="typedName.set($any($event.target).value)"
+      />
+    </mat-form-field>
+  }
 </mat-dialog-content>
 <mat-dialog-actions>
   <button mat-button type="button" [mat-dialog-close]="false">Cancel</button>
-  <button mat-button type="button" [mat-dialog-close]="true" [disabled]="typedName() !== data.name">Delete</button>
+  <button
+    mat-button
+    type="button"
+    [mat-dialog-close]="true"
+    [disabled]="data.requireNameConfirmation !== false && typedName() !== data.name"
+  >
+    Delete
+  </button>
 </mat-dialog-actions>
