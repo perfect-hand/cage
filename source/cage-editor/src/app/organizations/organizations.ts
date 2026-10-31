@@ -60,7 +60,11 @@ export class Organizations implements OnInit {
     const confirmed = await firstValueFrom(
       this.dialog
         .open(ConfirmDeleteDialog, {
-          data: { name, consequence: 'All titles of that organization will be deleted as well.' },
+          data: {
+            name,
+            requireNameConfirmation: true,
+            consequence: 'All titles of that organization will be deleted as well.',
+          },
         })
         .afterClosed(),
     );

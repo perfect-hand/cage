@@ -66,7 +66,6 @@ export class Attributes implements OnInit {
         .open(ConfirmDeleteDialog, {
           data: {
             name,
-            consequence: 'The attribute will be removed from all cards that use it.',
           },
         })
         .afterClosed(),

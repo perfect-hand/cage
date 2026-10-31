@@ -6,7 +6,8 @@ import { MatInputModule } from '@angular/material/input';
 
 export interface ConfirmDeleteDialogData {
   name: string;
-  consequence: string;
+  consequence?: string;
+  requireNameConfirmation?: boolean;
 }
 
 @Component({
