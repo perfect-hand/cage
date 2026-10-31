@@ -2,7 +2,12 @@ import { Service, signal } from '@angular/core';
 
 export type AttributeType = 'Int' | 'String' | 'Entity' | 'EntityList';
 
-export const attributeTypes: AttributeType[] = ['Int', 'String', 'Entity', 'EntityList'];
+export const attributeTypes: { value: AttributeType; label: string }[] = [
+  { value: 'Int', label: 'Int' },
+  { value: 'String', label: 'String' },
+  { value: 'Entity', label: 'Entity' },
+  { value: 'EntityList', label: 'Entity List' },
+];
 
 export interface Attribute {
   id: string;

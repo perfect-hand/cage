@@ -13,8 +13,8 @@
 
       <label for="attribute-type">Attribute type</label>
       <select id="attribute-type" class="text-input" [formField]="attributeForm.type">
-        @for (type of attributeTypes; track type) {
-        <option [value]="type">{{ type }}</option>
+        @for (type of attributeTypes; track type.value) {
+        <option [value]="type.value">{{ type.label }}</option>
         }
       </select>
 
