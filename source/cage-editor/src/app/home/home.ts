@@ -46,7 +46,13 @@ export class Home {
       this.titlesService.getTitles(organizationId).find((t) => t.id === titleId)?.name ?? '…'
     );
   });
-  readonly activeTitleId = computed(() => (this.titleId() === 'new' ? undefined : this.titleId()));
+  readonly activeTitleId = computed(() => {
+    const titleId = this.titleId();
+    const isEditingTitle = /^\/organizations\/[^/?#]+\/titles\/[^/?#]+\/edit(?:[/?#]|$)/.test(
+      this.url(),
+    );
+    return titleId && titleId !== 'new' && !isEditingTitle ? titleId : undefined;
+  });
 
   constructor() {
     this.router.events
