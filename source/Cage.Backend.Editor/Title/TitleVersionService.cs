@@ -5,6 +5,7 @@ namespace Cage.Backend.Editor.Title;
 
 public class TitleVersionService
 {
+  public const string InitialVersionName = "1.0";
   public const int MaximumVersionsPerTitle = 100;
   public const int MaximumVersionNameLength = 50;
 

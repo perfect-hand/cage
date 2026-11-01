@@ -56,9 +56,10 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
     var organizationId = Guid.NewGuid().ToString();
     await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
     var foreignTitleId = await testDao.AddTitle(Guid.NewGuid().ToString(), "Title");
+    var titleVersionId = testDao.GetInitialVersionId(foreignTitleId);
 
     // WHEN
-    var response = await httpClient.GetAsync($"/organizations/{organizationId}/titles/{foreignTitleId}/versions/{testDao.GetInitialVersionId(foreignTitleId)}/attributes");
+    var response = await httpClient.GetAsync($"/organizations/{organizationId}/titles/{foreignTitleId}/versions/{titleVersionId}/attributes");
 
     // THEN
     Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);

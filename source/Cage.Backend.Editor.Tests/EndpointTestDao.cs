@@ -72,7 +72,7 @@ public class EndpointTestDao
     {
       PartitionKey = title.RowKey,
       RowKey = Guid.NewGuid().ToString(),
-      Name = "1.0"
+      Name = TitleVersionService.InitialVersionName
     });
     return title.RowKey;
   }
@@ -115,7 +115,7 @@ public class EndpointTestDao
   public string GetInitialVersionId(string titleId)
   {
     return titleVersionsTableClient.Query<TitleVersionEntity>(entity =>
-        entity.PartitionKey == titleId && entity.Name == "1.0")
+        entity.PartitionKey == titleId && entity.Name == TitleVersionService.InitialVersionName)
         .Single().RowKey;
   }
 

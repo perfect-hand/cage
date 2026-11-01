@@ -47,7 +47,7 @@ public class TitleService
       {
         PartitionKey = title.RowKey,
         RowKey = Guid.NewGuid().ToString(),
-        Name = "1.0",
+        Name = TitleVersionService.InitialVersionName,
       });
     }
     catch

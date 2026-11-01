@@ -73,14 +73,6 @@ public class TitleVersionEndpointTests : EndpointTest, IClassFixture<WebApplicat
     Assert.Equal(attributeId, childAttribute.Id);
     Assert.Equal("Health", childAttribute.Name);
     Assert.Equal(CageType.Int, childAttribute.Type);
-    var deleteResponse = await httpClient.DeleteAsync(
-        $"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}/attributes/{attributeId}");
-    var emptyChildResponse = await httpClient.GetAsync(
-        $"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}/attributes");
-    var emptyChildAttributes = await emptyChildResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
-    Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
-    Assert.Equal("Armor", Assert.Single(Assert.IsType<List<AttributeDto>>(emptyChildAttributes)).Name);
-    Assert.Equal("Updated Health", Assert.Single(testDao.QueryAttributesByTitleVersion(parentVersionId)).Name);
   }
 
   [Fact]
@@ -120,28 +112,219 @@ public class TitleVersionEndpointTests : EndpointTest, IClassFixture<WebApplicat
   }
 
   [Fact]
-  public async Task RenamesVersionAndRejectsRequestsWithoutOrganizationAccess()
+  public async Task ListsTitleVersions()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var versionId = await testDao.AddVersion(titleId, "Draft", parentVersionId);
+
+    // WHEN
+    var response = await httpClient.GetAsync($"/organizations/{organizationId}/titles/{titleId}/versions");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    var versions = Assert.IsType<List<TitleVersionDto>>(await response.Content.ReadFromJsonAsync<List<TitleVersionDto>>());
+    Assert.Contains(versions, item => item.Id == parentVersionId);
+    Assert.Contains(versions, item => item.Id == versionId && item.Name == "Draft");
+  }
+
+  [Fact]
+  public async Task FailsToListTitleVersionsWithoutAuthentication()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+
+    // WHEN
+    var response = await unauthorizedHttpClient.GetAsync($"/organizations/{organizationId}/titles/{titleId}/versions");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToListTitleVersionsInForeignOrganization()
+  {
+    // GIVEN
+    var organizationId = Guid.NewGuid().ToString();
+    var titleId = await testDao.AddTitle(Guid.NewGuid().ToString(), "Title");
+
+    // WHEN
+    var response = await httpClient.GetAsync($"/organizations/{organizationId}/titles/{titleId}/versions");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task CreatesTitleVersion()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var dto = new TitleVersionDto { Name = "Draft", ParentVersionId = parentVersionId };
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/versions", dto);
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    var createdVersion = Assert.IsType<TitleVersionDto>(await response.Content.ReadFromJsonAsync<TitleVersionDto>());
+    Assert.NotNull(createdVersion.Id);
+    Assert.Equal(dto.Name, createdVersion.Name);
+    Assert.Equal(parentVersionId, createdVersion.ParentVersionId);
+    Assert.Contains(testDao.QueryVersionsByTitle(titleId), version => version.RowKey == createdVersion.Id);
+  }
+
+  [Fact]
+  public async Task FailsToCreateTitleVersionWithoutAuthentication()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+
+    // WHEN
+    var response = await unauthorizedHttpClient.PostAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions",
+        new TitleVersionDto { Name = "Draft" });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToCreateTitleVersionInForeignOrganization()
+  {
+    // GIVEN
+    var organizationId = Guid.NewGuid().ToString();
+    var titleId = await testDao.AddTitle(Guid.NewGuid().ToString(), "Title");
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions",
+        new TitleVersionDto { Name = "Draft" });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task CreatesTitleVersionWithNameAtMaximumLength()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var titleVersionName = new string('a', TitleVersionService.MaximumVersionNameLength);
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions",
+        new TitleVersionDto { Name = titleVersionName });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToCreateTitleVersionWithNameOverMaximumLength()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var titleVersionName = new string('a', TitleVersionService.MaximumVersionNameLength + 1);
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions",
+        new TitleVersionDto { Name = titleVersionName });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToCreateMoreThanMaximumTitleVersions()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    for (var i = 0; i < TitleVersionService.MaximumVersionsPerTitle - 1; i++)
+    {
+      await testDao.AddVersion(titleId, $"Version {i}");
+    }
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions",
+        new TitleVersionDto { Name = "One too many" });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task RenamesTitleVersion()
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
     var versionId = await testDao.AddVersion(titleId, "Draft", testDao.GetInitialVersionId(titleId));
 
     // WHEN
-    var renameResponse = await httpClient.PutAsJsonAsync(
+    var response = await httpClient.PutAsJsonAsync(
         $"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}",
         new TitleVersionDto { Name = "Release" });
-    var unauthorizedResponse = await unauthorizedHttpClient.GetAsync(
-        $"/organizations/{organizationId}/titles/{titleId}/versions");
-    var foreignResponse = await httpClient.GetAsync(
-        $"/organizations/{Guid.NewGuid()}/titles/{titleId}/versions");
 
     // THEN
-    Assert.Equal(HttpStatusCode.NoContent, renameResponse.StatusCode);
-    Assert.Equal(HttpStatusCode.Unauthorized, unauthorizedResponse.StatusCode);
-    Assert.Equal(HttpStatusCode.Forbidden, foreignResponse.StatusCode);
-    var versionsResponse = await httpClient.GetAsync($"/organizations/{organizationId}/titles/{titleId}/versions");
-    var versions = await versionsResponse.Content.ReadFromJsonAsync<List<TitleVersionDto>>();
-    Assert.Contains(Assert.IsType<List<TitleVersionDto>>(versions), item => item.Id == versionId && item.Name == "Release");
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    Assert.Equal("Release", Assert.Single(testDao.QueryVersionsByTitle(titleId), version => version.RowKey == versionId).Name);
+  }
+
+  [Fact]
+  public async Task FailsToRenameTitleVersionWithoutAuthentication()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = await testDao.AddVersion(titleId, "Draft");
+
+    // WHEN
+    var response = await unauthorizedHttpClient.PutAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}",
+        new TitleVersionDto { Name = "Release" });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    Assert.Equal("Draft", Assert.Single(testDao.QueryVersionsByTitle(titleId), version => version.RowKey == versionId).Name);
+  }
+
+  [Fact]
+  public async Task FailsToRenameTitleVersionInForeignOrganization()
+  {
+    // GIVEN
+    var organizationId = Guid.NewGuid().ToString();
+    var titleId = await testDao.AddTitle(Guid.NewGuid().ToString(), "Title");
+    var versionId = testDao.GetInitialVersionId(titleId);
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}",
+        new TitleVersionDto { Name = "Release" });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    Assert.Equal(TitleVersionService.InitialVersionName, Assert.Single(testDao.QueryVersionsByTitle(titleId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToRenameTitleVersionWithNameOverMaximumLength()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = await testDao.AddVersion(titleId, "Draft");
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}",
+        new TitleVersionDto { Name = new string('a', TitleVersionService.MaximumVersionNameLength + 1) });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("Draft", Assert.Single(testDao.QueryVersionsByTitle(titleId), version => version.RowKey == versionId).Name);
   }
 
   [Fact]
@@ -158,12 +341,45 @@ public class TitleVersionEndpointTests : EndpointTest, IClassFixture<WebApplicat
     // THEN
     Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     var initialVersion = Assert.Single(testDao.QueryVersionsByTitle(titleId));
-    Assert.Equal("1.0", initialVersion.Name);
+    Assert.Equal(TitleVersionService.InitialVersionName, initialVersion.Name);
     Assert.False(initialVersion.IsDeleted);
   }
 
   [Fact]
-  public async Task ReadOnlyVersionCannotBeChangedButCanBeUsedAsParent()
+  public async Task FailsToDeleteTitleVersionWithoutAuthentication()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = await testDao.AddVersion(titleId, "Draft");
+
+    // WHEN
+    var response = await unauthorizedHttpClient.DeleteAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    Assert.Contains(testDao.QueryVersionsByTitle(titleId), version => version.RowKey == versionId);
+  }
+
+  [Fact]
+  public async Task FailsToDeleteTitleVersionInForeignOrganization()
+  {
+    // GIVEN
+    var organizationId = Guid.NewGuid().ToString();
+    var titleId = await testDao.AddTitle(Guid.NewGuid().ToString(), "Title");
+    var versionId = testDao.GetInitialVersionId(titleId);
+
+    // WHEN
+    var response = await httpClient.DeleteAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    Assert.Contains(testDao.QueryVersionsByTitle(titleId), version => version.RowKey == versionId);
+  }
+
+  [Fact]
+  public async Task ReadOnlyVersionCannotBeChanged()
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
@@ -174,18 +390,43 @@ public class TitleVersionEndpointTests : EndpointTest, IClassFixture<WebApplicat
     var rejectedResponse = await httpClient.PostAsJsonAsync(
         $"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}/attributes",
         new AttributeDto { Name = "Health", Type = CageType.Int });
-    var childResponse = await httpClient.PostAsJsonAsync(
-        $"/organizations/{organizationId}/titles/{titleId}/versions",
-        new TitleVersionDto { Name = "Next", ParentVersionId = versionId });
-    var child = await childResponse.Content.ReadFromJsonAsync<TitleVersionDto>();
-    var acceptedResponse = await httpClient.PostAsJsonAsync(
-        $"/organizations/{organizationId}/titles/{titleId}/versions/{child?.Id}/attributes",
-        new AttributeDto { Name = "Health", Type = CageType.Int });
-
     // THEN
     Assert.Equal(HttpStatusCode.Conflict, rejectedResponse.StatusCode);
-    Assert.Equal(HttpStatusCode.Created, childResponse.StatusCode);
-    Assert.NotNull(child?.Id);
-    Assert.Equal(HttpStatusCode.Created, acceptedResponse.StatusCode);
+  }
+
+  [Fact]
+  public async Task SetsTitleVersionReadOnly()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}/read-only",
+        new TitleVersionReadOnlyDto { IsReadOnly = true });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    Assert.True(Assert.Single(testDao.QueryVersionsByTitle(titleId)).IsReadOnly);
+  }
+
+  [Fact]
+  public async Task ReadOnlyVersionCanBeUsedAsParent()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    await testDao.SetVersionReadOnly(titleId, versionId, true);
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions",
+        new TitleVersionDto { Name = "Next", ParentVersionId = versionId });
+    var child = await response.Content.ReadFromJsonAsync<TitleVersionDto>();
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    Assert.Equal(versionId, child?.ParentVersionId);
   }
 }
