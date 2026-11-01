@@ -79,7 +79,7 @@ public class TitleVersionEndpointTests : EndpointTest, IClassFixture<WebApplicat
     Assert.Equal(HttpStatusCode.OK, childResponse.StatusCode);
     var childAttributeList = Assert.IsType<List<AttributeDto>>(childAttributes);
     Assert.Equal(2, childAttributeList.Count);
-    var childAttribute = Assert.Single(childAttributeList.Where(attribute => attribute.Id == attributeId));
+    var childAttribute = Assert.Single(childAttributeList, attribute => attribute.Id == attributeId);
     Assert.Equal(attributeId, childAttribute.Id);
     Assert.Equal("Health", childAttribute.Name);
     Assert.Equal(CageType.Int, childAttribute.Type);
@@ -89,7 +89,7 @@ public class TitleVersionEndpointTests : EndpointTest, IClassFixture<WebApplicat
         $"/organizations/{organizationId}/titles/{titleId}/versions/{version.Id}/attributes");
     var emptyChildAttributes = await emptyChildResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
     Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
-    Assert.Empty(Assert.IsType<List<AttributeDto>>(emptyChildAttributes));
+    Assert.Equal("Armor", Assert.Single(Assert.IsType<List<AttributeDto>>(emptyChildAttributes)).Name);
     Assert.Equal("Updated Health", Assert.Single(testDao.QueryAttributesByTitle(titleId)).Name);
   }
 
