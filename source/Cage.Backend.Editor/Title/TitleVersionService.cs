@@ -106,7 +106,13 @@ public class TitleVersionService
     }
     else
     {
+      var parentVersionId = version.ParentVersionId;
       await attributeDao.DeleteByTitle(versionId);
+      if (version.ParentSnapshotId is not null)
+      {
+        await attributeDao.DeleteByTitle(version.ParentSnapshotId);
+      }
+
       if (versionId == titleId)
       {
         version.IsDeleted = true;
@@ -115,6 +121,7 @@ public class TitleVersionService
       else
       {
         await titleVersionDao.Delete(titleId, versionId);
+        await PruneDeletedAncestors(titleId, parentVersionId);
       }
     }
 
@@ -132,6 +139,43 @@ public class TitleVersionService
         RowKey = titleId,
         Name = "Initial",
       });
+    }
+
+    private async Task PruneDeletedAncestors(string titleId, string? versionId)
+    {
+      while (versionId is not null)
+      {
+        var version = await titleVersionDao.Get(titleId, versionId);
+        if (version is not { IsDeleted: true })
+        {
+          return;
+        }
+
+        var versions = await titleVersionDao.QueryByTitle(titleId);
+        if (versions.Any(candidate => candidate.ParentVersionId == versionId))
+        {
+          return;
+        }
+
+        var parentVersionId = version.ParentVersionId;
+        await attributeDao.DeleteByTitle(versionId);
+        if (version.ParentSnapshotId is not null)
+        {
+          await attributeDao.DeleteByTitle(version.ParentSnapshotId);
+        }
+
+        if (versionId == titleId)
+        {
+          version.ParentVersionId = null;
+          version.ParentSnapshotId = null;
+          await titleVersionDao.Update(version);
+          return;
+        }
+
+        await titleVersionDao.Delete(titleId, versionId);
+        logger.LogInformation("Deleted version {} storage pruned from title {}.", versionId, titleId);
+        versionId = parentVersionId;
+      }
     }
   }
 

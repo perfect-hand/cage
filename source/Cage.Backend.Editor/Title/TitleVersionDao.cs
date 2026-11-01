@@ -32,7 +32,7 @@ public class TitleVersionDao : TableDao
 
   public async Task Update(TitleVersionEntity version)
   {
-    await titleVersionsTableClient.UpdateEntityAsync(version, ETag.All, TableUpdateMode.Merge);
+    await titleVersionsTableClient.UpdateEntityAsync(version, version.ETag, TableUpdateMode.Replace);
   }
 
   public async Task Delete(string titleId, string versionId)

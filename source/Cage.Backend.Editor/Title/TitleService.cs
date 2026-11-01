@@ -79,7 +79,11 @@ public class TitleService
     if (deleted)
     {
       var versions = await titleVersionDao.QueryByTitle(titleId);
-      foreach (var versionId in versions.Select(version => version.RowKey).Append(titleId).Distinct())
+      foreach (var versionId in versions
+                   .SelectMany(version => new[] { version.RowKey, version.ParentSnapshotId })
+                   .Append(titleId)
+                   .OfType<string>()
+                   .Distinct())
       {
         await attributeDao.DeleteByTitle(versionId);
       }

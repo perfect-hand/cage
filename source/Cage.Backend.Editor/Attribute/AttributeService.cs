@@ -99,10 +99,7 @@ public class AttributeService
     }
 
     await FreezeDescendants(titleId, versionId);
-    var inherited = version.ParentVersionId is not null &&
-                    (await ReadAllVersions(titleId, version.ParentVersionId))
-                    .Any(attribute => attribute.RowKey == attributeId);
-    if (!inherited && await attributeDao.GetByVersion(versionId, attributeId) is not null)
+    if (version.ParentVersionId is null && version.ParentSnapshotId is null)
     {
       await attributeDao.DeleteAttribute(versionId, attributeId);
     }
@@ -156,6 +153,14 @@ public class AttributeService
     var attributesById = new Dictionary<string, AttributeEntity>();
     foreach (var version in versions.AsEnumerable().Reverse())
     {
+      if (version.ParentSnapshotId is not null)
+      {
+        foreach (var attribute in await attributeDao.QueryByVersion(version.ParentSnapshotId))
+        {
+          attributesById[attribute.RowKey] = attribute;
+        }
+      }
+
       foreach (var attribute in await attributeDao.QueryByVersion(version.RowKey))
       {
         if (attribute.IsDeleted)
@@ -174,48 +179,18 @@ public class AttributeService
 
   private async Task FreezeDescendants(string titleId, string versionId)
   {
-    var versions = await titleVersionDao.QueryByTitle(titleId);
-    var versionsById = versions.ToDictionary(version => version.RowKey);
-    var descendants = versions
-        .Where(version => version.RowKey != versionId && IsDescendantOf(version, versionId, versionsById))
+    var children = (await titleVersionDao.QueryByTitle(titleId))
+        .Where(version => version.ParentVersionId == versionId)
         .ToList();
-    foreach (var descendant in descendants)
+    foreach (var child in children)
     {
-      var attributes = await ReadAllVersions(titleId, descendant.RowKey);
-      await attributeDao.ReplaceVersionAttributes(descendant.RowKey, attributes);
-      descendant.ParentVersionId = null;
-      await titleVersionDao.Update(descendant);
+      var attributes = await ReadAllVersions(titleId, child.RowKey);
+      var snapshotId = Guid.NewGuid().ToString();
+      await attributeDao.AddVersionSnapshot(snapshotId, attributes);
+      child.ParentVersionId = null;
+      child.ParentSnapshotId = snapshotId;
+      await titleVersionDao.Update(child);
     }
-  }
-
-  private static bool IsDescendantOf(
-      TitleVersionEntity version,
-      string ancestorVersionId,
-      Dictionary<string, TitleVersionEntity> versionsById)
-  {
-    var parentVersionId = version.ParentVersionId;
-    var visited = new HashSet<string>();
-    while (parentVersionId is not null && visited.Add(parentVersionId))
-    {
-      if (parentVersionId == ancestorVersionId)
-      {
-        return true;
-      }
-
-      if (!versionsById.TryGetValue(parentVersionId, out var parent))
-      {
-        return false;
-      }
-
-      parentVersionId = parent.ParentVersionId;
-    }
-
-    if (parentVersionId is not null)
-    {
-      throw new InvalidOperationException("The title version hierarchy is invalid.");
-    }
-
-    return false;
   }
 
   private async Task<TitleVersionEntity> EnsureAccess(string organizationId, string titleId, string versionId, string? user)

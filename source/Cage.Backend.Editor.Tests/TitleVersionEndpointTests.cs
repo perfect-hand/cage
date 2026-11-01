@@ -62,6 +62,9 @@ public class TitleVersionEndpointTests : EndpointTest, IClassFixture<WebApplicat
     var version = await createResponse.Content.ReadFromJsonAsync<TitleVersionDto>();
     Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
     Assert.NotNull(version?.Id);
+    await httpClient.PostAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{version.Id}/attributes",
+        new AttributeDto { Name = "Armor", Type = CageType.Int });
 
     // WHEN
     var updateResponse = await httpClient.PutAsJsonAsync(
@@ -74,10 +77,20 @@ public class TitleVersionEndpointTests : EndpointTest, IClassFixture<WebApplicat
     // THEN
     Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
     Assert.Equal(HttpStatusCode.OK, childResponse.StatusCode);
-    var childAttribute = Assert.Single(Assert.IsType<List<AttributeDto>>(childAttributes));
+    var childAttributeList = Assert.IsType<List<AttributeDto>>(childAttributes);
+    Assert.Equal(2, childAttributeList.Count);
+    var childAttribute = Assert.Single(childAttributeList.Where(attribute => attribute.Id == attributeId));
     Assert.Equal(attributeId, childAttribute.Id);
     Assert.Equal("Health", childAttribute.Name);
     Assert.Equal(CageType.Int, childAttribute.Type);
+    var deleteResponse = await httpClient.DeleteAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{version.Id}/attributes/{attributeId}");
+    var emptyChildResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{version.Id}/attributes");
+    var emptyChildAttributes = await emptyChildResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
+    Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+    Assert.Empty(Assert.IsType<List<AttributeDto>>(emptyChildAttributes));
+    Assert.Equal("Updated Health", Assert.Single(testDao.QueryAttributesByTitle(titleId)).Name);
   }
 
   [Fact]
@@ -94,6 +107,11 @@ public class TitleVersionEndpointTests : EndpointTest, IClassFixture<WebApplicat
     await httpClient.PostAsJsonAsync(
         $"/organizations/{organizationId}/titles/{titleId}/versions/{version.Id}/attributes",
         new AttributeDto { Name = "Armor", Type = CageType.Int });
+    var childResponse = await httpClient.PostAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions",
+        new TitleVersionDto { Name = "Next", ParentVersionId = version.Id });
+    var child = await childResponse.Content.ReadFromJsonAsync<TitleVersionDto>();
+    Assert.NotNull(child?.Id);
 
     // WHEN
     var deleteResponse = await httpClient.DeleteAsync(
@@ -103,7 +121,17 @@ public class TitleVersionEndpointTests : EndpointTest, IClassFixture<WebApplicat
     Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
     var versionsResponse = await httpClient.GetAsync($"/organizations/{organizationId}/titles/{titleId}/versions");
     var versions = await versionsResponse.Content.ReadFromJsonAsync<List<TitleVersionDto>>();
-    Assert.Single(Assert.IsType<List<TitleVersionDto>>(versions));
+    Assert.Contains(Assert.IsType<List<TitleVersionDto>>(versions), item => item.Id == child.Id);
+    var childAttributesResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{child.Id}/attributes");
+    var childAttributes = await childAttributesResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
+    Assert.Equal(2, Assert.IsType<List<AttributeDto>>(childAttributes).Count);
+    var childDeleteResponse = await httpClient.DeleteAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{child.Id}");
+    Assert.Equal(HttpStatusCode.NoContent, childDeleteResponse.StatusCode);
+    var remainingVersionsResponse = await httpClient.GetAsync($"/organizations/{organizationId}/titles/{titleId}/versions");
+    var remainingVersions = await remainingVersionsResponse.Content.ReadFromJsonAsync<List<TitleVersionDto>>();
+    Assert.Single(Assert.IsType<List<TitleVersionDto>>(remainingVersions));
     var parentAttributesResponse = await httpClient.GetAsync(
         $"/organizations/{organizationId}/titles/{titleId}/versions/{titleId}/attributes");
     var parentAttributes = await parentAttributesResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
