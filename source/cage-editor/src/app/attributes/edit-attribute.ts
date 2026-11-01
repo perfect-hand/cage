@@ -21,6 +21,7 @@ export class EditAttribute implements OnInit {
 
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
+  readonly versionId = input('');
   readonly attributeId = input.required<string>();
   readonly attributeTypes = attributeTypes;
   readonly isLoading = signal(true);
@@ -38,7 +39,8 @@ export class EditAttribute implements OnInit {
   }
 
   private async loadAttribute(): Promise<void> {
-    let attributes = this.attributesService.getAttributes(this.titleId());
+    const versionId = this.versionId() || this.titleId();
+    let attributes = this.attributesService.getAttributes(this.titleId(), versionId);
     let attribute = attributes.find((item) => item.id === this.attributeId());
 
     if (!attribute) {
@@ -46,10 +48,10 @@ export class EditAttribute implements OnInit {
         attributes =
           (await firstValueFrom(
             this.http.get<Attribute[]>(
-              `/organizations/${this.organizationId()}/titles/${this.titleId()}/attributes`,
+              `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/attributes`,
             ),
           )) ?? [];
-        this.attributesService.setAttributes(this.titleId(), attributes);
+        this.attributesService.setAttributes(this.titleId(), versionId, attributes);
         attribute = attributes.find((item) => item.id === this.attributeId());
       } catch (error) {
         console.error('Failed to load attributes.', error);
@@ -70,27 +72,30 @@ export class EditAttribute implements OnInit {
     }
 
     this.isSubmitting.set(true);
+    const versionId = this.versionId() || this.titleId();
 
     try {
       const name = this.model().name.trim();
       const type = this.model().type;
       await firstValueFrom(
         this.http.put(
-          `/organizations/${this.organizationId()}/titles/${this.titleId()}/attributes/${this.attributeId()}`,
+          `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/attributes/${this.attributeId()}`,
           { name, type },
         ),
       );
       const attributes = this.attributesService
-        .getAttributes(this.titleId())
+        .getAttributes(this.titleId(), versionId)
         .map((attribute) =>
           attribute.id === this.attributeId() ? { ...attribute, name, type } : attribute,
         );
-      this.attributesService.setAttributes(this.titleId(), attributes);
+      this.attributesService.setAttributes(this.titleId(), versionId, attributes);
       await this.router.navigate([
         '/organizations',
         this.organizationId(),
         'titles',
         this.titleId(),
+        'versions',
+        versionId,
         'attributes',
       ]);
     } catch (error) {

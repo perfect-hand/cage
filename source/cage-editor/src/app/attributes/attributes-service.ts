@@ -17,16 +17,16 @@ export interface Attribute {
 
 @Service()
 export class AttributesService {
-  private readonly attributesByTitle = signal<Record<string, Attribute[]>>({});
+  private readonly attributesByVersion = signal<Record<string, Attribute[]>>({});
 
-  getAttributes(titleId: string): Attribute[] {
-    return this.attributesByTitle()[titleId] ?? [];
+  getAttributes(titleId: string, versionId: string): Attribute[] {
+    return this.attributesByVersion()[`${titleId}:${versionId}`] ?? [];
   }
 
-  setAttributes(titleId: string, attributes: Attribute[]): void {
-    this.attributesByTitle.update((attributesByTitle) => ({
-      ...attributesByTitle,
-      [titleId]: attributes,
+  setAttributes(titleId: string, versionId: string, attributes: Attribute[]): void {
+    this.attributesByVersion.update((attributesByVersion) => ({
+      ...attributesByVersion,
+      [`${titleId}:${versionId}`]: attributes,
     }));
   }
 }

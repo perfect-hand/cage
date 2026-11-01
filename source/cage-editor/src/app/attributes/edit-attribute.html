@@ -12,7 +12,7 @@
     } @else if (notFound()) {
     <p class="field-error" role="alert">Attribute not found.</p>
     <div class="form-actions">
-      <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'attributes']">Back</button>
+      <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId() || titleId(), 'attributes']">Back</button>
     </div>
     } @else {
     <form (submit)="updateAttribute(); $event.preventDefault()" novalidate>
@@ -30,7 +30,7 @@
       </select>
 
       <div class="form-actions">
-        <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'attributes']">Cancel</button>
+        <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId() || titleId(), 'attributes']">Cancel</button>
         <button mat-button type="submit" [disabled]="isSubmitting()">
           {{ isSubmitting() ? 'Saving...' : 'Save attribute' }}
         </button>

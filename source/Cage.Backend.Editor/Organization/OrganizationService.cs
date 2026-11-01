@@ -13,6 +13,7 @@ public class OrganizationService
   private readonly OrganizationMapper mapper;
   private readonly OrganizationDao dao;
   private readonly TitleDao titleDao;
+  private readonly TitleVersionDao titleVersionDao;
   private readonly AttributeDao attributeDao;
   private readonly ILogger<OrganizationService> logger;
 
@@ -21,6 +22,7 @@ public class OrganizationService
     mapper = new OrganizationMapper();
     dao = new OrganizationDao();
     titleDao = new TitleDao();
+    titleVersionDao = new TitleVersionDao();
     attributeDao = new AttributeDao();
     this.logger = logger;
   }
@@ -89,7 +91,13 @@ public class OrganizationService
     {
       foreach (var title in await titleDao.QueryByOrganization(organizationId))
       {
-        await attributeDao.DeleteByTitle(title.RowKey);
+        var versions = await titleVersionDao.QueryByTitle(title.RowKey);
+        foreach (var versionId in versions.Select(version => version.RowKey).Append(title.RowKey).Distinct())
+        {
+          await attributeDao.DeleteByTitle(versionId);
+        }
+
+        await titleVersionDao.DeleteByTitle(title.RowKey);
       }
 
       await titleDao.DeleteByOrganization(organizationId);

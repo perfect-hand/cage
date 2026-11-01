@@ -14,6 +14,7 @@ public class AttributeEntity : ITableEntity
 
   public required string Name { get; set; }
   public CageType Type { get; set; }
+  public bool IsDeleted { get; set; }
 
   public override string ToString()
   {

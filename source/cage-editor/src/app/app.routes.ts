@@ -8,6 +8,7 @@ import { Attributes } from './attributes/attributes';
 import { CreateAttribute } from './attributes/create-attribute';
 import { EditAttribute } from './attributes/edit-attribute';
 import { Titles } from './titles/titles';
+import { TitleVersions } from './titles/title-versions';
 import { Organizations } from './organizations/organizations';
 
 export const routes: Routes = [
@@ -21,9 +22,13 @@ export const routes: Routes = [
       { path: 'organizations/:organizationId/titles', component: Titles },
       { path: 'organizations/:organizationId/titles/new', component: CreateTitle },
       { path: 'organizations/:organizationId/titles/:titleId/edit', component: EditTitle },
+      { path: 'organizations/:organizationId/titles/:titleId/versions', component: TitleVersions },
       { path: 'organizations/:organizationId/titles/:titleId/attributes', component: Attributes },
       { path: 'organizations/:organizationId/titles/:titleId/attributes/new', component: CreateAttribute },
       { path: 'organizations/:organizationId/titles/:titleId/attributes/:attributeId/edit', component: EditAttribute },
+      { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/attributes', component: Attributes },
+      { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/attributes/new', component: CreateAttribute },
+      { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/attributes/:attributeId/edit', component: EditAttribute },
     ],
   },
 ];
