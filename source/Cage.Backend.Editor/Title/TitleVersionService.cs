@@ -42,9 +42,9 @@ public class TitleVersionService
       throw new ArgumentException($"Titles cannot have more than {MaximumVersionsPerTitle} versions.", nameof(dto));
     }
 
-    var parentVersionId = dto.ParentVersionId ?? titleId;
-    var parent = await titleVersionDao.Get(titleId, parentVersionId);
-    if (parent is null || parent.IsDeleted)
+    var parentVersionId = dto.ParentVersionId;
+    var parent = parentVersionId is null ? null : await titleVersionDao.Get(titleId, parentVersionId);
+    if (parentVersionId is not null && (parent is null || parent.IsDeleted))
     {
       throw new ArgumentException("Parent version does not exist.", nameof(dto));
     }
@@ -98,8 +98,26 @@ public class TitleVersionService
       return false;
     }
 
-    version.IsDeleted = true;
-    await titleVersionDao.Update(version);
+    var versions = await titleVersionDao.QueryByTitle(titleId);
+    if (versions.Any(candidate => candidate.ParentVersionId == versionId))
+    {
+      version.IsDeleted = true;
+      await titleVersionDao.Update(version);
+    }
+    else
+    {
+      await attributeDao.DeleteByTitle(versionId);
+      if (versionId == titleId)
+      {
+        version.IsDeleted = true;
+        await titleVersionDao.Update(version);
+      }
+      else
+      {
+        await titleVersionDao.Delete(titleId, versionId);
+      }
+    }
+
     logger.LogInformation("Version {} deleted from title {}.", versionId, titleId);
     return true;
   }

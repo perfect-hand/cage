@@ -38,6 +38,7 @@
 
       <label for="version-parent">Based on</label>
       <select id="version-parent" class="text-input" [ngModel]="parentVersionId()" (ngModelChange)="parentVersionId.set($event)" name="parentVersion">
+        <option value="">No parent</option>
         @for (version of versions(); track version.id) {
         <option [value]="version.id">{{ version.name }}</option>
         }

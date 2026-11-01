@@ -99,7 +99,10 @@ public class AttributeService
     }
 
     await FreezeDescendants(titleId, versionId);
-    if (await attributeDao.GetByVersion(versionId, attributeId) is not null)
+    var inherited = version.ParentVersionId is not null &&
+                    (await ReadAllVersions(titleId, version.ParentVersionId))
+                    .Any(attribute => attribute.RowKey == attributeId);
+    if (!inherited && await attributeDao.GetByVersion(versionId, attributeId) is not null)
     {
       await attributeDao.DeleteAttribute(versionId, attributeId);
     }

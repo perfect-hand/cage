@@ -44,7 +44,7 @@ export class TitleVersions implements OnInit {
         )) ?? [];
       this.versions.set(versions);
       this.versionsService.setVersions(this.titleId(), versions);
-      this.parentVersionId.set(this.titleId());
+      this.parentVersionId.set(versions.find((version) => version.id === this.titleId())?.id ?? versions[0]?.id ?? '');
     } catch (error) {
       console.error('Failed to load title versions.', error);
     } finally {
@@ -63,7 +63,7 @@ export class TitleVersions implements OnInit {
       const version = await firstValueFrom(
         this.http.post<TitleVersion>(
           `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions`,
-          { name, parentVersionId: this.parentVersionId() || this.titleId() },
+          { name, parentVersionId: this.parentVersionId() || null },
         ),
       );
       const versions = [...this.versions(), version];
@@ -159,7 +159,11 @@ export class TitleVersions implements OnInit {
           `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${version.id}`,
         ),
       );
-      this.updateVersions(this.versions().filter((item) => item.id !== version.id));
+      const versions = this.versions().filter((item) => item.id !== version.id);
+      this.updateVersions(versions);
+      if (this.parentVersionId() === version.id) {
+        this.parentVersionId.set(versions[0]?.id ?? '');
+      }
     } catch (error) {
       console.error('Failed to delete title version.', error);
     } finally {

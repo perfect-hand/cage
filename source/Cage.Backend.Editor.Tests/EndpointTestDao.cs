@@ -11,7 +11,6 @@ public class EndpointTestDao
   private readonly TableClient organizationsTableClient;
   private readonly TableClient usersInOrganizationTableClient;
   private readonly TableClient titlesTableClient;
-  private readonly TableClient titleVersionsTableClient;
   private readonly TableClient attributesTableClient;
 
   public EndpointTestDao(string connectionString)
@@ -26,7 +25,6 @@ public class EndpointTestDao
     organizationsTableClient = tableServiceClient.GetTableClient(OrganizationDao.OrganizationsTableName);
     usersInOrganizationTableClient = tableServiceClient.GetTableClient(OrganizationDao.UsersInOrganizationTableName);
     titlesTableClient = tableServiceClient.GetTableClient(TitleDao.TitlesTableName);
-    titleVersionsTableClient = tableServiceClient.GetTableClient(TitleVersionDao.TitleVersionsTableName);
   }
 
   public async Task<OrganizationEntity> AddOrganization(string name)
@@ -92,20 +90,6 @@ public class EndpointTestDao
     return attribute.RowKey;
   }
 
-  public async Task<string> AddVersion(string titleId, string name, string? parentVersionId = null, bool isReadOnly = false)
-  {
-    var version = new TitleVersionEntity
-    {
-      PartitionKey = titleId,
-      RowKey = Guid.NewGuid().ToString(),
-      Name = name,
-      ParentVersionId = parentVersionId ?? titleId,
-      IsReadOnly = isReadOnly
-    };
-    await titleVersionsTableClient.AddEntityAsync(version);
-    return version.RowKey;
-  }
-
   public List<AttributeEntity> QueryAttributesByTitle(string titleId)
   {
     return attributesTableClient.Query<AttributeEntity>(entity => entity.PartitionKey == titleId).ToList();
@@ -114,11 +98,6 @@ public class EndpointTestDao
   public List<TitleEntity> QueryTitlesByOrganization(string organizationId)
   {
     return titlesTableClient.Query<TitleEntity>(entity => entity.PartitionKey == organizationId).ToList();
-  }
-
-  public List<TitleVersionEntity> QueryVersionsByTitle(string titleId)
-  {
-    return titleVersionsTableClient.Query<TitleVersionEntity>(entity => entity.PartitionKey == titleId).ToList();
   }
 
   public OrganizationEntity? QueryOrganization(string organizationId)
