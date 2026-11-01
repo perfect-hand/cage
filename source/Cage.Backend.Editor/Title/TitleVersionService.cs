@@ -23,7 +23,6 @@ public class TitleVersionService
   public async Task<List<TitleVersionDto>> ReadAll(string organizationId, string titleId, string? user)
   {
     await EnsureTitleAccess(organizationId, titleId, user);
-    await EnsureInitialVersion(titleId);
     return (await titleVersionDao.QueryByTitle(titleId))
         .Where(version => !version.IsDeleted)
         .Select(mapper.ToDto)
@@ -34,7 +33,6 @@ public class TitleVersionService
   {
     await EnsureTitleAccess(organizationId, titleId, user);
     ValidateName(dto.Name);
-    await EnsureInitialVersion(titleId);
 
     var versions = await titleVersionDao.QueryByTitle(titleId);
     if (versions.Count(version => !version.IsDeleted) >= MaximumVersionsPerTitle)
@@ -59,7 +57,6 @@ public class TitleVersionService
   {
     await EnsureTitleAccess(organizationId, titleId, user);
     ValidateName(dto.Name);
-    await EnsureInitialVersion(titleId);
     var version = await GetActiveVersion(titleId, versionId);
     if (version is null)
     {
@@ -75,7 +72,6 @@ public class TitleVersionService
   public async Task<bool> SetReadOnly(string organizationId, string titleId, string versionId, bool isReadOnly, string? user)
   {
     await EnsureTitleAccess(organizationId, titleId, user);
-    await EnsureInitialVersion(titleId);
     var version = await GetActiveVersion(titleId, versionId);
     if (version is null)
     {
@@ -91,7 +87,6 @@ public class TitleVersionService
   public async Task<bool> Delete(string organizationId, string titleId, string versionId, string? user)
   {
     await EnsureTitleAccess(organizationId, titleId, user);
-    await EnsureInitialVersion(titleId);
     var version = await GetActiveVersion(titleId, versionId);
     if (version is null)
     {
@@ -99,6 +94,11 @@ public class TitleVersionService
     }
 
     var versions = await titleVersionDao.QueryByTitle(titleId);
+    if (versions.Count(candidate => !candidate.IsDeleted) <= 1)
+    {
+      throw new InvalidOperationException("Titles must have at least one version.");
+    }
+
     if (versions.Any(candidate => candidate.ParentVersionId == versionId))
     {
       version.IsDeleted = true;
@@ -129,53 +129,40 @@ public class TitleVersionService
     return true;
   }
 
-  private async Task EnsureInitialVersion(string titleId)
+  private async Task PruneDeletedAncestors(string titleId, string? versionId)
   {
-    if (await titleVersionDao.Get(titleId, titleId) is null)
+    while (versionId is not null)
     {
-      await titleVersionDao.Add(new TitleVersionEntity
+      var version = await titleVersionDao.Get(titleId, versionId);
+      if (version is not { IsDeleted: true })
       {
-        PartitionKey = titleId,
-        RowKey = titleId,
-        Name = "Initial",
-      });
-    }
-
-    private async Task PruneDeletedAncestors(string titleId, string? versionId)
-    {
-      while (versionId is not null)
-      {
-        var version = await titleVersionDao.Get(titleId, versionId);
-        if (version is not { IsDeleted: true })
-        {
-          return;
-        }
-
-        var versions = await titleVersionDao.QueryByTitle(titleId);
-        if (versions.Any(candidate => candidate.ParentVersionId == versionId))
-        {
-          return;
-        }
-
-        var parentVersionId = version.ParentVersionId;
-        await attributeDao.DeleteByTitle(versionId);
-        if (version.ParentSnapshotId is not null)
-        {
-          await attributeDao.DeleteByTitle(version.ParentSnapshotId);
-        }
-
-        if (versionId == titleId)
-        {
-          version.ParentVersionId = null;
-          version.ParentSnapshotId = null;
-          await titleVersionDao.Update(version);
-          return;
-        }
-
-        await titleVersionDao.Delete(titleId, versionId);
-        logger.LogInformation("Deleted version {} storage pruned from title {}.", versionId, titleId);
-        versionId = parentVersionId;
+        return;
       }
+
+      var versions = await titleVersionDao.QueryByTitle(titleId);
+      if (versions.Any(candidate => candidate.ParentVersionId == versionId))
+      {
+        return;
+      }
+
+      var parentVersionId = version.ParentVersionId;
+      await attributeDao.DeleteByTitle(versionId);
+      if (version.ParentSnapshotId is not null)
+      {
+        await attributeDao.DeleteByTitle(version.ParentSnapshotId);
+      }
+
+      if (versionId == titleId)
+      {
+        version.ParentVersionId = null;
+        version.ParentSnapshotId = null;
+        await titleVersionDao.Update(version);
+        return;
+      }
+
+      await titleVersionDao.Delete(titleId, versionId);
+      logger.LogInformation("Deleted version {} storage pruned from title {}.", versionId, titleId);
+      versionId = parentVersionId;
     }
   }
 

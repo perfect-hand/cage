@@ -11,6 +11,7 @@ public class EndpointTestDao
   private readonly TableClient organizationsTableClient;
   private readonly TableClient usersInOrganizationTableClient;
   private readonly TableClient titlesTableClient;
+  private readonly TableClient titleVersionsTableClient;
   private readonly TableClient attributesTableClient;
 
   public EndpointTestDao(string connectionString)
@@ -25,6 +26,7 @@ public class EndpointTestDao
     organizationsTableClient = tableServiceClient.GetTableClient(OrganizationDao.OrganizationsTableName);
     usersInOrganizationTableClient = tableServiceClient.GetTableClient(OrganizationDao.UsersInOrganizationTableName);
     titlesTableClient = tableServiceClient.GetTableClient(TitleDao.TitlesTableName);
+    titleVersionsTableClient = tableServiceClient.GetTableClient(TitleVersionDao.TitleVersionsTableName);
   }
 
   public async Task<OrganizationEntity> AddOrganization(string name)
@@ -66,6 +68,12 @@ public class EndpointTestDao
       Name = name
     };
     await titlesTableClient.AddEntityAsync(title);
+    await titleVersionsTableClient.AddEntityAsync(new TitleVersionEntity
+    {
+      PartitionKey = title.RowKey,
+      RowKey = title.RowKey,
+      Name = "1.0"
+    });
     return title.RowKey;
   }
 
@@ -98,6 +106,11 @@ public class EndpointTestDao
   public List<TitleEntity> QueryTitlesByOrganization(string organizationId)
   {
     return titlesTableClient.Query<TitleEntity>(entity => entity.PartitionKey == organizationId).ToList();
+  }
+
+  public List<TitleVersionEntity> QueryVersionsByTitle(string titleId)
+  {
+    return titleVersionsTableClient.Query<TitleVersionEntity>(entity => entity.PartitionKey == titleId).ToList();
   }
 
   public OrganizationEntity? QueryOrganization(string organizationId)

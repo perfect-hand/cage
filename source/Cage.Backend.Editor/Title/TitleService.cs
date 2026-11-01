@@ -41,12 +41,20 @@ public class TitleService
 
     var title = mapper.ToEntity(dto, organizationId);
     await titleDao.AddTitle(title);
-    await titleVersionDao.Add(new TitleVersionEntity
+    try
     {
-      PartitionKey = title.RowKey,
-      RowKey = title.RowKey,
-      Name = "Initial",
-    });
+      await titleVersionDao.Add(new TitleVersionEntity
+      {
+        PartitionKey = title.RowKey,
+        RowKey = title.RowKey,
+        Name = "1.0",
+      });
+    }
+    catch
+    {
+      await titleDao.DeleteTitle(organizationId, title.RowKey);
+      throw;
+    }
 
     logger.LogInformation("Title {} created in organization {}.", title.RowKey, organizationId);
     return mapper.ToDto(title);

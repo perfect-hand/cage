@@ -206,17 +206,6 @@ public class AttributeService
     }
 
     var version = await titleVersionDao.Get(titleId, versionId);
-    if (versionId == titleId && version is null)
-    {
-      version = new TitleVersionEntity
-      {
-        PartitionKey = titleId,
-        RowKey = titleId,
-        Name = "Initial",
-      };
-      await titleVersionDao.Add(version);
-    }
-
     if (version is null || version.IsDeleted)
     {
       throw new UnauthorizedAccessException();

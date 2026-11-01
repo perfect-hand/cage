@@ -101,6 +101,10 @@ static async Task<IResult> GetAllOrganizations(OrganizationService organizationS
   {
     return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
   }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+  }
 }
 
 static async Task<IResult> CreateOrganization(OrganizationService organizationService, OrganizationDto dto, HttpContext httpContext)
@@ -298,6 +302,10 @@ static async Task<IResult> DeleteTitleVersion(TitleVersionService titleVersionSe
   catch (UnauthorizedAccessException)
   {
     return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
   }
 }
 

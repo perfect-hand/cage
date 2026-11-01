@@ -169,6 +169,23 @@ public class TitleVersionEndpointTests : EndpointTest, IClassFixture<WebApplicat
   }
 
   [Fact]
+  public async Task CannotDeleteTheOnlyVersionOfATitle()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+
+    // WHEN
+    var response = await httpClient.DeleteAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{titleId}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    var initialVersion = Assert.Single(testDao.QueryVersionsByTitle(titleId));
+    Assert.Equal("1.0", initialVersion.Name);
+    Assert.False(initialVersion.IsDeleted);
+  }
+
+  [Fact]
   public async Task ReadOnlyVersionCannotBeChangedButCanBeUsedAsParent()
   {
     // GIVEN

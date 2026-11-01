@@ -72,6 +72,8 @@ public class TitleEndpointTests : EndpointTest, IClassFixture<WebApplicationFact
     Assert.Equal(dto.Name, createdTitle.Name);
 
     Assert.Contains(testDao.QueryTitlesByOrganization(organizationId), title => title.RowKey == createdTitle.Id);
+    var initialVersion = Assert.Single(testDao.QueryVersionsByTitle(createdTitle.Id!));
+    Assert.Equal("1.0", initialVersion.Name);
   }
 
   [Fact]
