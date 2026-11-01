@@ -46,7 +46,7 @@ public class TitleService
       await titleVersionDao.Add(new TitleVersionEntity
       {
         PartitionKey = title.RowKey,
-        RowKey = title.RowKey,
+        RowKey = Guid.NewGuid().ToString(),
         Name = "1.0",
       });
     }
@@ -89,11 +89,10 @@ public class TitleService
       var versions = await titleVersionDao.QueryByTitle(titleId);
       foreach (var versionId in versions
                    .SelectMany(version => new[] { version.RowKey, version.ParentSnapshotId })
-                   .Append(titleId)
                    .OfType<string>()
                    .Distinct())
       {
-        await attributeDao.DeleteByTitle(versionId);
+        await attributeDao.DeleteByTitleVersion(versionId);
       }
 
       await titleVersionDao.DeleteByTitle(titleId);

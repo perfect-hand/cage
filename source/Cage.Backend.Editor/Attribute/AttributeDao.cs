@@ -1,6 +1,5 @@
 using Azure;
 using Azure.Data.Tables;
-using Cage.Simulation.Types;
 
 namespace Cage.Backend.Editor.Attribute;
 
@@ -20,19 +19,14 @@ public class AttributeDao : TableDao
     await attributesTableClient.AddEntityAsync(attribute);
   }
 
-  public async Task<List<AttributeEntity>> QueryByTitle(string titleId)
+  public Task<List<AttributeEntity>> QueryByTitleVersion(string titleVersionId)
   {
-    return await QueryByVersion(titleId);
+    return Task.FromResult(attributesTableClient.Query<AttributeEntity>(ent => ent.PartitionKey == titleVersionId).ToList());
   }
 
-  public Task<List<AttributeEntity>> QueryByVersion(string versionId)
+  public async Task SetAttributeTitleVersion(string titleVersionId, AttributeEntity attribute)
   {
-    return Task.FromResult(attributesTableClient.Query<AttributeEntity>(ent => ent.PartitionKey == versionId).ToList());
-  }
-
-  public async Task SetAttribute(string versionId, AttributeEntity attribute)
-  {
-    attribute.PartitionKey = versionId;
+    attribute.PartitionKey = titleVersionId;
     await attributesTableClient.UpsertEntityAsync(attribute, TableUpdateMode.Replace);
   }
 
@@ -50,39 +44,24 @@ public class AttributeDao : TableDao
     }
   }
 
-  public async Task<bool> UpdateAttribute(string titleId, string attributeId, string name, CageType type)
+  public async Task<bool> DeleteAttributeTitleVersion(string titleVersionId, string attributeId)
   {
-    var attributeResponse = await attributesTableClient.GetEntityIfExistsAsync<AttributeEntity>(titleId, attributeId);
+    var attributeResponse = await attributesTableClient.GetEntityIfExistsAsync<AttributeEntity>(titleVersionId, attributeId);
     if (!attributeResponse.HasValue)
     {
       return false;
     }
 
-    var attribute = attributeResponse.Value!;
-    attribute.Name = name;
-    attribute.Type = type;
-    await attributesTableClient.UpdateEntityAsync(attribute, ETag.All, TableUpdateMode.Merge);
+    await attributesTableClient.DeleteEntityAsync(titleVersionId, attributeId);
     return true;
   }
 
-  public async Task<bool> DeleteAttribute(string titleId, string attributeId)
+  public async Task DeleteByTitleVersion(string titleVersionId)
   {
-    var attributeResponse = await attributesTableClient.GetEntityIfExistsAsync<AttributeEntity>(titleId, attributeId);
-    if (!attributeResponse.HasValue)
-    {
-      return false;
-    }
-
-    await attributesTableClient.DeleteEntityAsync(titleId, attributeId);
-    return true;
-  }
-
-  public async Task DeleteByTitle(string titleId)
-  {
-    var attributes = await QueryByTitle(titleId);
+    var attributes = await QueryByTitleVersion(titleVersionId);
     foreach (var attribute in attributes)
     {
-      await attributesTableClient.DeleteEntityAsync(titleId, attribute.RowKey);
+      await attributesTableClient.DeleteEntityAsync(titleVersionId, attribute.RowKey);
     }
   }
 }

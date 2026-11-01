@@ -20,11 +20,6 @@ public class AttributeService
     this.logger = logger;
   }
 
-  public Task<AttributeDto> Create(string organizationId, string titleId, AttributeDto dto, string? user)
-  {
-    return Create(organizationId, titleId, titleId, dto, user);
-  }
-
   public async Task<AttributeDto> Create(string organizationId, string titleId, string versionId, AttributeDto dto, string? user)
   {
     var version = await EnsureAccess(organizationId, titleId, versionId, user);
@@ -43,20 +38,10 @@ public class AttributeService
     return mapper.ToDto(attribute);
   }
 
-  public Task<List<AttributeDto>> ReadAll(string organizationId, string titleId, string? user)
-  {
-    return ReadAll(organizationId, titleId, titleId, user);
-  }
-
   public async Task<List<AttributeDto>> ReadAll(string organizationId, string titleId, string versionId, string? user)
   {
     await EnsureAccess(organizationId, titleId, versionId, user);
     return (await ReadAllVersions(titleId, versionId)).Select(mapper.ToDto).ToList();
-  }
-
-  public Task<bool> Update(string organizationId, string titleId, string attributeId, AttributeDto dto, string? user)
-  {
-    return Update(organizationId, titleId, titleId, attributeId, dto, user);
   }
 
   public async Task<bool> Update(string organizationId, string titleId, string versionId, string attributeId, AttributeDto dto, string? user)
@@ -76,14 +61,9 @@ public class AttributeService
     existing.PartitionKey = versionId;
     existing.Name = dto.Name;
     existing.Type = dto.Type;
-    await attributeDao.SetAttribute(versionId, existing);
+    await attributeDao.SetAttributeTitleVersion(versionId, existing);
     logger.LogInformation("Attribute {} updated in title version {}.", attributeId, versionId);
     return true;
-  }
-
-  public Task<bool> Delete(string organizationId, string titleId, string attributeId, string? user)
-  {
-    return Delete(organizationId, titleId, titleId, attributeId, user);
   }
 
   public async Task<bool> Delete(string organizationId, string titleId, string versionId, string attributeId, string? user)
@@ -101,13 +81,13 @@ public class AttributeService
     await FreezeDescendants(titleId, versionId);
     if (version.ParentVersionId is null && version.ParentSnapshotId is null)
     {
-      await attributeDao.DeleteAttribute(versionId, attributeId);
+      await attributeDao.DeleteAttributeTitleVersion(versionId, attributeId);
     }
     else
     {
       existing.PartitionKey = versionId;
       existing.IsDeleted = true;
-      await attributeDao.SetAttribute(versionId, existing);
+      await attributeDao.SetAttributeTitleVersion(versionId, existing);
     }
     logger.LogInformation("Attribute {} deleted from title version {}.", attributeId, versionId);
     return true;
@@ -128,11 +108,6 @@ public class AttributeService
       var version = await titleVersionDao.Get(titleId, currentId);
       if (version is null)
       {
-        if (currentId == titleId)
-        {
-          break;
-        }
-
         throw new UnauthorizedAccessException();
       }
 
@@ -155,13 +130,13 @@ public class AttributeService
     {
       if (version.ParentSnapshotId is not null)
       {
-        foreach (var attribute in await attributeDao.QueryByVersion(version.ParentSnapshotId))
+        foreach (var attribute in await attributeDao.QueryByTitleVersion(version.ParentSnapshotId))
         {
           attributesById[attribute.RowKey] = attribute;
         }
       }
 
-      foreach (var attribute in await attributeDao.QueryByVersion(version.RowKey))
+      foreach (var attribute in await attributeDao.QueryByTitleVersion(version.RowKey))
       {
         if (attribute.IsDeleted)
         {

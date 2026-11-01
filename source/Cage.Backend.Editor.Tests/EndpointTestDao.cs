@@ -71,7 +71,7 @@ public class EndpointTestDao
     await titleVersionsTableClient.AddEntityAsync(new TitleVersionEntity
     {
       PartitionKey = title.RowKey,
-      RowKey = title.RowKey,
+      RowKey = Guid.NewGuid().ToString(),
       Name = "1.0"
     });
     return title.RowKey;
@@ -85,11 +85,11 @@ public class EndpointTestDao
     return (organizationId, titleId);
   }
 
-  public async Task<string> AddAttribute(string titleId, string name, CageType type)
+  public async Task<string> AddAttribute(string titleVersionId, string name, CageType type)
   {
     var attribute = new AttributeEntity
     {
-      PartitionKey = titleId,
+      PartitionKey = titleVersionId,
       RowKey = Guid.NewGuid().ToString(),
       Name = name,
       Type = type
@@ -98,9 +98,37 @@ public class EndpointTestDao
     return attribute.RowKey;
   }
 
-  public List<AttributeEntity> QueryAttributesByTitle(string titleId)
+  public async Task<string> AddVersion(string titleId, string name, string? parentVersionId = null, bool isReadOnly = false)
   {
-    return attributesTableClient.Query<AttributeEntity>(entity => entity.PartitionKey == titleId).ToList();
+    var version = new TitleVersionEntity
+    {
+      PartitionKey = titleId,
+      RowKey = Guid.NewGuid().ToString(),
+      Name = name,
+      ParentVersionId = parentVersionId,
+      IsReadOnly = isReadOnly
+    };
+    await titleVersionsTableClient.AddEntityAsync(version);
+    return version.RowKey;
+  }
+
+  public string GetInitialVersionId(string titleId)
+  {
+    return titleVersionsTableClient.Query<TitleVersionEntity>(entity =>
+        entity.PartitionKey == titleId && entity.Name == "1.0")
+        .Single().RowKey;
+  }
+
+  public async Task SetVersionReadOnly(string titleId, string titleVersionId, bool isReadOnly)
+  {
+    var version = (await titleVersionsTableClient.GetEntityAsync<TitleVersionEntity>(titleId, titleVersionId)).Value;
+    version.IsReadOnly = isReadOnly;
+    await titleVersionsTableClient.UpdateEntityAsync(version, version.ETag, TableUpdateMode.Replace);
+  }
+
+  public List<AttributeEntity> QueryAttributesByTitleVersion(string titleVersionId)
+  {
+    return attributesTableClient.Query<AttributeEntity>(entity => entity.PartitionKey == titleVersionId).ToList();
   }
 
   public List<TitleEntity> QueryTitlesByOrganization(string organizationId)

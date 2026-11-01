@@ -74,10 +74,6 @@ organizations.MapPut("/{organizationId}/titles/{titleId}/versions/{versionId}", 
 organizations.MapPut("/{organizationId}/titles/{titleId}/versions/{versionId}/read-only", SetTitleVersionReadOnly);
 organizations.MapDelete("/{organizationId}/titles/{titleId}/versions/{versionId}", DeleteTitleVersion);
 
-organizations.MapGet("/{organizationId}/titles/{titleId}/attributes", GetAllAttributes);
-organizations.MapPost("/{organizationId}/titles/{titleId}/attributes", CreateAttribute);
-organizations.MapPut("/{organizationId}/titles/{titleId}/attributes/{attributeId}", UpdateAttribute);
-organizations.MapDelete("/{organizationId}/titles/{titleId}/attributes/{attributeId}", DeleteAttribute);
 organizations.MapGet("/{organizationId}/titles/{titleId}/versions/{versionId}/attributes", GetAllVersionAttributes);
 organizations.MapPost("/{organizationId}/titles/{titleId}/versions/{versionId}/attributes", CreateVersionAttribute);
 organizations.MapPut("/{organizationId}/titles/{titleId}/versions/{versionId}/attributes/{attributeId}", UpdateVersionAttribute);
@@ -296,84 +292,6 @@ static async Task<IResult> DeleteTitleVersion(TitleVersionService titleVersionSe
   try
   {
     return await titleVersionService.Delete(organizationId, titleId, versionId, user)
-        ? TypedResults.NoContent()
-        : TypedResults.NotFound();
-  }
-  catch (UnauthorizedAccessException)
-  {
-    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
-  }
-  catch (InvalidOperationException)
-  {
-    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
-  }
-}
-
-static async Task<IResult> GetAllAttributes(AttributeService attributeService, string organizationId, string titleId, HttpContext httpContext)
-{
-  var user = GetUser(httpContext);
-  try
-  {
-    var attributes = await attributeService.ReadAll(organizationId, titleId, user);
-    return TypedResults.Ok(attributes);
-  }
-  catch (UnauthorizedAccessException)
-  {
-    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
-  }
-}
-
-static async Task<IResult> CreateAttribute(AttributeService attributeService, string organizationId, string titleId, AttributeDto dto, HttpContext httpContext)
-{
-  var user = GetUser(httpContext);
-  try
-  {
-    var attribute = await attributeService.Create(organizationId, titleId, dto, user);
-    return TypedResults.Created($"/organizations/{organizationId}/titles/{titleId}/attributes/{attribute.Id}", attribute);
-  }
-  catch (UnauthorizedAccessException)
-  {
-    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
-  }
-  catch (ArgumentException)
-  {
-    return TypedResults.BadRequest();
-  }
-  catch (InvalidOperationException)
-  {
-    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
-  }
-}
-
-static async Task<IResult> UpdateAttribute(AttributeService attributeService, string organizationId, string titleId, string attributeId, AttributeDto dto, HttpContext httpContext)
-{
-  var user = GetUser(httpContext);
-  try
-  {
-    return await attributeService.Update(organizationId, titleId, attributeId, dto, user)
-        ? TypedResults.NoContent()
-        : TypedResults.NotFound();
-  }
-  catch (UnauthorizedAccessException)
-  {
-    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
-  }
-  catch (ArgumentException)
-  {
-    return TypedResults.BadRequest();
-  }
-  catch (InvalidOperationException)
-  {
-    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
-  }
-}
-
-static async Task<IResult> DeleteAttribute(AttributeService attributeService, string organizationId, string titleId, string attributeId, HttpContext httpContext)
-{
-  var user = GetUser(httpContext);
-  try
-  {
-    return await attributeService.Delete(organizationId, titleId, attributeId, user)
         ? TypedResults.NoContent()
         : TypedResults.NotFound();
   }
