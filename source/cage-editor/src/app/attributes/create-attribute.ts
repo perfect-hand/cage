@@ -21,7 +21,7 @@ export class CreateAttribute {
 
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
-  readonly versionId = input('');
+  readonly versionId = input.required<string>();
   readonly attributeTypes = attributeTypes;
   readonly maximumAttributes = maximumAttributes;
   readonly isSubmitting = signal(false);
@@ -39,7 +39,7 @@ export class CreateAttribute {
     }
 
     this.isSubmitting.set(true);
-    const versionId = this.versionId() || this.titleId();
+    const versionId = this.versionId();
 
     try {
       if (this.attributesService.getAttributes(this.titleId(), versionId).length >= maximumAttributes) {

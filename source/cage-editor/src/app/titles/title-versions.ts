@@ -36,15 +36,11 @@ export class TitleVersions implements OnInit {
 
   private async loadVersions(): Promise<void> {
     try {
-      const versions =
-        (await firstValueFrom(
-          this.http.get<TitleVersion[]>(
-            `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions`,
-          ),
-        )) ?? [];
+      const versions = await this.versionsService.loadVersions(this.organizationId(), this.titleId());
       this.versions.set(versions);
-      this.versionsService.setVersions(this.titleId(), versions);
-      this.parentVersionId.set(versions.find((version) => version.id === this.titleId())?.id ?? versions[0]?.id ?? '');
+      this.parentVersionId.set(
+        versions.find((version) => version.parentVersionId === null)?.id ?? versions[0]?.id ?? '',
+      );
     } catch (error) {
       console.error('Failed to load title versions.', error);
     } finally {

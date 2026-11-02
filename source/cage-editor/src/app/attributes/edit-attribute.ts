@@ -21,7 +21,7 @@ export class EditAttribute implements OnInit {
 
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
-  readonly versionId = input('');
+  readonly versionId = input.required<string>();
   readonly attributeId = input.required<string>();
   readonly attributeTypes = attributeTypes;
   readonly isLoading = signal(true);
@@ -39,7 +39,7 @@ export class EditAttribute implements OnInit {
   }
 
   private async loadAttribute(): Promise<void> {
-    const versionId = this.versionId() || this.titleId();
+    const versionId = this.versionId();
     let attributes = this.attributesService.getAttributes(this.titleId(), versionId);
     let attribute = attributes.find((item) => item.id === this.attributeId());
 
@@ -72,7 +72,7 @@ export class EditAttribute implements OnInit {
     }
 
     this.isSubmitting.set(true);
-    const versionId = this.versionId() || this.titleId();
+    const versionId = this.versionId();
 
     try {
       const name = this.model().name.trim();

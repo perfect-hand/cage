@@ -23,7 +23,7 @@
       }
 
       <div class="form-actions">
-        <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId() || titleId(), 'attributes']">Cancel</button>
+        <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId(), 'attributes']">Cancel</button>
         <button mat-button type="submit" [disabled]="isSubmitting() || atLimit()">
           {{ isSubmitting() ? 'Creating...' : 'Create attribute' }}
         </button>

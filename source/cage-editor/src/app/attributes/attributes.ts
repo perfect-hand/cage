@@ -7,7 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
-import { TitleVersion, TitleVersionsService } from '../titles/title-versions-service';
+import { TitleVersionsService } from '../titles/title-versions-service';
 import { Attribute, AttributesService } from './attributes-service';
 
 export const maximumAttributes = 100;
@@ -27,7 +27,7 @@ export class Attributes implements OnInit {
 
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
-  readonly versionId = input('');
+  readonly versionId = input.required<string>();
   readonly attributes = signal<Attribute[]>([]);
   readonly isLoading = signal(false);
   readonly isDeleting = signal(false);
@@ -42,19 +42,10 @@ export class Attributes implements OnInit {
 
   private async loadAttributes(): Promise<void> {
     this.isLoading.set(true);
-    const versionId = this.versionId() || this.titleId();
+    const versionId = this.versionId();
 
     try {
-      let versions = this.versionsService.getVersions(this.titleId());
-      if (versions.length === 0) {
-        versions =
-          (await firstValueFrom(
-            this.http.get<TitleVersion[]>(
-              `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions`,
-            ),
-          )) ?? [];
-        this.versionsService.setVersions(this.titleId(), versions);
-      }
+      const versions = await this.versionsService.loadVersions(this.organizationId(), this.titleId());
 
       const version = versions.find((item) => item.id === versionId);
       if (!version) {
@@ -87,7 +78,7 @@ export class Attributes implements OnInit {
       return;
     }
 
-    const versionId = this.versionId() || this.titleId();
+    const versionId = this.versionId();
     const confirmed = await firstValueFrom(
       this.dialog
         .open(ConfirmDeleteDialog, {

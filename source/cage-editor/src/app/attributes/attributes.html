@@ -33,7 +33,7 @@
                   <button
                     mat-icon-button
                     type="button"
-                    [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId() || titleId(), 'attributes', attribute.id, 'edit']"
+                    [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId(), 'attributes', attribute.id, 'edit']"
                     [attr.aria-label]="'Edit attribute ' + attribute.name"
                   >
                     <mat-icon aria-hidden="true">edit</mat-icon>
@@ -56,7 +56,7 @@
       </table>
 
     <div class="form-actions">
-      <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId() || titleId(), 'attributes', 'new']" [disabled]="isReadOnly() || attributes().length >= maximumAttributes">
+      <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId(), 'attributes', 'new']" [disabled]="isReadOnly() || attributes().length >= maximumAttributes">
         New attribute
       </button>
       @if (isReadOnly()) {
