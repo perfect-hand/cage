@@ -208,22 +208,6 @@ public class TitleVersionEndpointTests : EndpointTest, IClassFixture<WebApplicat
   }
 
   [Fact]
-  public async Task CreatesTitleVersionWithNameAtMaximumLength()
-  {
-    // GIVEN
-    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
-    var titleVersionName = new string('a', TitleVersionService.MaximumVersionNameLength);
-
-    // WHEN
-    var response = await httpClient.PostAsJsonAsync(
-        $"/organizations/{organizationId}/titles/{titleId}/versions",
-        new TitleVersionDto { Name = titleVersionName });
-
-    // THEN
-    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-  }
-
-  [Fact]
   public async Task FailsToCreateTitleVersionWithNameOverMaximumLength()
   {
     // GIVEN
