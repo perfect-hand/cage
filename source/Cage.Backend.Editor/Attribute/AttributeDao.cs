@@ -24,30 +24,22 @@ public class AttributeDao : TableDao
     return Task.FromResult(attributesTableClient.Query<AttributeEntity>(ent => ent.PartitionKey == titleVersionId).ToList());
   }
 
+  public async Task<AttributeEntity?> GetAttributeTitleVersion(string titleVersionId, string attributeId)
+  {
+    var response = await attributesTableClient.GetEntityIfExistsAsync<AttributeEntity>(titleVersionId, attributeId);
+    return response.HasValue ? response.Value : null;
+  }
+
   public async Task SetAttributeTitleVersion(string titleVersionId, AttributeEntity attribute)
   {
     attribute.PartitionKey = titleVersionId;
     await attributesTableClient.UpsertEntityAsync(attribute, TableUpdateMode.Replace);
   }
 
-  public async Task AddVersionSnapshot(string snapshotId, List<AttributeEntity> attributes)
-  {
-    foreach (var attribute in attributes)
-    {
-      await attributesTableClient.AddEntityAsync(new AttributeEntity
-      {
-        PartitionKey = snapshotId,
-        RowKey = attribute.RowKey,
-        Name = attribute.Name,
-        Type = attribute.Type
-      });
-    }
-  }
-
   public async Task<bool> DeleteAttributeTitleVersion(string titleVersionId, string attributeId)
   {
-    var attributeResponse = await attributesTableClient.GetEntityIfExistsAsync<AttributeEntity>(titleVersionId, attributeId);
-    if (!attributeResponse.HasValue)
+    var attribute = await attributesTableClient.GetEntityIfExistsAsync<AttributeEntity>(titleVersionId, attributeId);
+    if (!attribute.HasValue)
     {
       return false;
     }

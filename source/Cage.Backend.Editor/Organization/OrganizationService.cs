@@ -92,12 +92,9 @@ public class OrganizationService
       foreach (var title in await titleDao.QueryByOrganization(organizationId))
       {
         var versions = await titleVersionDao.QueryByTitle(title.RowKey);
-        foreach (var versionId in versions
-                     .SelectMany(version => new[] { version.RowKey, version.ParentSnapshotId })
-                     .OfType<string>()
-                     .Distinct())
+        foreach (var version in versions)
         {
-          await attributeDao.DeleteByTitleVersion(versionId);
+          await attributeDao.DeleteByTitleVersion(version.RowKey);
         }
 
         await titleVersionDao.DeleteByTitle(title.RowKey);

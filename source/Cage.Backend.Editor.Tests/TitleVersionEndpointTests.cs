@@ -47,14 +47,17 @@ public class TitleVersionEndpointTests : EndpointTest, IClassFixture<WebApplicat
   }
 
   [Fact]
-  public async Task ChangesToParentAfterForkDoNotAffectChildVersion()
+  public async Task ChangesToParentAfterForkOnlyCopyChangedAttributesToChildren()
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
     var parentVersionId = testDao.GetInitialVersionId(titleId);
     var attributeId = await testDao.AddAttribute(parentVersionId, "Health", CageType.Int);
+    await testDao.AddAttribute(parentVersionId, "Mana", CageType.Int);
     var versionId = await testDao.AddVersion(titleId, "Draft", parentVersionId);
     await testDao.AddAttribute(versionId, "Armor", CageType.Int);
+    var siblingVersionId = await testDao.AddVersion(titleId, "Sibling", parentVersionId);
+    var nestedVersionId = await testDao.AddVersion(titleId, "Nested", versionId);
 
     // WHEN
     var updateResponse = await httpClient.PutAsJsonAsync(
@@ -63,16 +66,100 @@ public class TitleVersionEndpointTests : EndpointTest, IClassFixture<WebApplicat
     var childResponse = await httpClient.GetAsync(
         $"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}/attributes");
     var childAttributes = await childResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
+    var siblingResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{siblingVersionId}/attributes");
+    var siblingAttributes = await siblingResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
+    var nestedResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{nestedVersionId}/attributes");
+    var nestedAttributes = await nestedResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
 
     // THEN
     Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
     Assert.Equal(HttpStatusCode.OK, childResponse.StatusCode);
     var childAttributeList = Assert.IsType<List<AttributeDto>>(childAttributes);
-    Assert.Equal(2, childAttributeList.Count);
+    Assert.Equal(3, childAttributeList.Count);
     var childAttribute = Assert.Single(childAttributeList, attribute => attribute.Id == attributeId);
     Assert.Equal(attributeId, childAttribute.Id);
     Assert.Equal("Health", childAttribute.Name);
     Assert.Equal(CageType.Int, childAttribute.Type);
+    Assert.Equal(2, testDao.QueryAttributesByTitleVersion(versionId).Count);
+    Assert.DoesNotContain(testDao.QueryAttributesByTitleVersion(versionId), attribute => attribute.Name == "Mana");
+    Assert.Equal(HttpStatusCode.OK, siblingResponse.StatusCode);
+    Assert.Equal("Health", Assert.Single(Assert.IsType<List<AttributeDto>>(siblingAttributes), attribute => attribute.Id == attributeId).Name);
+    Assert.Single(testDao.QueryAttributesByTitleVersion(siblingVersionId));
+    Assert.Equal(HttpStatusCode.OK, nestedResponse.StatusCode);
+    Assert.Equal("Health", Assert.Single(Assert.IsType<List<AttributeDto>>(nestedAttributes), attribute => attribute.Id == attributeId).Name);
+    Assert.Empty(testDao.QueryAttributesByTitleVersion(nestedVersionId));
+  }
+
+  [Fact]
+  public async Task ParentAttributeCreatedAfterForkIsHiddenFromChildren()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var childVersionId = await testDao.AddVersion(titleId, "Draft", parentVersionId);
+    var nestedVersionId = await testDao.AddVersion(titleId, "Nested", childVersionId);
+
+    // WHEN
+    var createResponse = await httpClient.PostAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{parentVersionId}/attributes",
+        new AttributeDto { Name = "Health", Type = CageType.Int });
+    var createdAttribute = await createResponse.Content.ReadFromJsonAsync<AttributeDto>();
+    var childResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{childVersionId}/attributes");
+    var childAttributes = await childResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
+    var nestedResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{nestedVersionId}/attributes");
+    var nestedAttributes = await nestedResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
+    var parentResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{parentVersionId}/attributes");
+    var parentAttributes = await parentResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+    Assert.NotNull(createdAttribute?.Id);
+    Assert.Equal(HttpStatusCode.OK, childResponse.StatusCode);
+    Assert.Empty(Assert.IsType<List<AttributeDto>>(childAttributes));
+    Assert.True(Assert.Single(testDao.QueryAttributesByTitleVersion(childVersionId)).IsDeleted);
+    Assert.Equal(HttpStatusCode.OK, nestedResponse.StatusCode);
+    Assert.Empty(Assert.IsType<List<AttributeDto>>(nestedAttributes));
+    Assert.Equal(HttpStatusCode.OK, parentResponse.StatusCode);
+    Assert.Equal(createdAttribute.Id, Assert.Single(Assert.IsType<List<AttributeDto>>(parentAttributes)).Id);
+  }
+
+  [Fact]
+  public async Task DeletingParentAttributeDoesNotAffectChildren()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var attributeId = await testDao.AddAttribute(parentVersionId, "Health", CageType.Int);
+    await testDao.AddAttribute(parentVersionId, "Mana", CageType.Int);
+    var childVersionId = await testDao.AddVersion(titleId, "Draft", parentVersionId);
+    var nestedVersionId = await testDao.AddVersion(titleId, "Nested", childVersionId);
+
+    // WHEN
+    var deleteResponse = await httpClient.DeleteAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{parentVersionId}/attributes/{attributeId}");
+    var childResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{childVersionId}/attributes");
+    var childAttributes = await childResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
+    var nestedResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{nestedVersionId}/attributes");
+    var nestedAttributes = await nestedResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
+    var parentResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{parentVersionId}/attributes");
+    var parentAttributes = await parentResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+    Assert.Equal(HttpStatusCode.OK, childResponse.StatusCode);
+    Assert.Equal(attributeId, Assert.Single(Assert.IsType<List<AttributeDto>>(childAttributes), attribute => attribute.Id == attributeId).Id);
+    Assert.Equal(HttpStatusCode.OK, nestedResponse.StatusCode);
+    Assert.Equal(attributeId, Assert.Single(Assert.IsType<List<AttributeDto>>(nestedAttributes), attribute => attribute.Id == attributeId).Id);
+    Assert.Equal(HttpStatusCode.OK, parentResponse.StatusCode);
+    Assert.DoesNotContain(Assert.IsType<List<AttributeDto>>(parentAttributes), attribute => attribute.Id == attributeId);
   }
 
   [Fact]

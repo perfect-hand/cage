@@ -12,7 +12,6 @@ public class TitleVersionEntity : ITableEntity
 
   public required string Name { get; set; }
   public string? ParentVersionId { get; set; }
-  public string? ParentSnapshotId { get; set; }
   public bool IsReadOnly { get; set; }
   public bool IsDeleted { get; set; }
 }

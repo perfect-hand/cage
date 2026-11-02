@@ -109,11 +109,6 @@ public class TitleVersionService
     {
       var parentVersionId = version.ParentVersionId;
       await attributeDao.DeleteByTitleVersion(versionId);
-      if (version.ParentSnapshotId is not null)
-      {
-        await attributeDao.DeleteByTitleVersion(version.ParentSnapshotId);
-      }
-
       await titleVersionDao.Delete(titleId, versionId);
       await PruneDeletedAncestors(titleId, parentVersionId);
     }
@@ -140,11 +135,6 @@ public class TitleVersionService
 
       var parentVersionId = version.ParentVersionId;
       await attributeDao.DeleteByTitleVersion(versionId);
-      if (version.ParentSnapshotId is not null)
-      {
-        await attributeDao.DeleteByTitleVersion(version.ParentSnapshotId);
-      }
-
       await titleVersionDao.Delete(titleId, versionId);
       logger.LogInformation("Deleted version {} storage pruned from title {}.", versionId, titleId);
       versionId = parentVersionId;

@@ -31,8 +31,8 @@ public class AttributeService
       throw new ArgumentException($"Titles cannot have more than {MaximumAttributesPerTitle} attributes.", nameof(dto));
     }
 
-    await FreezeDescendants(titleId, versionId);
     var attribute = mapper.ToEntity(dto, versionId);
+    await PreserveAttributeForChildren(titleId, versionId, attribute, isDeleted: true);
     await attributeDao.AddAttribute(attribute);
     logger.LogInformation("Attribute {} created in title version {}.", attribute.RowKey, versionId);
     return mapper.ToDto(attribute);
@@ -57,10 +57,11 @@ public class AttributeService
       return false;
     }
 
-    await FreezeDescendants(titleId, versionId);
+    await PreserveAttributeForChildren(titleId, versionId, existing);
     existing.PartitionKey = versionId;
     existing.Name = dto.Name;
     existing.Type = dto.Type;
+    existing.IsDeleted = false;
     await attributeDao.SetAttributeTitleVersion(versionId, existing);
     logger.LogInformation("Attribute {} updated in title version {}.", attributeId, versionId);
     return true;
@@ -78,8 +79,8 @@ public class AttributeService
       return false;
     }
 
-    await FreezeDescendants(titleId, versionId);
-    if (version.ParentVersionId is null && version.ParentSnapshotId is null)
+    await PreserveAttributeForChildren(titleId, versionId, existing);
+    if (version.ParentVersionId is null)
     {
       await attributeDao.DeleteAttributeTitleVersion(versionId, attributeId);
     }
@@ -128,14 +129,6 @@ public class AttributeService
     var attributesById = new Dictionary<string, AttributeEntity>();
     foreach (var version in versions.AsEnumerable().Reverse())
     {
-      if (version.ParentSnapshotId is not null)
-      {
-        foreach (var attribute in await attributeDao.QueryByTitleVersion(version.ParentSnapshotId))
-        {
-          attributesById[attribute.RowKey] = attribute;
-        }
-      }
-
       foreach (var attribute in await attributeDao.QueryByTitleVersion(version.RowKey))
       {
         if (attribute.IsDeleted)
@@ -152,19 +145,26 @@ public class AttributeService
     return attributesById.Values.ToList();
   }
 
-  private async Task FreezeDescendants(string titleId, string versionId)
+  private async Task PreserveAttributeForChildren(string titleId, string versionId, AttributeEntity attribute, bool isDeleted = false)
   {
     var children = (await titleVersionDao.QueryByTitle(titleId))
         .Where(version => version.ParentVersionId == versionId)
         .ToList();
     foreach (var child in children)
     {
-      var attributes = await ReadAllVersions(titleId, child.RowKey);
-      var snapshotId = Guid.NewGuid().ToString();
-      await attributeDao.AddVersionSnapshot(snapshotId, attributes);
-      child.ParentVersionId = null;
-      child.ParentSnapshotId = snapshotId;
-      await titleVersionDao.Update(child);
+      if (await attributeDao.GetAttributeTitleVersion(child.RowKey, attribute.RowKey) is not null)
+      {
+        continue;
+      }
+
+      await attributeDao.SetAttributeTitleVersion(child.RowKey, new AttributeEntity
+      {
+        PartitionKey = child.RowKey,
+        RowKey = attribute.RowKey,
+        Name = attribute.Name,
+        Type = attribute.Type,
+        IsDeleted = isDeleted
+      });
     }
   }
 
