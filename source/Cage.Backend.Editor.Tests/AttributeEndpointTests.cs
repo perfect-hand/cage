@@ -13,15 +13,16 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   }
 
   [Fact]
-  public async Task GetsAllAttributesOfTitle()
+  public async Task GetsAllAttributesOfTitleVersion()
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
-    var attributeId = await testDao.AddAttribute(titleId, "Health", CageType.Int);
+    var titleVersionId = testDao.GetInitialVersionId(titleId);
+    var attributeId = await testDao.AddAttribute(titleVersionId, "Health", CageType.Int);
     await testDao.AddAttribute(Guid.NewGuid().ToString(), "Other", CageType.String);
 
     // WHEN
-    var response = await httpClient.GetAsync($"/organizations/{organizationId}/titles/{titleId}/attributes");
+    var response = await httpClient.GetAsync($"/organizations/{organizationId}/titles/{titleId}/versions/{titleVersionId}/attributes");
 
     // THEN
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -39,9 +40,10 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
     // GIVEN
     var organizationId = Guid.NewGuid();
     var titleId = Guid.NewGuid();
+    var titleVersionId = Guid.NewGuid();
 
     // WHEN
-    var response = await unauthorizedHttpClient.GetAsync($"/organizations/{organizationId}/titles/{titleId}/attributes");
+    var response = await unauthorizedHttpClient.GetAsync($"/organizations/{organizationId}/titles/{titleId}/versions/{titleVersionId}/attributes");
 
     // THEN
     Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -54,9 +56,10 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
     var organizationId = Guid.NewGuid().ToString();
     await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Organization");
     var foreignTitleId = await testDao.AddTitle(Guid.NewGuid().ToString(), "Title");
+    var titleVersionId = testDao.GetInitialVersionId(foreignTitleId);
 
     // WHEN
-    var response = await httpClient.GetAsync($"/organizations/{organizationId}/titles/{foreignTitleId}/attributes");
+    var response = await httpClient.GetAsync($"/organizations/{organizationId}/titles/{foreignTitleId}/versions/{titleVersionId}/attributes");
 
     // THEN
     Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -67,10 +70,11 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var titleVersionId = testDao.GetInitialVersionId(titleId);
     var dto = new AttributeDto { Name = "Health", Type = CageType.Int };
 
     // WHEN
-    var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/attributes", dto);
+    var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/versions/{titleVersionId}/attributes", dto);
 
     // THEN
     Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -80,7 +84,7 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
     Assert.Equal("Health", created.Name);
     Assert.Equal(CageType.Int, created.Type);
 
-    var stored = Assert.Single(testDao.QueryAttributesByTitle(titleId));
+    var stored = Assert.Single(testDao.QueryAttributesByTitleVersion(titleVersionId));
     Assert.Equal(created.Id, stored.RowKey);
     Assert.Equal(CageType.Int, stored.Type);
   }
@@ -90,10 +94,11 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var titleVersionId = testDao.GetInitialVersionId(titleId);
     var dto = new AttributeDto { Name = new string('a', AttributeService.MaximumAttributeNameLength + 1), Type = CageType.Int };
 
     // WHEN
-    var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/attributes", dto);
+    var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/versions/{titleVersionId}/attributes", dto);
 
     // THEN
     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -104,15 +109,16 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var titleVersionId = testDao.GetInitialVersionId(titleId);
     for (var i = 0; i < AttributeService.MaximumAttributesPerTitle; i++)
     {
-      await testDao.AddAttribute(titleId, $"Attribute{i}", CageType.Int);
+      await testDao.AddAttribute(titleVersionId, $"Attribute{i}", CageType.Int);
     }
 
     var dto = new AttributeDto { Name = "Another", Type = CageType.Int };
 
     // WHEN
-    var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/attributes", dto);
+    var response = await httpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/versions/{titleVersionId}/attributes", dto);
 
     // THEN
     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -123,14 +129,15 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var titleVersionId = testDao.GetInitialVersionId(titleId);
     var dto = new AttributeDto { Name = "Health", Type = CageType.Int };
 
     // WHEN
-    var response = await unauthorizedHttpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/attributes", dto);
+    var response = await unauthorizedHttpClient.PostAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/versions/{titleVersionId}/attributes", dto);
 
     // THEN
     Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    Assert.Empty(testDao.QueryAttributesByTitle(titleId));
+    Assert.Empty(testDao.QueryAttributesByTitleVersion(titleVersionId));
   }
 
   [Fact]
@@ -140,7 +147,7 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
     var dto = new AttributeDto { Name = "Health", Type = CageType.Int };
 
     // WHEN
-    var response = await httpClient.PostAsJsonAsync($"/organizations/{Guid.NewGuid()}/titles/{Guid.NewGuid()}/attributes", dto);
+    var response = await httpClient.PostAsJsonAsync($"/organizations/{Guid.NewGuid()}/titles/{Guid.NewGuid()}/versions/{Guid.NewGuid()}/attributes", dto);
 
     // THEN
     Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -151,16 +158,17 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
-    var attributeId = await testDao.AddAttribute(titleId, "Old", CageType.Int);
+    var titleVersionId = testDao.GetInitialVersionId(titleId);
+    var attributeId = await testDao.AddAttribute(titleVersionId, "Old", CageType.Int);
 
     // WHEN
     var response = await httpClient.PutAsJsonAsync(
-        $"/organizations/{organizationId}/titles/{titleId}/attributes/{attributeId}",
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{titleVersionId}/attributes/{attributeId}",
         new AttributeDto { Name = "New", Type = CageType.String });
 
     // THEN
     Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-    var updated = Assert.Single(testDao.QueryAttributesByTitle(titleId));
+    var updated = Assert.Single(testDao.QueryAttributesByTitleVersion(titleVersionId));
     Assert.Equal("New", updated.Name);
     Assert.Equal(CageType.String, updated.Type);
   }
@@ -170,15 +178,16 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
-    var attributeId = await testDao.AddAttribute(titleId, "Old", CageType.Int);
+    var titleVersionId = testDao.GetInitialVersionId(titleId);
+    var attributeId = await testDao.AddAttribute(titleVersionId, "Old", CageType.Int);
     var dto = new AttributeDto { Name = new string('a', AttributeService.MaximumAttributeNameLength + 1), Type = CageType.Int };
 
     // WHEN
-    var response = await httpClient.PutAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/attributes/{attributeId}", dto);
+    var response = await httpClient.PutAsJsonAsync($"/organizations/{organizationId}/titles/{titleId}/versions/{titleVersionId}/attributes/{attributeId}", dto);
 
     // THEN
     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    Assert.Equal("Old", Assert.Single(testDao.QueryAttributesByTitle(titleId)).Name);
+    Assert.Equal("Old", Assert.Single(testDao.QueryAttributesByTitleVersion(titleVersionId)).Name);
   }
 
   [Fact]
@@ -186,16 +195,17 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
-    var attributeId = await testDao.AddAttribute(titleId, "Old", CageType.Int);
+    var titleVersionId = testDao.GetInitialVersionId(titleId);
+    var attributeId = await testDao.AddAttribute(titleVersionId, "Old", CageType.Int);
 
     // WHEN
     var response = await unauthorizedHttpClient.PutAsJsonAsync(
-        $"/organizations/{organizationId}/titles/{titleId}/attributes/{attributeId}",
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{titleVersionId}/attributes/{attributeId}",
         new AttributeDto { Name = "New", Type = CageType.String });
 
     // THEN
     Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    Assert.Equal("Old", Assert.Single(testDao.QueryAttributesByTitle(titleId)).Name);
+    Assert.Equal("Old", Assert.Single(testDao.QueryAttributesByTitleVersion(titleVersionId)).Name);
   }
 
   [Fact]
@@ -204,16 +214,17 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
     // GIVEN
     var foreignOrganizationId = Guid.NewGuid().ToString();
     var titleId = await testDao.AddTitle(foreignOrganizationId, "Title");
-    var attributeId = await testDao.AddAttribute(titleId, "Old", CageType.Int);
+    var titleVersionId = testDao.GetInitialVersionId(titleId);
+    var attributeId = await testDao.AddAttribute(titleVersionId, "Old", CageType.Int);
 
     // WHEN
     var response = await httpClient.PutAsJsonAsync(
-        $"/organizations/{foreignOrganizationId}/titles/{titleId}/attributes/{attributeId}",
+        $"/organizations/{foreignOrganizationId}/titles/{titleId}/versions/{titleVersionId}/attributes/{attributeId}",
         new AttributeDto { Name = "New", Type = CageType.String });
 
     // THEN
     Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    Assert.Equal("Old", Assert.Single(testDao.QueryAttributesByTitle(titleId)).Name);
+    Assert.Equal("Old", Assert.Single(testDao.QueryAttributesByTitleVersion(titleVersionId)).Name);
   }
 
   [Fact]
@@ -221,10 +232,11 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var titleVersionId = testDao.GetInitialVersionId(titleId);
 
     // WHEN
     var response = await httpClient.PutAsJsonAsync(
-        $"/organizations/{organizationId}/titles/{titleId}/attributes/{Guid.NewGuid()}",
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{titleVersionId}/attributes/{Guid.NewGuid()}",
         new AttributeDto { Name = "New", Type = CageType.String });
 
     // THEN
@@ -236,14 +248,15 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
-    var attributeId = await testDao.AddAttribute(titleId, "Health", CageType.Int);
+    var titleVersionId = testDao.GetInitialVersionId(titleId);
+    var attributeId = await testDao.AddAttribute(titleVersionId, "Health", CageType.Int);
 
     // WHEN
-    var response = await httpClient.DeleteAsync($"/organizations/{organizationId}/titles/{titleId}/attributes/{attributeId}");
+    var response = await httpClient.DeleteAsync($"/organizations/{organizationId}/titles/{titleId}/versions/{titleVersionId}/attributes/{attributeId}");
 
     // THEN
     Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-    Assert.Empty(testDao.QueryAttributesByTitle(titleId));
+    Assert.Empty(testDao.QueryAttributesByTitleVersion(titleVersionId));
   }
 
   [Fact]
@@ -251,14 +264,15 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
-    var attributeId = await testDao.AddAttribute(titleId, "Health", CageType.Int);
+    var titleVersionId = testDao.GetInitialVersionId(titleId);
+    var attributeId = await testDao.AddAttribute(titleVersionId, "Health", CageType.Int);
 
     // WHEN
-    var response = await unauthorizedHttpClient.DeleteAsync($"/organizations/{organizationId}/titles/{titleId}/attributes/{attributeId}");
+    var response = await unauthorizedHttpClient.DeleteAsync($"/organizations/{organizationId}/titles/{titleId}/versions/{titleVersionId}/attributes/{attributeId}");
 
     // THEN
     Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    Assert.Single(testDao.QueryAttributesByTitle(titleId));
+    Assert.Single(testDao.QueryAttributesByTitleVersion(titleVersionId));
   }
 
   [Fact]
@@ -267,14 +281,15 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
     // GIVEN
     var foreignOrganizationId = Guid.NewGuid().ToString();
     var titleId = await testDao.AddTitle(foreignOrganizationId, "Title");
-    var attributeId = await testDao.AddAttribute(titleId, "Health", CageType.Int);
+    var titleVersionId = testDao.GetInitialVersionId(titleId);
+    var attributeId = await testDao.AddAttribute(titleVersionId, "Health", CageType.Int);
 
     // WHEN
-    var response = await httpClient.DeleteAsync($"/organizations/{foreignOrganizationId}/titles/{titleId}/attributes/{attributeId}");
+    var response = await httpClient.DeleteAsync($"/organizations/{foreignOrganizationId}/titles/{titleId}/versions/{titleVersionId}/attributes/{attributeId}");
 
     // THEN
     Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-    Assert.Single(testDao.QueryAttributesByTitle(titleId));
+    Assert.Single(testDao.QueryAttributesByTitleVersion(titleVersionId));
   }
 
   [Fact]
@@ -282,13 +297,14 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
-    await testDao.AddAttribute(titleId, "Health", CageType.Int);
+    var titleVersionId = testDao.GetInitialVersionId(titleId);
+    await testDao.AddAttribute(titleVersionId, "Health", CageType.Int);
 
     // WHEN
     var response = await httpClient.DeleteAsync($"/organizations/{organizationId}/titles/{titleId}");
 
     // THEN
     Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-    Assert.Empty(testDao.QueryAttributesByTitle(titleId));
+    Assert.Empty(testDao.QueryAttributesByTitleVersion(titleVersionId));
   }
 }

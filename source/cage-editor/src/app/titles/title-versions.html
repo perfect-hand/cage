@@ -1,0 +1,56 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>Title versions</h2>
+    </div>
+
+    @if (isLoading()) {
+    <div class="loading-state" aria-live="polite">
+      <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+      <span>Loading title versions...</span>
+    </div>
+    } @else {
+    <ul class="item-list">
+      @for (version of versions(); track version.id) {
+        <li class="item-list-item">
+          <a [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', version.id, 'attributes']">
+            {{ version.name }}{{ version.isReadOnly ? ' (read-only)' : '' }}
+          </a>
+          <div class="form-actions">
+            <input #versionName class="text-input" [value]="version.name" [disabled]="isSubmitting()" aria-label="Version name" />
+            <button mat-button type="button" (click)="renameVersion(version, versionName.value)" [disabled]="isSubmitting()">
+              Rename
+            </button>
+            <button mat-button type="button" (click)="setReadOnly(version)" [disabled]="isSubmitting()">
+              {{ version.isReadOnly ? 'Make editable' : 'Make read-only' }}
+            </button>
+            <button mat-button type="button" (click)="deleteVersion(version)" [disabled]="isSubmitting()">
+              Delete
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+
+    <form (submit)="createVersion(); $event.preventDefault()" novalidate>
+      <label for="version-name">New version name</label>
+      <input id="version-name" class="text-input" [ngModel]="newVersionName()" (ngModelChange)="newVersionName.set($event)" name="versionName" maxlength="50" />
+
+      <label for="version-parent">Based on</label>
+      <select id="version-parent" class="text-input" [ngModel]="parentVersionId()" (ngModelChange)="parentVersionId.set($event)" name="parentVersion">
+        <option value="">No parent</option>
+        @for (version of versions(); track version.id) {
+        <option [value]="version.id">{{ version.name }}</option>
+        }
+      </select>
+
+      <div class="form-actions">
+        <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles']">Back to titles</button>
+        <button mat-button type="submit" [disabled]="isSubmitting() || versions().length >= maximumVersions">
+          {{ isSubmitting() ? 'Creating...' : 'Create version' }}
+        </button>
+      </div>
+    </form>
+    }
+  </section>
+</main>

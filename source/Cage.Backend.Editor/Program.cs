@@ -45,6 +45,7 @@ builder.Services.AddHttpLogging(options => { });
 builder.Services.AddScoped<InfoService>();
 builder.Services.AddScoped<OrganizationService>();
 builder.Services.AddScoped<TitleService>();
+builder.Services.AddScoped<TitleVersionService>();
 builder.Services.AddScoped<AttributeService>();
 
 var app = builder.Build();
@@ -67,11 +68,16 @@ organizations.MapGet("/{organizationId}/titles", GetAllTitles);
 organizations.MapPost("/{organizationId}/titles", CreateTitle);
 organizations.MapPut("/{organizationId}/titles/{titleId}", UpdateTitle);
 organizations.MapDelete("/{organizationId}/titles/{titleId}", DeleteTitle);
+organizations.MapGet("/{organizationId}/titles/{titleId}/versions", GetAllTitleVersions);
+organizations.MapPost("/{organizationId}/titles/{titleId}/versions", CreateTitleVersion);
+organizations.MapPut("/{organizationId}/titles/{titleId}/versions/{versionId}", RenameTitleVersion);
+organizations.MapPut("/{organizationId}/titles/{titleId}/versions/{versionId}/read-only", SetTitleVersionReadOnly);
+organizations.MapDelete("/{organizationId}/titles/{titleId}/versions/{versionId}", DeleteTitleVersion);
 
-organizations.MapGet("/{organizationId}/titles/{titleId}/attributes", GetAllAttributes);
-organizations.MapPost("/{organizationId}/titles/{titleId}/attributes", CreateAttribute);
-organizations.MapPut("/{organizationId}/titles/{titleId}/attributes/{attributeId}", UpdateAttribute);
-organizations.MapDelete("/{organizationId}/titles/{titleId}/attributes/{attributeId}", DeleteAttribute);
+organizations.MapGet("/{organizationId}/titles/{titleId}/versions/{versionId}/attributes", GetAllVersionAttributes);
+organizations.MapPost("/{organizationId}/titles/{titleId}/versions/{versionId}/attributes", CreateVersionAttribute);
+organizations.MapPut("/{organizationId}/titles/{titleId}/versions/{versionId}/attributes/{attributeId}", UpdateVersionAttribute);
+organizations.MapDelete("/{organizationId}/titles/{titleId}/versions/{versionId}/attributes/{attributeId}", DeleteVersionAttribute);
 
 static async Task<IResult> GetInfo(InfoService infoService)
 {
@@ -90,6 +96,10 @@ static async Task<IResult> GetAllOrganizations(OrganizationService organizationS
   catch (UnauthorizedAccessException)
   {
     return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
   }
 }
 
@@ -211,13 +221,12 @@ static async Task<IResult> DeleteTitle(TitleService titleService, string organiz
   }
 }
 
-static async Task<IResult> GetAllAttributes(AttributeService attributeService, string organizationId, string titleId, HttpContext httpContext)
+static async Task<IResult> GetAllTitleVersions(TitleVersionService titleVersionService, string organizationId, string titleId, HttpContext httpContext)
 {
   var user = GetUser(httpContext);
   try
   {
-    var attributes = await attributeService.ReadAll(organizationId, titleId, user);
-    return TypedResults.Ok(attributes);
+    return TypedResults.Ok(await titleVersionService.ReadAll(organizationId, titleId, user));
   }
   catch (UnauthorizedAccessException)
   {
@@ -225,13 +234,13 @@ static async Task<IResult> GetAllAttributes(AttributeService attributeService, s
   }
 }
 
-static async Task<IResult> CreateAttribute(AttributeService attributeService, string organizationId, string titleId, AttributeDto dto, HttpContext httpContext)
+static async Task<IResult> CreateTitleVersion(TitleVersionService titleVersionService, string organizationId, string titleId, TitleVersionDto dto, HttpContext httpContext)
 {
   var user = GetUser(httpContext);
   try
   {
-    var attribute = await attributeService.Create(organizationId, titleId, dto, user);
-    return TypedResults.Created($"/organizations/{organizationId}/titles/{titleId}/attributes/{attribute.Id}", attribute);
+    var version = await titleVersionService.Create(organizationId, titleId, dto, user);
+    return TypedResults.Created($"/organizations/{organizationId}/titles/{titleId}/versions/{version.Id}", version);
   }
   catch (UnauthorizedAccessException)
   {
@@ -243,12 +252,12 @@ static async Task<IResult> CreateAttribute(AttributeService attributeService, st
   }
 }
 
-static async Task<IResult> UpdateAttribute(AttributeService attributeService, string organizationId, string titleId, string attributeId, AttributeDto dto, HttpContext httpContext)
+static async Task<IResult> RenameTitleVersion(TitleVersionService titleVersionService, string organizationId, string titleId, string versionId, TitleVersionDto dto, HttpContext httpContext)
 {
   var user = GetUser(httpContext);
   try
   {
-    return await attributeService.Update(organizationId, titleId, attributeId, dto, user)
+    return await titleVersionService.Rename(organizationId, titleId, versionId, dto, user)
         ? TypedResults.NoContent()
         : TypedResults.NotFound();
   }
@@ -262,18 +271,114 @@ static async Task<IResult> UpdateAttribute(AttributeService attributeService, st
   }
 }
 
-static async Task<IResult> DeleteAttribute(AttributeService attributeService, string organizationId, string titleId, string attributeId, HttpContext httpContext)
+static async Task<IResult> SetTitleVersionReadOnly(TitleVersionService titleVersionService, string organizationId, string titleId, string versionId, TitleVersionReadOnlyDto dto, HttpContext httpContext)
 {
   var user = GetUser(httpContext);
   try
   {
-    return await attributeService.Delete(organizationId, titleId, attributeId, user)
+    return await titleVersionService.SetReadOnly(organizationId, titleId, versionId, dto.IsReadOnly, user)
         ? TypedResults.NoContent()
         : TypedResults.NotFound();
   }
   catch (UnauthorizedAccessException)
   {
     return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+}
+
+static async Task<IResult> DeleteTitleVersion(TitleVersionService titleVersionService, string organizationId, string titleId, string versionId, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await titleVersionService.Delete(organizationId, titleId, versionId, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+  }
+}
+
+static async Task<IResult> GetAllVersionAttributes(AttributeService attributeService, string organizationId, string titleId, string versionId, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return TypedResults.Ok(await attributeService.ReadAll(organizationId, titleId, versionId, user));
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+}
+
+static async Task<IResult> CreateVersionAttribute(AttributeService attributeService, string organizationId, string titleId, string versionId, AttributeDto dto, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    var attribute = await attributeService.Create(organizationId, titleId, versionId, dto, user);
+    return TypedResults.Created($"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}/attributes/{attribute.Id}", attribute);
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (ArgumentException)
+  {
+    return TypedResults.BadRequest();
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+  }
+}
+
+static async Task<IResult> UpdateVersionAttribute(AttributeService attributeService, string organizationId, string titleId, string versionId, string attributeId, AttributeDto dto, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await attributeService.Update(organizationId, titleId, versionId, attributeId, dto, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (ArgumentException)
+  {
+    return TypedResults.BadRequest();
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+  }
+}
+
+static async Task<IResult> DeleteVersionAttribute(AttributeService attributeService, string organizationId, string titleId, string versionId, string attributeId, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await attributeService.Delete(organizationId, titleId, versionId, attributeId, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
   }
 }
 

@@ -7,6 +7,7 @@ import { firstValueFrom, filter } from 'rxjs';
 
 import { AuthService } from '../auth-service';
 import { Organization, OrganizationService } from '../organizations/organization-service';
+import { TitleVersionsService } from '../titles/title-versions-service';
 import { Title, TitlesService } from '../titles/titles-service';
 
 @Component({
@@ -22,6 +23,7 @@ export class Home {
   private readonly router = inject(Router);
   private readonly organizationService = inject(OrganizationService);
   private readonly titlesService = inject(TitlesService);
+  private readonly titleVersionsService = inject(TitleVersionsService);
   private readonly url = signal(this.router.url);
   private readonly requested = new Set<string>();
 
@@ -53,6 +55,20 @@ export class Home {
     );
     return titleId && titleId !== 'new' && !isEditingTitle ? titleId : undefined;
   });
+  readonly activeVersionId = computed(
+    () =>
+      /^\/organizations\/[^/?#]+\/titles\/[^/?#]+\/versions\/([^/?#]+)\/attributes(?:[/?#]|$)/.exec(
+        this.url(),
+      )?.[1],
+  );
+  readonly activeVersionName = computed(() => {
+    const titleId = this.activeTitleId();
+    const versionId = this.activeVersionId();
+    return titleId && versionId
+      ? this.titleVersionsService.getVersions(titleId).find((version) => version.id === versionId)
+          ?.name
+      : undefined;
+  });
 
   constructor() {
     this.router.events
@@ -72,6 +88,24 @@ export class Home {
       if (organizationId && titleId && this.titleName() === '…' && !this.requested.has(organizationId)) {
         this.requested.add(organizationId);
         void this.loadTitles(organizationId);
+      }
+    });
+    effect(() => {
+      const organizationId = this.organizationId();
+      const titleId = this.activeTitleId();
+      const versionId = this.activeVersionId();
+      const requestKey = `versions:${titleId}`;
+      if (
+        organizationId &&
+        titleId &&
+        versionId &&
+        this.activeVersionName() === undefined &&
+        !this.requested.has(requestKey)
+      ) {
+        this.requested.add(requestKey);
+        void this.titleVersionsService
+          .loadVersions(organizationId, titleId)
+          .catch((error) => console.error('Failed to load title versions.', error));
       }
     });
   }

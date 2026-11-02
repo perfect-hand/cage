@@ -10,6 +10,7 @@ public class TitleService
 
   private readonly TitleMapper mapper;
   private readonly TitleDao titleDao;
+  private readonly TitleVersionDao titleVersionDao;
   private readonly AttributeDao attributeDao;
   private readonly OrganizationDao organizationDao;
   private readonly ILogger<TitleService> logger;
@@ -18,6 +19,7 @@ public class TitleService
   {
     mapper = new TitleMapper();
     titleDao = new TitleDao();
+    titleVersionDao = new TitleVersionDao();
     attributeDao = new AttributeDao();
     organizationDao = new OrganizationDao();
     this.logger = logger;
@@ -39,6 +41,20 @@ public class TitleService
 
     var title = mapper.ToEntity(dto, organizationId);
     await titleDao.AddTitle(title);
+    try
+    {
+      await titleVersionDao.Add(new TitleVersionEntity
+      {
+        PartitionKey = title.RowKey,
+        RowKey = Guid.NewGuid().ToString(),
+        Name = TitleVersionService.InitialVersionName,
+      });
+    }
+    catch
+    {
+      await titleDao.DeleteTitle(organizationId, title.RowKey);
+      throw;
+    }
 
     logger.LogInformation("Title {} created in organization {}.", title.RowKey, organizationId);
     return mapper.ToDto(title);
@@ -70,7 +86,14 @@ public class TitleService
     var deleted = await titleDao.DeleteTitle(organizationId, titleId);
     if (deleted)
     {
-      await attributeDao.DeleteByTitle(titleId);
+      var versions = await titleVersionDao.QueryByTitle(titleId);
+      foreach (var version in versions)
+      {
+        await attributeDao.DeleteByTitleVersion(version.RowKey);
+      }
+
+      await titleVersionDao.DeleteByTitle(titleId);
+      logger.LogInformation("Title {} deleted from organization {}.", titleId, organizationId);
     }
 
     return deleted;

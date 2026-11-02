@@ -21,6 +21,7 @@ export class CreateAttribute {
 
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
+  readonly versionId = input.required<string>();
   readonly attributeTypes = attributeTypes;
   readonly maximumAttributes = maximumAttributes;
   readonly isSubmitting = signal(false);
@@ -38,16 +39,17 @@ export class CreateAttribute {
     }
 
     this.isSubmitting.set(true);
+    const versionId = this.versionId();
 
     try {
-      if (this.attributesService.getAttributes(this.titleId()).length >= maximumAttributes) {
+      if (this.attributesService.getAttributes(this.titleId(), versionId).length >= maximumAttributes) {
         this.atLimit.set(true);
         return;
       }
 
       await firstValueFrom(
         this.http.post(
-          `/organizations/${this.organizationId()}/titles/${this.titleId()}/attributes`,
+          `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/attributes`,
           { name: this.model().name.trim(), type: this.model().type },
         ),
       );
@@ -56,6 +58,8 @@ export class CreateAttribute {
         this.organizationId(),
         'titles',
         this.titleId(),
+        'versions',
+        versionId,
         'attributes',
       ]);
     } catch (error) {

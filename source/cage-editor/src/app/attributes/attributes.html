@@ -1,7 +1,7 @@
 <main class="content-panel">
   <section class="content-section">
     <div class="section-header">
-      <h2>Attributes</h2>
+      <h2>Attributes — {{ versionName() }}</h2>
     </div>
 
     @if (isLoading()) {
@@ -9,13 +9,17 @@
       <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
       <span>Loading attributes...</span>
     </div>
+    } @else if (notFound()) {
+    <p class="field-error" role="alert">Title version not found.</p>
     } @else {
       <table class="attribute-table">
         <thead>
           <tr>
             <th scope="col">Name</th>
             <th scope="col">Type</th>
+            @if (!isReadOnly()) {
             <th scope="col">Actions</th>
+            }
           </tr>
         </thead>
         <tbody>
@@ -23,12 +27,13 @@
             <tr>
               <td>{{ attribute.name }}</td>
               <td>{{ attribute.type }}</td>
+              @if (!isReadOnly()) {
               <td>
                 <div class="attribute-actions">
                   <button
                     mat-icon-button
                     type="button"
-                    [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'attributes', attribute.id, 'edit']"
+                    [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId(), 'attributes', attribute.id, 'edit']"
                     [attr.aria-label]="'Edit attribute ' + attribute.name"
                   >
                     <mat-icon aria-hidden="true">edit</mat-icon>
@@ -44,16 +49,19 @@
                   </button>
                 </div>
               </td>
+              }
             </tr>
           }
         </tbody>
       </table>
 
     <div class="form-actions">
-      <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'attributes', 'new']" [disabled]="attributes().length >= maximumAttributes">
+      <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId(), 'attributes', 'new']" [disabled]="isReadOnly() || attributes().length >= maximumAttributes">
         New attribute
       </button>
-      @if (attributes().length >= maximumAttributes) {
+      @if (isReadOnly()) {
+      <span>This version is read-only.</span>
+      } @else if (attributes().length >= maximumAttributes) {
       <span>Maximum of {{ maximumAttributes }} attributes reached.</span>
       }
     </div>
