@@ -5,37 +5,52 @@
     </div>
 
     @if (isLoading()) {
-    <div class="loading-state" aria-live="polite">
-      <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
-      <span>Loading title versions...</span>
-    </div>
-    } @else {
-    <form (submit)="createVersion(); $event.preventDefault()" novalidate>
-      <label for="version-name">Version name</label>
-      <input id="version-name" class="text-input" type="text" [formField]="nameForm" />
-      @if (nameForm().touched() && nameForm().invalid()) {
-      <p class="field-error" role="alert">Enter a version name of at most 50 characters.</p>
-      }
-
-      <label for="version-parent">Based on</label>
-      <select id="version-parent" class="text-input" [value]="parentVersionId()" (change)="parentVersionId.set($any($event.target).value)">
-        <option value="">No parent</option>
-        @for (version of versions(); track version.id) {
-        <option [value]="version.id">{{ version.name }}</option>
-        }
-      </select>
-
-      @if (versions().length >= maximumVersions) {
-      <p class="field-error" role="alert">Maximum of {{ maximumVersions }} versions reached.</p>
-      }
-
-      <div class="form-actions">
-        <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions']">Cancel</button>
-        <button mat-button type="submit" [disabled]="isSubmitting() || versions().length >= maximumVersions">
-          {{ isSubmitting() ? 'Creating...' : 'Create version' }}
-        </button>
+      <div class="loading-state" aria-live="polite">
+        <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+        <span>Loading title versions...</span>
       </div>
-    </form>
+    } @else {
+      <form (submit)="createVersion(); $event.preventDefault()" novalidate>
+        <label for="version-name">Version name</label>
+        <input id="version-name" class="text-input" type="text" [formField]="nameForm" />
+        @if (nameForm().touched() && nameForm().invalid()) {
+          <p class="field-error" role="alert">Enter a version name of at most 50 characters.</p>
+        }
+
+        <label for="version-parent">Based on</label>
+        <select
+          id="version-parent"
+          class="text-input"
+          [value]="parentVersionId()"
+          (change)="parentVersionId.set($any($event.target).value)"
+        >
+          <option value="">No parent</option>
+          @for (version of versions(); track version.id) {
+            <option [value]="version.id">{{ version.name }}</option>
+          }
+        </select>
+
+        @if (versions().length >= maximumVersions) {
+          <p class="field-error" role="alert">Maximum of {{ maximumVersions }} versions reached.</p>
+        }
+
+        <div class="form-actions">
+          <button
+            mat-button
+            type="button"
+            [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions']"
+          >
+            Cancel
+          </button>
+          <button
+            mat-button
+            type="submit"
+            [disabled]="isSubmitting() || versions().length >= maximumVersions"
+          >
+            {{ isSubmitting() ? 'Creating...' : 'Create version' }}
+          </button>
+        </div>
+      </form>
     }
   </section>
 </main>

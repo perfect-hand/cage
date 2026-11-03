@@ -39,7 +39,10 @@ export class EditTitleVersion implements OnInit {
 
   private async loadVersion(): Promise<void> {
     try {
-      const versions = await this.versionsService.loadVersions(this.organizationId(), this.titleId());
+      const versions = await this.versionsService.loadVersions(
+        this.organizationId(),
+        this.titleId(),
+      );
       const version = versions.find((item) => item.id === this.versionId());
       if (version) {
         this.version.set(version);
@@ -74,7 +77,7 @@ export class EditTitleVersion implements OnInit {
         this.titleId(),
         this.versionsService
           .getVersions(this.titleId())
-          .map((item) => item.id === version.id ? { ...item, name } : item),
+          .map((item) => (item.id === version.id ? { ...item, name } : item)),
       );
       await this.router.navigate([
         '/organizations',

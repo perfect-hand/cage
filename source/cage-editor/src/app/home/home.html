@@ -22,9 +22,7 @@
       @if (organizationId(); as organizationId) {
       @if (activeTitleId(); as titleId) {
       @if (activeVersionId(); as versionId) {
-      <a mat-button [routerLink]="activeVersionId()
-        ? ['/organizations', organizationId, 'titles', titleId, 'versions', versionId, 'attributes']
-        : ['/organizations', organizationId, 'titles', titleId, 'versions']">
+      <a mat-button [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions', versionId, 'attributes']">
         Attributes
       </a>
       }

@@ -39,7 +39,10 @@ export class CreateTitleVersion implements OnInit {
 
   private async loadVersions(): Promise<void> {
     try {
-      const versions = await this.versionsService.loadVersions(this.organizationId(), this.titleId());
+      const versions = await this.versionsService.loadVersions(
+        this.organizationId(),
+        this.titleId(),
+      );
       this.versions.set(versions);
       this.parentVersionId.set(
         versions.find((version) => version.parentVersionId === null)?.id ?? versions[0]?.id ?? '',

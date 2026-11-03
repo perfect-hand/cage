@@ -34,7 +34,10 @@ export class TitleVersions implements OnInit {
 
   private async loadVersions(): Promise<void> {
     try {
-      const versions = await this.versionsService.loadVersions(this.organizationId(), this.titleId());
+      const versions = await this.versionsService.loadVersions(
+        this.organizationId(),
+        this.titleId(),
+      );
       this.versions.set(versions);
     } catch (error) {
       console.error('Failed to load title versions.', error);
@@ -58,9 +61,7 @@ export class TitleVersions implements OnInit {
         ),
       );
       this.updateVersions(
-        this.versions().map((item) =>
-          item.id === version.id ? { ...item, isReadOnly } : item,
-        ),
+        this.versions().map((item) => (item.id === version.id ? { ...item, isReadOnly } : item)),
       );
     } catch (error) {
       console.error('Failed to update title version.', error);
@@ -94,9 +95,6 @@ export class TitleVersions implements OnInit {
       );
       const versions = this.versions().filter((item) => item.id !== version.id);
       this.updateVersions(versions);
-      if (this.parentVersionId() === version.id) {
-        this.parentVersionId.set(versions[0]?.id ?? '');
-      }
     } catch (error) {
       console.error('Failed to delete title version.', error);
     } finally {
