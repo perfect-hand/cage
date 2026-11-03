@@ -5,52 +5,116 @@
     </div>
 
     @if (isLoading()) {
-    <div class="loading-state" aria-live="polite">
-      <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
-      <span>Loading title versions...</span>
-    </div>
+      <div class="loading-state" aria-live="polite">
+        <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+        <span>Loading title versions...</span>
+      </div>
     } @else {
-    <ul class="item-list">
-      @for (version of versions(); track version.id) {
-        <li class="item-list-item">
-          <a [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', version.id, 'attributes']">
-            {{ version.name }}{{ version.isReadOnly ? ' (read-only)' : '' }}
-          </a>
-          <div class="form-actions">
-            <input #versionName class="text-input" [value]="version.name" [disabled]="isSubmitting()" aria-label="Version name" />
-            <button mat-button type="button" (click)="renameVersion(version, versionName.value)" [disabled]="isSubmitting()">
-              Rename
-            </button>
-            <button mat-button type="button" (click)="setReadOnly(version)" [disabled]="isSubmitting()">
-              {{ version.isReadOnly ? 'Make editable' : 'Make read-only' }}
-            </button>
-            <button mat-button type="button" (click)="deleteVersion(version)" [disabled]="isSubmitting()">
-              Delete
-            </button>
-          </div>
-        </li>
-      }
-    </ul>
-
-    <form (submit)="createVersion(); $event.preventDefault()" novalidate>
-      <label for="version-name">New version name</label>
-      <input id="version-name" class="text-input" [ngModel]="newVersionName()" (ngModelChange)="newVersionName.set($event)" name="versionName" maxlength="50" />
-
-      <label for="version-parent">Based on</label>
-      <select id="version-parent" class="text-input" [ngModel]="parentVersionId()" (ngModelChange)="parentVersionId.set($event)" name="parentVersion">
-        <option value="">No parent</option>
-        @for (version of versions(); track version.id) {
-        <option [value]="version.id">{{ version.name }}</option>
-        }
-      </select>
+      <table class="title-version-table">
+        <thead>
+          <tr>
+            <th scope="col" aria-label="Read-only status"></th>
+            <th scope="col">Version name</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (version of versions(); track version.id) {
+            <tr>
+              <td>
+                @if (version.isReadOnly) {
+                  <mat-icon aria-label="Read-only">lock</mat-icon>
+                }
+              </td>
+              <td>
+                <a
+                  [routerLink]="[
+                    '/organizations',
+                    organizationId(),
+                    'titles',
+                    titleId(),
+                    'versions',
+                    version.id,
+                    'attributes',
+                  ]"
+                >
+                  {{ version.name }}
+                </a>
+              </td>
+              <td>
+                <div class="version-actions">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    [routerLink]="[
+                      '/organizations',
+                      organizationId(),
+                      'titles',
+                      titleId(),
+                      'versions',
+                      version.id,
+                      'edit',
+                    ]"
+                    [attr.aria-label]="'Rename version ' + version.name"
+                  >
+                    <mat-icon aria-hidden="true">edit</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    (click)="setReadOnly(version)"
+                    [disabled]="isSubmitting()"
+                    [attr.aria-label]="
+                      (version.isReadOnly ? 'Unlock' : 'Lock') + ' version ' + version.name
+                    "
+                  >
+                    <mat-icon aria-hidden="true">{{
+                      version.isReadOnly ? 'lock_open' : 'lock'
+                    }}</mat-icon>
+                  </button>
+                  <button
+                    mat-icon-button
+                    type="button"
+                    (click)="deleteVersion(version)"
+                    [disabled]="isSubmitting()"
+                    [attr.aria-label]="'Delete version ' + version.name"
+                  >
+                    <mat-icon aria-hidden="true">delete</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
 
       <div class="form-actions">
-        <button mat-button type="button" [routerLink]="['/organizations', organizationId(), 'titles']">Back to titles</button>
-        <button mat-button type="submit" [disabled]="isSubmitting() || versions().length >= maximumVersions">
-          {{ isSubmitting() ? 'Creating...' : 'Create version' }}
+        <button
+          mat-button
+          type="button"
+          [routerLink]="['/organizations', organizationId(), 'titles']"
+        >
+          Back to titles
         </button>
+        <button
+          mat-button
+          type="button"
+          [routerLink]="[
+            '/organizations',
+            organizationId(),
+            'titles',
+            titleId(),
+            'versions',
+            'new',
+          ]"
+          [disabled]="versions().length >= maximumVersions"
+        >
+          New version
+        </button>
+        @if (versions().length >= maximumVersions) {
+          <span>Maximum of {{ maximumVersions }} versions reached.</span>
+        }
       </div>
-    </form>
     }
   </section>
 </main>

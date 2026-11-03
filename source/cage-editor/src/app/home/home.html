@@ -8,9 +8,7 @@
         <li><a [routerLink]="['/organizations', organizationId, 'titles']">{{ organizationName() }}</a></li>
         @if (activeTitleId(); as titleId) {
         <li>
-          <a [routerLink]="activeVersionId()
-            ? ['/organizations', organizationId, 'titles', titleId, 'versions', activeVersionId(), 'attributes']
-            : ['/organizations', organizationId, 'titles', titleId, 'versions']">{{ titleName() }}</a>
+          <a [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions']">{{ titleName() }}</a>
         </li>
         @if (activeVersionName(); as versionName) {
         <li aria-current="page">{{ versionName }}</li>
@@ -23,11 +21,11 @@
     <nav class="feature-buttons" aria-label="Title features">
       @if (organizationId(); as organizationId) {
       @if (activeTitleId(); as titleId) {
-      <a mat-button [routerLink]="activeVersionId()
-        ? ['/organizations', organizationId, 'titles', titleId, 'versions', activeVersionId(), 'attributes']
-        : ['/organizations', organizationId, 'titles', titleId, 'versions']">
+      @if (activeVersionId(); as versionId) {
+      <a mat-button [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions', versionId, 'attributes']">
         Attributes
       </a>
+      }
       }
       }
     </nav>

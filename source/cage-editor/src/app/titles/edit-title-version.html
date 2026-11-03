@@ -1,0 +1,37 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>Rename title version</h2>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-state" aria-live="polite">
+        <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+        <span>Loading title version...</span>
+      </div>
+    } @else if (notFound()) {
+      <p class="field-error" role="alert">Title version not found.</p>
+    } @else {
+      <form (submit)="updateVersion(); $event.preventDefault()" novalidate>
+        <label for="version-name">Version name</label>
+        <input id="version-name" class="text-input" type="text" [formField]="nameForm" />
+        @if (nameForm().touched() && nameForm().invalid()) {
+          <p class="field-error" role="alert">Enter a version name of at most 50 characters.</p>
+        }
+
+        <div class="form-actions">
+          <button
+            mat-button
+            type="button"
+            [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions']"
+          >
+            Cancel
+          </button>
+          <button mat-button type="submit" [disabled]="isSubmitting()">
+            {{ isSubmitting() ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
+      </form>
+    }
+  </section>
+</main>
