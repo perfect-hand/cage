@@ -32,7 +32,6 @@ export class Attributes implements OnInit {
   readonly isLoading = signal(false);
   readonly isDeleting = signal(false);
   readonly isReadOnly = signal(false);
-  readonly versionName = signal('');
   readonly notFound = signal(false);
   readonly maximumAttributes = maximumAttributes;
 
@@ -52,7 +51,6 @@ export class Attributes implements OnInit {
         this.notFound.set(true);
         return;
       }
-      this.versionName.set(version.name);
       this.isReadOnly.set(version.isReadOnly);
 
       const response =

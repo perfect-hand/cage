@@ -56,10 +56,11 @@ export class Home {
     return titleId && titleId !== 'new' && !isEditingTitle ? titleId : undefined;
   });
   readonly activeVersionId = computed(
-    () =>
-      /^\/organizations\/[^/?#]+\/titles\/[^/?#]+\/versions\/([^/?#]+)\/attributes(?:[/?#]|$)/.exec(
-        this.url(),
-      )?.[1],
+    () => {
+      const versionId = /^\/organizations\/[^/?#]+\/titles\/[^/?#]+\/versions\/([^/?#]+)(?:[/?#]|$)/
+        .exec(this.url())?.[1];
+      return versionId === 'new' ? undefined : versionId;
+    },
   );
   readonly activeVersionName = computed(() => {
     const titleId = this.activeTitleId();

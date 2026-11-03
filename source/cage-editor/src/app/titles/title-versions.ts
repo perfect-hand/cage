@@ -1,24 +1,24 @@
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { Router, RouterLink } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
 import { maximumTitleVersions, TitleVersion, TitleVersionsService } from './title-versions-service';
 
 @Component({
   selector: 'title-versions',
-  imports: [FormsModule, MatButtonModule, MatProgressSpinnerModule, RouterLink],
+  imports: [MatButtonModule, MatIconModule, MatProgressSpinnerModule, RouterLink],
   templateUrl: './title-versions.html',
   changeDetection: ChangeDetectionStrategy.Eager,
+  styleUrl: './title-versions.scss',
 })
 export class TitleVersions implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly dialog = inject(MatDialog);
-  private readonly router = inject(Router);
   private readonly versionsService = inject(TitleVersionsService);
 
   readonly organizationId = input.required<string>();
@@ -26,8 +26,6 @@ export class TitleVersions implements OnInit {
   readonly versions = signal<TitleVersion[]>([]);
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
-  readonly newVersionName = signal('');
-  readonly parentVersionId = signal('');
   readonly maximumVersions = maximumTitleVersions;
 
   ngOnInit(): void {
@@ -38,71 +36,10 @@ export class TitleVersions implements OnInit {
     try {
       const versions = await this.versionsService.loadVersions(this.organizationId(), this.titleId());
       this.versions.set(versions);
-      this.parentVersionId.set(
-        versions.find((version) => version.parentVersionId === null)?.id ?? versions[0]?.id ?? '',
-      );
     } catch (error) {
       console.error('Failed to load title versions.', error);
     } finally {
       this.isLoading.set(false);
-    }
-  }
-
-  async createVersion(): Promise<void> {
-    const name = this.newVersionName().trim();
-    if (!name || this.isSubmitting()) {
-      return;
-    }
-
-    this.isSubmitting.set(true);
-    try {
-      const version = await firstValueFrom(
-        this.http.post<TitleVersion>(
-          `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions`,
-          { name, parentVersionId: this.parentVersionId() || null },
-        ),
-      );
-      const versions = [...this.versions(), version];
-      this.updateVersions(versions);
-      await this.router.navigate([
-        '/organizations',
-        this.organizationId(),
-        'titles',
-        this.titleId(),
-        'versions',
-        version.id,
-        'attributes',
-      ]);
-    } catch (error) {
-      console.error('Failed to create title version.', error);
-    } finally {
-      this.isSubmitting.set(false);
-    }
-  }
-
-  async renameVersion(version: TitleVersion, name: string): Promise<void> {
-    const trimmedName = name.trim();
-    if (!trimmedName || trimmedName === version.name || this.isSubmitting()) {
-      return;
-    }
-
-    this.isSubmitting.set(true);
-    try {
-      await firstValueFrom(
-        this.http.put(
-          `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${version.id}`,
-          { name: trimmedName },
-        ),
-      );
-      this.updateVersions(
-        this.versions().map((item) =>
-          item.id === version.id ? { ...item, name: trimmedName } : item,
-        ),
-      );
-    } catch (error) {
-      console.error('Failed to rename title version.', error);
-    } finally {
-      this.isSubmitting.set(false);
     }
   }
 
