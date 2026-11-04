@@ -6,9 +6,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { TitleDto } from '../api-dtos';
+import { TitleDto } from './title-dto';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
-import { Title, TitlesService } from './titles-service';
+import { TitlesService } from './titles-service';
 
 @Component({
   selector: 'titles',
@@ -28,7 +28,7 @@ export class Titles implements OnInit {
   private readonly titlesService = inject(TitlesService);
 
   readonly organizationId = input.required<string>();
-  readonly titles = signal<Title[]>([]);
+  readonly titles = signal<TitleDto[]>([]);
   readonly isLoading = signal(false);
   readonly isDeleting = signal(false);
 

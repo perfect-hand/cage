@@ -1,23 +1,21 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Service, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { TitleVersionDto } from '../api-dtos';
+import { TitleVersionDto } from './title-version-dto';
 
 export const maximumTitleVersions = 100;
-
-export type TitleVersion = TitleVersionDto;
 
 @Service()
 export class TitleVersionsService {
   private readonly http = inject(HttpClient);
-  private readonly versionsByTitle = signal<Record<string, TitleVersion[]>>({});
-  private readonly pendingRequests = new Map<string, Promise<TitleVersion[]>>();
+  private readonly versionsByTitle = signal<Record<string, TitleVersionDto[]>>({});
+  private readonly pendingRequests = new Map<string, Promise<TitleVersionDto[]>>();
 
-  getVersions(titleId: string): TitleVersion[] {
+  getVersions(titleId: string): TitleVersionDto[] {
     return this.versionsByTitle()[titleId] ?? [];
   }
 
-  loadVersions(organizationId: string, titleId: string): Promise<TitleVersion[]> {
+  loadVersions(organizationId: string, titleId: string): Promise<TitleVersionDto[]> {
     const cachedVersions = this.getVersions(titleId);
     if (cachedVersions.length > 0) {
       return Promise.resolve(cachedVersions);
@@ -43,7 +41,7 @@ export class TitleVersionsService {
     return request;
   }
 
-  setVersions(titleId: string, versions: TitleVersion[]): void {
+  setVersions(titleId: string, versions: TitleVersionDto[]): void {
     this.versionsByTitle.update((versionsByTitle) => ({
       ...versionsByTitle,
       [titleId]: versions,

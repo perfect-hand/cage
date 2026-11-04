@@ -12,9 +12,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { OrganizationDto } from '../api-dtos';
+import { OrganizationDto } from './organization-dto';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
-import { Organization, OrganizationService } from './organization-service';
+import { OrganizationService } from './organization-service';
 
 @Component({
   selector: 'organizations',

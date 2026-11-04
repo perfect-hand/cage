@@ -5,8 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { AttributeDto, AttributeRequestDto } from '../api-dtos';
-import { Attribute, AttributesService, AttributeType, attributeTypes } from './attributes-service';
+import { AttributeDto, AttributeRequestDto, AttributeType } from './attribute-dto';
+import { AttributesService, attributeTypes } from './attributes-service';
 
 @Component({
   selector: 'edit-attribute',

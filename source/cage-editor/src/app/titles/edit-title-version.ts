@@ -5,8 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { RenameTitleVersionRequestDto } from '../api-dtos';
-import { TitleVersion, TitleVersionsService } from './title-versions-service';
+import { RenameTitleVersionRequestDto, TitleVersionDto } from './title-version-dto';
+import { TitleVersionsService } from './title-versions-service';
 
 @Component({
   selector: 'edit-title-version',
@@ -26,7 +26,7 @@ export class EditTitleVersion implements OnInit {
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
   readonly notFound = signal(false);
-  readonly version = signal<TitleVersion | undefined>(undefined);
+  readonly version = signal<TitleVersionDto | undefined>(undefined);
   readonly name = signal('');
   readonly nameForm = form(this.name, (path) => {
     required(path, { message: 'Enter a version name.' });

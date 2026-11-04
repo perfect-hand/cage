@@ -5,8 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { OrganizationDto, OrganizationRequestDto } from '../api-dtos';
-import { Organization, OrganizationService } from './organization-service';
+import { OrganizationDto, OrganizationRequestDto } from './organization-dto';
+import { OrganizationService } from './organization-service';
 
 @Component({
   selector: 'edit-organization',

@@ -6,10 +6,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { AttributeDto } from '../api-dtos';
+import { AttributeDto } from './attribute-dto';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
 import { TitleVersionsService } from '../titles/title-versions-service';
-import { Attribute, AttributesService } from './attributes-service';
+import { AttributesService } from './attributes-service';
 
 export const maximumAttributes = 100;
 
@@ -29,7 +29,7 @@ export class Attributes implements OnInit {
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
   readonly versionId = input.required<string>();
-  readonly attributes = signal<Attribute[]>([]);
+  readonly attributes = signal<AttributeDto[]>([]);
   readonly isLoading = signal(false);
   readonly isDeleting = signal(false);
   readonly isReadOnly = signal(false);

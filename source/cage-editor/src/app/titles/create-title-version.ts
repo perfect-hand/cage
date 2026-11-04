@@ -5,8 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { CreateTitleVersionRequestDto, TitleVersionDto } from '../api-dtos';
-import { maximumTitleVersions, TitleVersion, TitleVersionsService } from './title-versions-service';
+import { CreateTitleVersionRequestDto, TitleVersionDto } from './title-version-dto';
+import { maximumTitleVersions, TitleVersionsService } from './title-versions-service';
 
 @Component({
   selector: 'create-title-version',
@@ -22,7 +22,7 @@ export class CreateTitleVersion implements OnInit {
 
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
-  readonly versions = signal<TitleVersion[]>([]);
+  readonly versions = signal<TitleVersionDto[]>([]);
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
   readonly name = signal('');

@@ -4,9 +4,9 @@ import { form, FormField, maxLength, pattern, required } from '@angular/forms/si
 import { MatButtonModule } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { AttributeDto, AttributeRequestDto } from '../api-dtos';
+import { AttributeDto, AttributeRequestDto, AttributeType } from './attribute-dto';
 import { maximumAttributes } from './attributes';
-import { AttributesService, AttributeType, attributeTypes } from './attributes-service';
+import { AttributesService, attributeTypes } from './attributes-service';
 
 @Component({
   selector: 'create-attribute',

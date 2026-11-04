@@ -6,10 +6,11 @@ import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router
 import { firstValueFrom, filter } from 'rxjs';
 
 import { AuthService } from '../auth-service';
-import { OrganizationDto, TitleDto } from '../api-dtos';
-import { Organization, OrganizationService } from '../organizations/organization-service';
+import { OrganizationDto } from '../organizations/organization-dto';
+import { OrganizationService } from '../organizations/organization-service';
 import { TitleVersionsService } from '../titles/title-versions-service';
-import { Title, TitlesService } from '../titles/titles-service';
+import { TitleDto } from '../titles/title-dto';
+import { TitlesService } from '../titles/titles-service';
 
 @Component({
   selector: 'home',

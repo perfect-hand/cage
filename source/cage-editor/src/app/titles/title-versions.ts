@@ -7,8 +7,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
-import { SetTitleVersionReadOnlyRequestDto } from '../api-dtos';
-import { maximumTitleVersions, TitleVersion, TitleVersionsService } from './title-versions-service';
+import { SetTitleVersionReadOnlyRequestDto, TitleVersionDto } from './title-version-dto';
+import { maximumTitleVersions, TitleVersionsService } from './title-versions-service';
 
 @Component({
   selector: 'title-versions',
@@ -24,7 +24,7 @@ export class TitleVersions implements OnInit {
 
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
-  readonly versions = signal<TitleVersion[]>([]);
+  readonly versions = signal<TitleVersionDto[]>([]);
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
   readonly maximumVersions = maximumTitleVersions;
@@ -47,7 +47,7 @@ export class TitleVersions implements OnInit {
     }
   }
 
-  async setReadOnly(version: TitleVersion): Promise<void> {
+  async setReadOnly(version: TitleVersionDto): Promise<void> {
     if (this.isSubmitting()) {
       return;
     }
@@ -72,7 +72,7 @@ export class TitleVersions implements OnInit {
     }
   }
 
-  async deleteVersion(version: TitleVersion): Promise<void> {
+  async deleteVersion(version: TitleVersionDto): Promise<void> {
     if (this.isSubmitting()) {
       return;
     }
@@ -104,7 +104,7 @@ export class TitleVersions implements OnInit {
     }
   }
 
-  private updateVersions(versions: TitleVersion[]): void {
+  private updateVersions(versions: TitleVersionDto[]): void {
     this.versions.set(versions);
     this.versionsService.setVersions(this.titleId(), versions);
   }
