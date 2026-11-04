@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { RenameTitleVersionRequestDto } from '../api-dtos';
 import { TitleVersion, TitleVersionsService } from './title-versions-service';
 
 @Component({
@@ -67,10 +68,11 @@ export class EditTitleVersion implements OnInit {
     this.isSubmitting.set(true);
     try {
       const name = this.name().trim();
+      const request: RenameTitleVersionRequestDto = { name };
       await firstValueFrom(
-        this.http.put(
+        this.http.put<void>(
           `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${version.id}`,
-          { name },
+          request,
         ),
       );
       this.versionsService.setVersions(

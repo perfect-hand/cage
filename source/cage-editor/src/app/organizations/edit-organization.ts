@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { OrganizationDto, OrganizationRequestDto } from '../api-dtos';
 import { Organization, OrganizationService } from './organization-service';
 
 @Component({
@@ -41,7 +42,9 @@ export class EditOrganization implements OnInit {
 
     if (!organization) {
       try {
-        const organizations = await firstValueFrom(this.http.get<Organization[]>('/organizations'));
+        const organizations = await firstValueFrom(
+          this.http.get<OrganizationDto[]>('/organizations'),
+        );
         this.organizationService.setOrganizations(organizations ?? []);
         organization = organizations?.find((item) => item.id === this.organizationId());
       } catch (error) {
@@ -66,8 +69,12 @@ export class EditOrganization implements OnInit {
 
     try {
       const name = this.name().trim();
+      const organization: OrganizationRequestDto = { name };
       await firstValueFrom(
-        this.http.put(`/organizations/${this.organizationId()}`, { name }),
+        this.http.put<void>(
+          `/organizations/${this.organizationId()}`,
+          organization,
+        ),
       );
       this.organizationService.setOrganizations(
         this.organizationService.organizations().map((organization) =>

@@ -7,6 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
+import { SetTitleVersionReadOnlyRequestDto } from '../api-dtos';
 import { maximumTitleVersions, TitleVersion, TitleVersionsService } from './title-versions-service';
 
 @Component({
@@ -54,10 +55,11 @@ export class TitleVersions implements OnInit {
     this.isSubmitting.set(true);
     try {
       const isReadOnly = !version.isReadOnly;
+      const request: SetTitleVersionReadOnlyRequestDto = { isReadOnly };
       await firstValueFrom(
-        this.http.put(
+        this.http.put<void>(
           `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${version.id}/read-only`,
-          { isReadOnly },
+          request,
         ),
       );
       this.updateVersions(
@@ -89,7 +91,7 @@ export class TitleVersions implements OnInit {
     this.isSubmitting.set(true);
     try {
       await firstValueFrom(
-        this.http.delete(
+        this.http.delete<void>(
           `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${version.id}`,
         ),
       );

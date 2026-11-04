@@ -4,6 +4,7 @@ import { form, FormField, maxLength, pattern, required } from '@angular/forms/si
 import { MatButtonModule } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { OrganizationDto, OrganizationRequestDto } from '../api-dtos';
 import { OrganizationService } from './organization-service';
 
 @Component({
@@ -40,10 +41,9 @@ export class CreateOrganization {
         return;
       }
 
+      const organization: OrganizationRequestDto = { name: this.name().trim() };
       await firstValueFrom(
-        this.http.post('/organizations', {
-          name: this.name().trim(),
-        }),
+        this.http.post<OrganizationDto>('/organizations', organization),
       );
       await this.router.navigateByUrl('/');
     } catch (error) {

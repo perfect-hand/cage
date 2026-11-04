@@ -4,6 +4,7 @@ import { form, FormField, maxLength, pattern, required } from '@angular/forms/si
 import { MatButtonModule } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { AttributeDto, AttributeRequestDto } from '../api-dtos';
 import { maximumAttributes } from './attributes';
 import { AttributesService, AttributeType, attributeTypes } from './attributes-service';
 
@@ -47,10 +48,14 @@ export class CreateAttribute {
         return;
       }
 
+      const attribute: AttributeRequestDto = {
+        name: this.model().name.trim(),
+        type: this.model().type,
+      };
       await firstValueFrom(
-        this.http.post(
+        this.http.post<AttributeDto>(
           `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/attributes`,
-          { name: this.model().name.trim(), type: this.model().type },
+          attribute,
         ),
       );
       await this.router.navigate([

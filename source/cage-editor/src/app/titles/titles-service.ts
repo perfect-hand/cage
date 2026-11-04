@@ -1,9 +1,7 @@
 import { Service, signal } from '@angular/core';
+import { TitleDto } from '../api-dtos';
 
-export interface Title {
-  id: string;
-  name: string;
-}
+export type Title = TitleDto;
 
 @Service()
 export class TitlesService {

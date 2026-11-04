@@ -1,9 +1,7 @@
 import { Service, signal } from '@angular/core';
+import { OrganizationDto } from '../api-dtos';
 
-export interface Organization {
-  id: string;
-  name: string;
-}
+export type Organization = OrganizationDto;
 
 @Service()
 export class OrganizationService {

@@ -6,6 +6,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { TitleDto } from '../api-dtos';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
 import { Title, TitlesService } from './titles-service';
 
@@ -40,7 +41,7 @@ export class Titles implements OnInit {
 
     try {
       const response = await firstValueFrom(
-        this.http.get<Title[]>(`/organizations/${this.organizationId()}/titles`),
+        this.http.get<TitleDto[]>(`/organizations/${this.organizationId()}/titles`),
       );
 
       this.titles.set(response ?? []);
@@ -79,7 +80,7 @@ export class Titles implements OnInit {
 
     try {
       await firstValueFrom(
-        this.http.delete(`/organizations/${this.organizationId()}/titles/${titleId}`),
+        this.http.delete<void>(`/organizations/${this.organizationId()}/titles/${titleId}`),
       );
       const titles = this.titles().filter((title) => title.id !== titleId);
       this.titles.set(titles);

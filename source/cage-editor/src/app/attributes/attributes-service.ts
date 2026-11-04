@@ -1,6 +1,7 @@
 import { Service, signal } from '@angular/core';
+import { AttributeDto } from '../api-dtos';
 
-export type AttributeType = 'Int' | 'String' | 'Entity' | 'EntityList';
+export type AttributeType = AttributeDto['type'];
 
 export const attributeTypes: { value: AttributeType; label: string }[] = [
   { value: 'Int', label: 'Int' },
@@ -9,11 +10,7 @@ export const attributeTypes: { value: AttributeType; label: string }[] = [
   { value: 'EntityList', label: 'Entity List' },
 ];
 
-export interface Attribute {
-  id: string;
-  name: string;
-  type: AttributeType;
-}
+export type Attribute = AttributeDto;
 
 @Service()
 export class AttributesService {

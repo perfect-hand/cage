@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { AttributeDto } from '../api-dtos';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
 import { TitleVersionsService } from '../titles/title-versions-service';
 import { Attribute, AttributesService } from './attributes-service';
@@ -55,7 +56,7 @@ export class Attributes implements OnInit {
 
       const response =
         (await firstValueFrom(
-          this.http.get<Attribute[]>(
+          this.http.get<AttributeDto[]>(
             `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/attributes`,
           ),
         )) ?? [];
@@ -95,7 +96,7 @@ export class Attributes implements OnInit {
 
     try {
       await firstValueFrom(
-        this.http.delete(
+        this.http.delete<void>(
           `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/attributes/${attributeId}`,
         ),
       );

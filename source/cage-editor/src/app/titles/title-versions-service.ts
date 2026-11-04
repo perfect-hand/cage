@@ -1,15 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Service, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { TitleVersionDto } from '../api-dtos';
 
 export const maximumTitleVersions = 100;
 
-export interface TitleVersion {
-  id: string;
-  name: string;
-  parentVersionId: string | null;
-  isReadOnly: boolean;
-}
+export type TitleVersion = TitleVersionDto;
 
 @Service()
 export class TitleVersionsService {
@@ -33,7 +29,7 @@ export class TitleVersionsService {
     }
 
     const request = firstValueFrom(
-      this.http.get<TitleVersion[]>(
+      this.http.get<TitleVersionDto[]>(
         `/organizations/${organizationId}/titles/${titleId}/versions`,
       ),
     )
