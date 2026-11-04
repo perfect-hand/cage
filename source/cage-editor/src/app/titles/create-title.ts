@@ -4,7 +4,7 @@ import { form, FormField, maxLength, pattern, required } from '@angular/forms/si
 import { MatButtonModule } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { TitleDto, TitleRequestDto } from './title-dto';
+import { TitleDto, TitleRequestDto } from './titles-model';
 import { TitlesService } from './titles-service';
 
 @Component({

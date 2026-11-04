@@ -1,5 +1,5 @@
 import { Service, signal } from '@angular/core';
-import { TitleDto } from './title-dto';
+import { TitleDto } from './titles-model';
 
 @Service()
 export class TitlesService {

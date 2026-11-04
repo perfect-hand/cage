@@ -5,7 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { TitleDto, TitleRequestDto } from './title-dto';
+import { TitleDto, TitleRequestDto } from './titles-model';
 import { TitlesService } from './titles-service';
 
 @Component({

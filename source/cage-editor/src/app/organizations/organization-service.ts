@@ -1,5 +1,5 @@
 import { Service, signal } from '@angular/core';
-import { OrganizationDto } from './organization-dto';
+import { OrganizationDto } from './organization-model';
 
 @Service()
 export class OrganizationService {

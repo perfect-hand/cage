@@ -12,7 +12,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { OrganizationDto } from './organization-dto';
+import { OrganizationDto } from './organization-model';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
 import { OrganizationService } from './organization-service';
 

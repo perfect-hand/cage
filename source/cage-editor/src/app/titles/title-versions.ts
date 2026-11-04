@@ -7,7 +7,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
-import { SetTitleVersionReadOnlyRequestDto, TitleVersionDto } from './title-version-dto';
+import { SetTitleVersionReadOnlyRequestDto, TitleVersionDto } from './title-versions-model';
 import { maximumTitleVersions, TitleVersionsService } from './title-versions-service';
 
 @Component({

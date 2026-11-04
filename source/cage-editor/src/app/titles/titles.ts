@@ -6,7 +6,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { TitleDto } from './title-dto';
+import { TitleDto } from './titles-model';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
 import { TitlesService } from './titles-service';
 

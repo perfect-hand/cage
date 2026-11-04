@@ -1,5 +1,5 @@
 import { Service, signal } from '@angular/core';
-import { AttributeDto, AttributeType } from './attribute-dto';
+import { AttributeDto, AttributeType } from './attributes-model';
 
 export const attributeTypes: { value: AttributeType; label: string }[] = [
   { value: 'Int', label: 'Int' },

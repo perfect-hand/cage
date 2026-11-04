@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Service, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { TitleVersionDto } from './title-version-dto';
+import { TitleVersionDto } from './title-versions-model';
 
 export const maximumTitleVersions = 100;
 
