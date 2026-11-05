@@ -52,8 +52,8 @@
                   {{ version.name }}
                 </a>
               </td>
-              <td>{{ version.createdAt | date: 'medium' }}</td>
-              <td>
+              <td data-label="Created">{{ version.createdAt | date: 'medium' }}</td>
+              <td data-label="Actions">
                 <div class="version-actions">
                   <button
                     mat-icon-button
