@@ -1,9 +1,10 @@
 using Azure;
 using Azure.Data.Tables;
+using Cage.Backend.Editor.Title;
 
 namespace Cage.Backend.Editor.Attribute;
 
-public class AttributeDao : TableDao
+public class AttributeDao : TableDao, IVersionedTitleEntityDao<AttributeEntity>
 {
   public const string AttributesTableName = "Attributes";
 
@@ -56,4 +57,14 @@ public class AttributeDao : TableDao
       await attributesTableClient.DeleteEntityAsync(titleVersionId, attribute.RowKey);
     }
   }
+
+  Task IVersionedTitleEntityDao<AttributeEntity>.Add(AttributeEntity attribute) => AddAttribute(attribute);
+  Task<AttributeEntity?> IVersionedTitleEntityDao<AttributeEntity>.Get(string titleVersionId, string entityId) =>
+      GetAttributeTitleVersion(titleVersionId, entityId);
+  Task IVersionedTitleEntityDao<AttributeEntity>.Set(string titleVersionId, AttributeEntity attribute) =>
+      SetAttributeTitleVersion(titleVersionId, attribute);
+  Task<bool> IVersionedTitleEntityDao<AttributeEntity>.Delete(string titleVersionId, string entityId) =>
+      DeleteAttributeTitleVersion(titleVersionId, entityId);
+  Task IVersionedTitleEntityDao<AttributeEntity>.DeleteByTitleVersion(string titleVersionId) =>
+      DeleteByTitleVersion(titleVersionId);
 }

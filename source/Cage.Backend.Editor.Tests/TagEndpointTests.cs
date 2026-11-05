@@ -32,80 +32,137 @@ public class TagEndpointTests : EndpointTest, IClassFixture<WebApplicationFactor
   }
 
   [Fact]
-  public async Task FailsToGetTagsWithoutAuthenticationOrFromForeignOrganization()
+  public async Task FailsToGetTagsWithoutAuthentication()
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
     var versionId = testDao.GetInitialVersionId(titleId);
-    var foreignOrganizationId = Guid.NewGuid().ToString();
-    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, foreignOrganizationId, "Foreign");
-    var foreignTitleId = await testDao.AddTitle(Guid.NewGuid().ToString(), "Title");
-    var foreignVersionId = testDao.GetInitialVersionId(foreignTitleId);
 
     // WHEN
-    var unauthorizedResponse = await unauthorizedHttpClient.GetAsync(TagsPath(organizationId, titleId, versionId));
-    var foreignResponse = await httpClient.GetAsync(TagsPath(foreignOrganizationId, foreignTitleId, foreignVersionId));
+    var response = await unauthorizedHttpClient.GetAsync(TagsPath(organizationId, titleId, versionId));
 
     // THEN
-    Assert.Equal(HttpStatusCode.Unauthorized, unauthorizedResponse.StatusCode);
-    Assert.Equal(HttpStatusCode.Forbidden, foreignResponse.StatusCode);
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
   }
 
   [Fact]
-  public async Task CreatesTagAndRejectsInvalidOrExcessiveTags()
+  public async Task FailsToGetTagsOfTitleInForeignOrganization()
+  {
+    // GIVEN
+    var organizationId = Guid.NewGuid().ToString();
+    await testDao.AddUserToOrganization(TestAuthHandler.TestUser, organizationId, "Foreign");
+    var titleId = await testDao.AddTitle(Guid.NewGuid().ToString(), "Title");
+    var versionId = testDao.GetInitialVersionId(titleId);
+
+    // WHEN
+    var response = await httpClient.GetAsync(TagsPath(organizationId, titleId, versionId));
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task CreatesTag()
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
     var versionId = testDao.GetInitialVersionId(titleId);
 
     // WHEN
-    var createResponse = await httpClient.PostAsJsonAsync(TagsPath(organizationId, titleId, versionId), new TagDto { Name = "Monster" });
-    var tooLongResponse = await httpClient.PostAsJsonAsync(
-        TagsPath(organizationId, titleId, versionId),
-        new TagDto { Name = new string('a', TagService.MaximumTagNameLength + 1) });
-    var emptyResponse = await httpClient.PostAsJsonAsync(TagsPath(organizationId, titleId, versionId), new TagDto { Name = " " });
+    var response = await httpClient.PostAsJsonAsync(TagsPath(organizationId, titleId, versionId), new TagDto { Name = "Monster" });
 
-    for (var i = 1; i < TagService.MaximumTagsPerTitle; i++)
+    // THEN
+    Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    var created = await response.Content.ReadFromJsonAsync<TagDto>();
+    Assert.NotNull(created?.Id);
+    Assert.Equal("Monster", created.Name);
+    var stored = Assert.Single(testDao.QueryTagsByTitleVersion(versionId));
+    Assert.Equal(created.Id, stored.RowKey);
+  }
+
+  [Fact]
+  public async Task FailsToCreateTagWithNameOverMaximumLength()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var dto = new TagDto { Name = new string('a', TagService.MaximumTagNameLength + 1) };
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(TagsPath(organizationId, titleId, versionId), dto);
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToCreateTagWithWhitespaceName()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(TagsPath(organizationId, titleId, versionId), new TagDto { Name = " " });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToCreateMoreThanMaximumTagsInTitle()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    for (var i = 0; i < TagService.MaximumTagsPerTitle; i++)
     {
       await testDao.AddTag(versionId, $"Tag{i}");
     }
-    var excessResponse = await httpClient.PostAsJsonAsync(TagsPath(organizationId, titleId, versionId), new TagDto { Name = "Excess" });
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(TagsPath(organizationId, titleId, versionId), new TagDto { Name = "Excess" });
 
     // THEN
-    Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
-    var created = await createResponse.Content.ReadFromJsonAsync<TagDto>();
-    Assert.NotNull(created?.Id);
-    Assert.Equal("Monster", created.Name);
-    Assert.Equal(HttpStatusCode.BadRequest, tooLongResponse.StatusCode);
-    Assert.Equal(HttpStatusCode.BadRequest, emptyResponse.StatusCode);
-    Assert.Equal(HttpStatusCode.BadRequest, excessResponse.StatusCode);
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
   }
 
   [Fact]
-  public async Task FailsToCreateTagsWithoutAuthenticationOrInForeignOrganization()
+  public async Task FailsToCreateTagWithoutAuthentication()
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
     var versionId = testDao.GetInitialVersionId(titleId);
+
+    // WHEN
+    var response = await unauthorizedHttpClient.PostAsJsonAsync(TagsPath(organizationId, titleId, versionId), new TagDto { Name = "Resource" });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    Assert.Empty(testDao.QueryTagsByTitleVersion(versionId));
+  }
+
+  [Fact]
+  public async Task FailsToCreateTagInForeignOrganization()
+  {
+    // GIVEN
     var foreignOrganizationId = Guid.NewGuid().ToString();
     await testDao.AddUserToOrganization(TestAuthHandler.TestUser, foreignOrganizationId, "Foreign");
     var foreignTitleId = await testDao.AddTitle(Guid.NewGuid().ToString(), "Title");
     var foreignVersionId = testDao.GetInitialVersionId(foreignTitleId);
-    var dto = new TagDto { Name = "Resource" };
 
     // WHEN
-    var unauthorizedResponse = await unauthorizedHttpClient.PostAsJsonAsync(TagsPath(organizationId, titleId, versionId), dto);
-    var foreignResponse = await httpClient.PostAsJsonAsync(TagsPath(foreignOrganizationId, foreignTitleId, foreignVersionId), dto);
+    var response = await httpClient.PostAsJsonAsync(
+        TagsPath(foreignOrganizationId, foreignTitleId, foreignVersionId),
+        new TagDto { Name = "Resource" });
 
     // THEN
-    Assert.Equal(HttpStatusCode.Unauthorized, unauthorizedResponse.StatusCode);
-    Assert.Equal(HttpStatusCode.Forbidden, foreignResponse.StatusCode);
-    Assert.Empty(testDao.QueryTagsByTitleVersion(versionId));
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     Assert.Empty(testDao.QueryTagsByTitleVersion(foreignVersionId));
   }
 
   [Fact]
-  public async Task UpdatesTagAndRejectsInvalidOrMissingTags()
+  public async Task UpdatesTag()
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
@@ -113,72 +170,136 @@ public class TagEndpointTests : EndpointTest, IClassFixture<WebApplicationFactor
     var tagId = await testDao.AddTag(versionId, "Old");
 
     // WHEN
-    var updateResponse = await httpClient.PutAsJsonAsync($"{TagsPath(organizationId, titleId, versionId)}/{tagId}", new TagDto { Name = "New" });
-    var tooLongResponse = await httpClient.PutAsJsonAsync(
+    var response = await httpClient.PutAsJsonAsync(
         $"{TagsPath(organizationId, titleId, versionId)}/{tagId}",
-        new TagDto { Name = new string('a', TagService.MaximumTagNameLength + 1) });
-    var missingResponse = await httpClient.PutAsJsonAsync(
-        $"{TagsPath(organizationId, titleId, versionId)}/{Guid.NewGuid()}",
-        new TagDto { Name = "Missing" });
+        new TagDto { Name = "New" });
 
     // THEN
-    Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
-    Assert.Equal(HttpStatusCode.BadRequest, tooLongResponse.StatusCode);
-    Assert.Equal(HttpStatusCode.NotFound, missingResponse.StatusCode);
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     Assert.Equal("New", Assert.Single(testDao.QueryTagsByTitleVersion(versionId)).Name);
   }
 
   [Fact]
-  public async Task FailsToUpdateTagsWithoutAuthenticationOrInForeignOrganization()
+  public async Task FailsToUpdateTagWithNameOverMaximumLength()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var tagId = await testDao.AddTag(versionId, "Old");
+    var dto = new TagDto { Name = new string('a', TagService.MaximumTagNameLength + 1) };
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync($"{TagsPath(organizationId, titleId, versionId)}/{tagId}", dto);
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryTagsByTitleVersion(versionId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateMissingTag()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"{TagsPath(organizationId, titleId, versionId)}/{Guid.NewGuid()}",
+        new TagDto { Name = "Missing" });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateTagWithoutAuthentication()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var tagId = await testDao.AddTag(versionId, "Old");
+
+    // WHEN
+    var response = await unauthorizedHttpClient.PutAsJsonAsync(
+        $"{TagsPath(organizationId, titleId, versionId)}/{tagId}",
+        new TagDto { Name = "New" });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryTagsByTitleVersion(versionId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateTagInForeignOrganization()
   {
     // GIVEN
     var foreignOrganizationId = Guid.NewGuid().ToString();
     var foreignTitleId = await testDao.AddTitle(foreignOrganizationId, "Title");
     var foreignVersionId = testDao.GetInitialVersionId(foreignTitleId);
     var tagId = await testDao.AddTag(foreignVersionId, "Old");
-    var dto = new TagDto { Name = "New" };
 
     // WHEN
-    var unauthorizedResponse = await unauthorizedHttpClient.PutAsJsonAsync(
+    var response = await httpClient.PutAsJsonAsync(
         $"{TagsPath(foreignOrganizationId, foreignTitleId, foreignVersionId)}/{tagId}",
-        dto);
-    var foreignResponse = await httpClient.PutAsJsonAsync(
-        $"{TagsPath(foreignOrganizationId, foreignTitleId, foreignVersionId)}/{tagId}",
-        dto);
+        new TagDto { Name = "New" });
 
     // THEN
-    Assert.Equal(HttpStatusCode.Unauthorized, unauthorizedResponse.StatusCode);
-    Assert.Equal(HttpStatusCode.Forbidden, foreignResponse.StatusCode);
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     Assert.Equal("Old", Assert.Single(testDao.QueryTagsByTitleVersion(foreignVersionId)).Name);
   }
 
   [Fact]
-  public async Task DeletesTagAndRejectsUnauthenticatedOrForeignRequests()
+  public async Task DeletesTag()
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
     var versionId = testDao.GetInitialVersionId(titleId);
     var tagId = await testDao.AddTag(versionId, "Resource");
+
+    // WHEN
+    var response = await httpClient.DeleteAsync($"{TagsPath(organizationId, titleId, versionId)}/{tagId}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    Assert.Empty(testDao.QueryTagsByTitleVersion(versionId));
+  }
+
+  [Fact]
+  public async Task FailsToDeleteTagWithoutAuthentication()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var tagId = await testDao.AddTag(versionId, "Resource");
+
+    // WHEN
+    var response = await unauthorizedHttpClient.DeleteAsync($"{TagsPath(organizationId, titleId, versionId)}/{tagId}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    Assert.Single(testDao.QueryTagsByTitleVersion(versionId));
+  }
+
+  [Fact]
+  public async Task FailsToDeleteTagInForeignOrganization()
+  {
+    // GIVEN
     var foreignOrganizationId = Guid.NewGuid().ToString();
     var foreignTitleId = await testDao.AddTitle(foreignOrganizationId, "Title");
     var foreignVersionId = testDao.GetInitialVersionId(foreignTitleId);
-    var foreignTagId = await testDao.AddTag(foreignVersionId, "Monster");
+    var tagId = await testDao.AddTag(foreignVersionId, "Resource");
 
     // WHEN
-    var unauthorizedResponse = await unauthorizedHttpClient.DeleteAsync($"{TagsPath(organizationId, titleId, versionId)}/{tagId}");
-    var foreignResponse = await httpClient.DeleteAsync($"{TagsPath(foreignOrganizationId, foreignTitleId, foreignVersionId)}/{foreignTagId}");
-    var deleteResponse = await httpClient.DeleteAsync($"{TagsPath(organizationId, titleId, versionId)}/{tagId}");
+    var response = await httpClient.DeleteAsync($"{TagsPath(foreignOrganizationId, foreignTitleId, foreignVersionId)}/{tagId}");
 
     // THEN
-    Assert.Equal(HttpStatusCode.Unauthorized, unauthorizedResponse.StatusCode);
-    Assert.Equal(HttpStatusCode.Forbidden, foreignResponse.StatusCode);
-    Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
-    Assert.Empty(testDao.QueryTagsByTitleVersion(versionId));
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     Assert.Single(testDao.QueryTagsByTitleVersion(foreignVersionId));
   }
 
   [Fact]
-  public async Task TagsInChildVersionsRemainIndependentFromLaterParentChanges()
+  public async Task ChildVersionKeepsParentTagValueWhenParentIsUpdated()
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
@@ -194,41 +315,66 @@ public class TagEndpointTests : EndpointTest, IClassFixture<WebApplicationFactor
     var updateResponse = await httpClient.PutAsJsonAsync(
         $"{TagsPath(organizationId, titleId, parentVersionId)}/{tagId}",
         new TagDto { Name = "Monster" });
-    var createAfterForkResponse = await httpClient.PostAsJsonAsync(
-        TagsPath(organizationId, titleId, parentVersionId),
-        new TagDto { Name = "Late" });
     var childResponse = await httpClient.GetAsync(TagsPath(organizationId, titleId, childVersionId));
-    var parentResponse = await httpClient.GetAsync(TagsPath(organizationId, titleId, parentVersionId));
 
     // THEN
     Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
-    Assert.Equal(HttpStatusCode.Created, createAfterForkResponse.StatusCode);
     var childTags = await childResponse.Content.ReadFromJsonAsync<List<TagDto>>();
-    var parentTags = await parentResponse.Content.ReadFromJsonAsync<List<TagDto>>();
     Assert.Equal("Resource", Assert.Single(Assert.IsType<List<TagDto>>(childTags)).Name);
-    Assert.Equal(new[] { "Late", "Monster" }, Assert.IsType<List<TagDto>>(parentTags).Select(tag => tag.Name).Order().ToArray());
   }
 
   [Fact]
-  public async Task DeletesTagsWhenDeletingTitleOrTitleVersion()
+  public async Task ParentTagCreatedAfterForkIsHiddenFromChildVersion()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var childVersionId = await testDao.AddVersion(titleId, "2.0", parentVersionId);
+
+    // WHEN
+    var createResponse = await httpClient.PostAsJsonAsync(
+        TagsPath(organizationId, titleId, parentVersionId),
+        new TagDto { Name = "Late" });
+    var childResponse = await httpClient.GetAsync(TagsPath(organizationId, titleId, childVersionId));
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+    var childTags = await childResponse.Content.ReadFromJsonAsync<List<TagDto>>();
+    Assert.Empty(Assert.IsType<List<TagDto>>(childTags));
+  }
+
+  [Fact]
+  public async Task DeletesTagsWhenDeletingTitleVersion()
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
     var rootVersionId = testDao.GetInitialVersionId(titleId);
     var childVersionId = await testDao.AddVersion(titleId, "2.0", rootVersionId);
-    await testDao.AddTag(rootVersionId, "Resource");
     await testDao.AddTag(childVersionId, "Monster");
 
     // WHEN
-    var deleteVersionResponse = await httpClient.DeleteAsync(
+    var response = await httpClient.DeleteAsync(
         $"/organizations/{organizationId}/titles/{titleId}/versions/{childVersionId}");
-    var deleteTitleResponse = await httpClient.DeleteAsync($"/organizations/{organizationId}/titles/{titleId}");
 
     // THEN
-    Assert.Equal(HttpStatusCode.NoContent, deleteVersionResponse.StatusCode);
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     Assert.Empty(testDao.QueryTagsByTitleVersion(childVersionId));
-    Assert.Equal(HttpStatusCode.NoContent, deleteTitleResponse.StatusCode);
-    Assert.Empty(testDao.QueryTagsByTitleVersion(rootVersionId));
+  }
+
+  [Fact]
+  public async Task DeletesTagsWhenDeletingTitle()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    await testDao.AddTag(versionId, "Resource");
+
+    // WHEN
+    var response = await httpClient.DeleteAsync($"/organizations/{organizationId}/titles/{titleId}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    Assert.Empty(testDao.QueryTagsByTitleVersion(versionId));
   }
 
   private static string TagsPath(string organizationId, string titleId, string versionId)

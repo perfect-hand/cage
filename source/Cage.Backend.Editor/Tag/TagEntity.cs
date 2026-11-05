@@ -1,10 +1,11 @@
 using Azure;
 using Azure.Data.Tables;
 using Cage.Simulation.Common;
+using Cage.Backend.Editor.Title;
 
 namespace Cage.Backend.Editor.Tag;
 
-public class TagEntity : ITableEntity
+public class TagEntity : ITableEntity, IVersionedTitleEntity
 {
   public required string PartitionKey { get; set; }
   public required string RowKey { get; set; }

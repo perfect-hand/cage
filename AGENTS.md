@@ -31,6 +31,8 @@ In tests, use service constants for configured data limits instead of repeating 
 
 Structure backend tests with `GIVEN`, `WHEN`, and `THEN` comments.
 
+Each test should verify one behavior; split tests that cover multiple behaviors into separate tests.
+
 In endpoint tests, use `EndpointTestDao` for all `GIVEN` setup and `THEN` verification; use HTTP requests only for the `WHEN` action being tested.
 
 For backend endpoint CRUD tests, cover unauthenticated requests and attempts to modify data in foreign organizations whenever applicable. For create and update operations, verify that values exceeding maximum string lengths are rejected; for create operations, verify that maximum entity counts cannot be exceeded.
