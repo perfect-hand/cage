@@ -42,11 +42,13 @@ On the backend, all service methods that create, update or delete entities must 
 The pipeline (`.github/workflows/default.yml`) runs the scripts in `build/` with PowerShell (`pwsh`). Never run
 the deploy scripts (`build/Deploy*.ps1`) or `build/PushGitTag.ps1`: they deploy to Azure or push Git tags.
 
+- To verify editor frontend changes, run `build/BuildEditorFrontend.ps1`. It writes the (git-ignored)
+  `src/environments/version.production.ts` file, runs `npm ci` and `ng build` (production configuration) in
+  `source/cage-editor`. It requires the Angular CLI (`ng`); if missing, install it with `npm install -g @angular/cli`.
+  Do not run `build/DeployEditorFrontend.ps1`, which runs this script and then deploys with `swa deploy`.
 - `build/BuildSimulation.ps1` is safe to run: it only cleans, builds and tests the simulation library.
 - `build/BuildEditorBackend.ps1` and `build/BuildGameBackend.ps1` also build and push Docker images to ghcr.io
   (requires `CAGE_GITHUB_USER`/`CAGE_GITHUB_TOKEN` and Docker), so they fail in the agent environment. Do not run them.
   Instead, run their build and test steps directly, e.g. in `source/Cage.Backend.Editor` and
   `source/Cage.Backend.Editor.Tests` (or the `Game` equivalents): `dotnet build`, then `dotnet test`
   (optionally `dotnet publish` for a production build).
-- For the editor frontend, run `npm ci` and `ng build` (production configuration by default) in `source/cage-editor`.
-  Do not run `build/DeployEditorFrontend.ps1`, which additionally deploys the result with `swa deploy`.
