@@ -1,0 +1,46 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>New tag</h2>
+    </div>
+
+    <form (submit)="createTag(); $event.preventDefault()" novalidate>
+      <label for="tag-name">Tag name</label>
+      <input
+        id="tag-name"
+        class="text-input"
+        type="text"
+        [formField]="tagForm.name"
+        autocomplete="off"
+      />
+      @if (tagForm.name().touched() && tagForm.name().invalid()) {
+        <p class="field-error" role="alert">Enter a tag name of at most 50 characters.</p>
+      }
+
+      @if (atLimit()) {
+        <p class="field-error" role="alert">A title can have at most {{ maximumTags }} tags.</p>
+      }
+
+      <div class="form-actions">
+        <button
+          mat-button
+          type="button"
+          [routerLink]="[
+            '/organizations',
+            organizationId(),
+            'titles',
+            titleId(),
+            'versions',
+            versionId(),
+            'tags',
+          ]"
+        >
+          Cancel
+        </button>
+        <button mat-button type="submit" [disabled]="isSubmitting() || atLimit()">
+          {{ isSubmitting() ? 'Creating...' : 'Create tag' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</main>

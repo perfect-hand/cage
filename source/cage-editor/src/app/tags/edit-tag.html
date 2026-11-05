@@ -1,0 +1,68 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>Edit tag</h2>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-state" aria-live="polite">
+        <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+        <span>Loading tag...</span>
+      </div>
+    } @else if (notFound()) {
+      <p class="field-error" role="alert">Tag not found.</p>
+      <div class="form-actions">
+        <button
+          mat-button
+          type="button"
+          [routerLink]="[
+            '/organizations',
+            organizationId(),
+            'titles',
+            titleId(),
+            'versions',
+            versionId(),
+            'tags',
+          ]"
+        >
+          Back
+        </button>
+      </div>
+    } @else {
+      <form (submit)="updateTag(); $event.preventDefault()" novalidate>
+        <label for="tag-name">Tag name</label>
+        <input
+          id="tag-name"
+          class="text-input"
+          type="text"
+          [formField]="tagForm.name"
+          autocomplete="off"
+        />
+        @if (tagForm.name().touched() && tagForm.name().invalid()) {
+          <p class="field-error" role="alert">Enter a tag name of at most 50 characters.</p>
+        }
+
+        <div class="form-actions">
+          <button
+            mat-button
+            type="button"
+            [routerLink]="[
+              '/organizations',
+              organizationId(),
+              'titles',
+              titleId(),
+              'versions',
+              versionId(),
+              'tags',
+            ]"
+          >
+            Cancel
+          </button>
+          <button mat-button type="submit" [disabled]="isSubmitting()">
+            {{ isSubmitting() ? 'Saving...' : 'Save tag' }}
+          </button>
+        </div>
+      </form>
+    }
+  </section>
+</main>

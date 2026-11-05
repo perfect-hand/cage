@@ -1,6 +1,7 @@
 using Cage.Backend.Editor.Attribute;
 using Cage.Backend.Editor.Info;
 using Cage.Backend.Editor.Organization;
+using Cage.Backend.Editor.Tag;
 using Cage.Backend.Editor.Title;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -47,6 +48,7 @@ builder.Services.AddScoped<OrganizationService>();
 builder.Services.AddScoped<TitleService>();
 builder.Services.AddScoped<TitleVersionService>();
 builder.Services.AddScoped<AttributeService>();
+builder.Services.AddScoped<TagService>();
 
 var app = builder.Build();
 app.UseHttpsRedirection();
@@ -78,6 +80,11 @@ organizations.MapGet("/{organizationId}/titles/{titleId}/versions/{versionId}/at
 organizations.MapPost("/{organizationId}/titles/{titleId}/versions/{versionId}/attributes", CreateVersionAttribute);
 organizations.MapPut("/{organizationId}/titles/{titleId}/versions/{versionId}/attributes/{attributeId}", UpdateVersionAttribute);
 organizations.MapDelete("/{organizationId}/titles/{titleId}/versions/{versionId}/attributes/{attributeId}", DeleteVersionAttribute);
+
+organizations.MapGet("/{organizationId}/titles/{titleId}/versions/{versionId}/tags", GetAllVersionTags);
+organizations.MapPost("/{organizationId}/titles/{titleId}/versions/{versionId}/tags", CreateVersionTag);
+organizations.MapPut("/{organizationId}/titles/{titleId}/versions/{versionId}/tags/{tagId}", UpdateVersionTag);
+organizations.MapDelete("/{organizationId}/titles/{titleId}/versions/{versionId}/tags/{tagId}", DeleteVersionTag);
 
 static async Task<IResult> GetInfo(InfoService infoService)
 {
@@ -369,6 +376,83 @@ static async Task<IResult> DeleteVersionAttribute(AttributeService attributeServ
   try
   {
     return await attributeService.Delete(organizationId, titleId, versionId, attributeId, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+  }
+}
+
+static async Task<IResult> GetAllVersionTags(TagService tagService, string organizationId, string titleId, string versionId, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return TypedResults.Ok(await tagService.ReadAll(organizationId, titleId, versionId, user));
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+}
+
+static async Task<IResult> CreateVersionTag(TagService tagService, string organizationId, string titleId, string versionId, TagDto dto, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    var tag = await tagService.Create(organizationId, titleId, versionId, dto, user);
+    return TypedResults.Created($"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}/tags/{tag.Id}", tag);
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (ArgumentException)
+  {
+    return TypedResults.BadRequest();
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+  }
+}
+
+static async Task<IResult> UpdateVersionTag(TagService tagService, string organizationId, string titleId, string versionId, string tagId, TagDto dto, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await tagService.Update(organizationId, titleId, versionId, tagId, dto, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (ArgumentException)
+  {
+    return TypedResults.BadRequest();
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+  }
+}
+
+static async Task<IResult> DeleteVersionTag(TagService tagService, string organizationId, string titleId, string versionId, string tagId, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await tagService.Delete(organizationId, titleId, versionId, tagId, user)
         ? TypedResults.NoContent()
         : TypedResults.NotFound();
   }
