@@ -45,6 +45,9 @@ the deploy scripts (`build/Deploy*.ps1`) or `build/PushGitTag.ps1`: they deploy 
 - To verify editor frontend changes, run `build/BuildEditorFrontend.ps1`. It writes the (git-ignored)
   `src/environments/version.production.ts` file, runs `npm ci` and `ng build` (production configuration) in
   `source/cage-editor`. It requires the Angular CLI (`ng`); if missing, install it with `npm install -g @angular/cli`.
+  The production build inlines Google Fonts, so it fails with `getaddrinfo ENOTFOUND fonts.googleapis.com` when
+  the environment has no internet access; that error is environmental, not caused by your changes (compile errors
+  are reported before it).
   Do not run `build/DeployEditorFrontend.ps1`, which runs this script and then deploys with `swa deploy`.
 - `build/BuildSimulation.ps1` is safe to run: it only cleans, builds and tests the simulation library.
 - `build/BuildEditorBackend.ps1` and `build/BuildGameBackend.ps1` also build and push Docker images to ghcr.io
