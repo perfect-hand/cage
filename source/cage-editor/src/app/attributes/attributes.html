@@ -12,7 +12,17 @@
     } @else if (notFound()) {
     <p class="field-error" role="alert">Title version not found.</p>
     } @else {
-      <table class="attribute-table">
+      <label for="attribute-search">Search attributes</label>
+      <input
+        id="attribute-search"
+        class="text-input"
+        type="search"
+        [value]="searchTerm()"
+        (input)="setSearchTerm($event)"
+        autocomplete="off"
+        aria-controls="attribute-table"
+      />
+      <table id="attribute-table" class="attribute-table">
         <thead>
           <tr>
             <th scope="col">Name</th>
@@ -23,7 +33,7 @@
           </tr>
         </thead>
         <tbody>
-          @for (attribute of attributes(); track attribute.id) {
+          @for (attribute of filteredAttributes(); track attribute.id) {
             <tr>
               <td>{{ attribute.name }}</td>
               <td>{{ attribute.type }}</td>
@@ -51,6 +61,12 @@
               </td>
               }
             </tr>
+          } @empty {
+            @if (searchTerm().trim()) {
+            <tr>
+              <td [attr.colspan]="isReadOnly() ? 2 : 3">No attributes match your search.</td>
+            </tr>
+            }
           }
         </tbody>
       </table>

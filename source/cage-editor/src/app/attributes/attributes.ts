@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -30,6 +30,14 @@ export class Attributes implements OnInit {
   readonly titleId = input.required<string>();
   readonly versionId = input.required<string>();
   readonly attributes = signal<AttributeDto[]>([]);
+  readonly searchTerm = signal('');
+  readonly filteredAttributes = computed(() => {
+    const searchTerm = this.searchTerm().trim().toLowerCase();
+    return this.attributes().filter(
+      (attribute) =>
+        attribute.name.toLowerCase().includes(searchTerm) || attribute.type.toLowerCase().includes(searchTerm),
+    );
+  });
   readonly isLoading = signal(false);
   readonly isDeleting = signal(false);
   readonly isReadOnly = signal(false);
@@ -38,6 +46,10 @@ export class Attributes implements OnInit {
 
   ngOnInit(): void {
     void this.loadAttributes();
+  }
+
+  setSearchTerm(event: Event): void {
+    this.searchTerm.set((event.target as HTMLInputElement).value);
   }
 
   private async loadAttributes(): Promise<void> {
