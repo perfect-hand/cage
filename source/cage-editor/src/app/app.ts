@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { MatIconRegistry } from '@angular/material/icon';
 import { Title } from '@angular/platform-browser';
 import { RouterOutlet } from '@angular/router';
 
@@ -17,6 +18,7 @@ import { version } from '../environments/version';
 export class App implements OnInit {
   protected readonly title = signal('cage-editor');
   private readonly authService = inject(AuthService);
+  private readonly matIconRegistry = inject(MatIconRegistry);
   private readonly browserTitle = inject(Title);
 
   readonly isSignedIn = this.authService.isSignedIn;
@@ -24,6 +26,7 @@ export class App implements OnInit {
   readonly version = version;
 
   ngOnInit(): void {
+    this.matIconRegistry.setDefaultFontSetClass('material-symbols-outlined');
     this.browserTitle.setTitle(`CaGE Editor (${environment.label})`);
     void this.authService.initialize();
   }
