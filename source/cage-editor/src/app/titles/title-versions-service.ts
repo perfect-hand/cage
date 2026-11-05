@@ -32,9 +32,8 @@ export class TitleVersionsService {
       ),
     )
       .then((versions) => {
-        const loadedVersions = versions ?? [];
-        this.setVersions(titleId, loadedVersions);
-        return loadedVersions;
+        this.setVersions(titleId, versions ?? []);
+        return this.getVersions(titleId);
       })
       .finally(() => this.pendingRequests.delete(titleId));
     this.pendingRequests.set(titleId, request);
@@ -44,7 +43,9 @@ export class TitleVersionsService {
   setVersions(titleId: string, versions: TitleVersionDto[]): void {
     this.versionsByTitle.update((versionsByTitle) => ({
       ...versionsByTitle,
-      [titleId]: versions,
+      [titleId]: [...versions].sort(
+        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
     }));
   }
 }

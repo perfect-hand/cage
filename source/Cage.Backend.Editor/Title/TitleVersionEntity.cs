@@ -14,4 +14,5 @@ public class TitleVersionEntity : ITableEntity
   public string? ParentVersionId { get; set; }
   public bool IsReadOnly { get; set; }
   public bool IsDeleted { get; set; }
+  public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }

@@ -6,4 +6,5 @@ public class TitleVersionDto
   public required string Name { get; set; }
   public string? ParentVersionId { get; set; }
   public bool IsReadOnly { get; set; }
+  public DateTimeOffset CreatedAt { get; set; }
 }

@@ -9,7 +9,8 @@ public class TitleVersionMapper
       Id = entity.RowKey,
       Name = entity.Name,
       ParentVersionId = entity.ParentVersionId,
-      IsReadOnly = entity.IsReadOnly
+      IsReadOnly = entity.IsReadOnly,
+      CreatedAt = entity.CreatedAt
     };
   }
 

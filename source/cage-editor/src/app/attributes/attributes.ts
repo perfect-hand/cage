@@ -73,8 +73,8 @@ export class Attributes implements OnInit {
           ),
         )) ?? [];
 
-      this.attributes.set(response);
       this.attributesService.setAttributes(this.titleId(), versionId, response);
+      this.attributes.set(this.attributesService.getAttributes(this.titleId(), versionId));
     } catch (error) {
       console.error('Failed to load attributes.', error);
       this.attributes.set([]);

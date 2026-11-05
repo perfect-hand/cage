@@ -10,16 +10,27 @@
         <span>Loading title versions...</span>
       </div>
     } @else {
-      <table class="title-version-table">
+      <label for="version-search">Search versions</label>
+      <input
+        id="version-search"
+        class="text-input"
+        type="search"
+        [value]="searchTerm()"
+        (input)="setSearchTerm($event)"
+        autocomplete="off"
+        aria-controls="title-version-table"
+      />
+      <table id="title-version-table" class="title-version-table">
         <thead>
           <tr>
             <th scope="col" aria-label="Read-only status"></th>
             <th scope="col">Version name</th>
+            <th scope="col">Created</th>
             <th scope="col">Actions</th>
           </tr>
         </thead>
         <tbody>
-          @for (version of versions(); track version.id) {
+          @for (version of filteredVersions(); track version.id) {
             <tr>
               <td>
                 @if (version.isReadOnly) {
@@ -41,6 +52,7 @@
                   {{ version.name }}
                 </a>
               </td>
+              <td>{{ version.createdAt | date: 'medium' }}</td>
               <td>
                 <div class="version-actions">
                   <button
@@ -84,6 +96,12 @@
                 </div>
               </td>
             </tr>
+          } @empty {
+            @if (searchTerm().trim()) {
+              <tr>
+                <td colspan="4">No versions match your search.</td>
+              </tr>
+            }
           }
         </tbody>
       </table>
