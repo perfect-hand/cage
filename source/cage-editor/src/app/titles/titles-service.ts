@@ -12,7 +12,7 @@ export class TitlesService {
   setTitles(organizationId: string, titles: TitleDto[]): void {
     this.titlesByOrganization.update((titlesByOrganization) => ({
       ...titlesByOrganization,
-      [organizationId]: titles,
+      [organizationId]: [...titles].sort((a, b) => a.name.localeCompare(b.name)),
     }));
   }
 }

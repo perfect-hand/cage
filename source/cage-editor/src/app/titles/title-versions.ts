@@ -1,5 +1,6 @@
+import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, computed, input, OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -12,7 +13,7 @@ import { maximumTitleVersions, TitleVersionsService } from './title-versions-ser
 
 @Component({
   selector: 'title-versions',
-  imports: [MatButtonModule, MatIconModule, MatProgressSpinnerModule, RouterLink],
+  imports: [DatePipe, MatButtonModule, MatIconModule, MatProgressSpinnerModule, RouterLink],
   templateUrl: './title-versions.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './title-versions.scss',
@@ -25,12 +26,21 @@ export class TitleVersions implements OnInit {
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
   readonly versions = signal<TitleVersionDto[]>([]);
+  readonly searchTerm = signal('');
+  readonly filteredVersions = computed(() => {
+    const searchTerm = this.searchTerm().trim().toLowerCase();
+    return this.versions().filter((version) => version.name.toLowerCase().includes(searchTerm));
+  });
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
   readonly maximumVersions = maximumTitleVersions;
 
   ngOnInit(): void {
     void this.loadVersions();
+  }
+
+  setSearchTerm(event: Event): void {
+    this.searchTerm.set((event.target as HTMLInputElement).value);
   }
 
   private async loadVersions(): Promise<void> {

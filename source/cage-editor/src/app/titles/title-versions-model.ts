@@ -3,6 +3,7 @@ export interface TitleVersionDto {
   name: string;
   parentVersionId: string | null;
   isReadOnly: boolean;
+  createdAt: string;
 }
 
 export interface CreateTitleVersionRequestDto {

@@ -6,6 +6,8 @@ export class OrganizationService {
   readonly organizations = signal<OrganizationDto[]>([]);
 
   setOrganizations(organizations: OrganizationDto[]): void {
-    this.organizations.set(organizations);
+    this.organizations.set(
+      [...organizations].sort((a, b) => a.name.localeCompare(b.name)),
+    );
   }
 }

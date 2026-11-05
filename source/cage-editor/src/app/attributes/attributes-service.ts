@@ -19,7 +19,7 @@ export class AttributesService {
   setAttributes(titleId: string, versionId: string, attributes: AttributeDto[]): void {
     this.attributesByVersion.update((attributesByVersion) => ({
       ...attributesByVersion,
-      [`${titleId}:${versionId}`]: attributes,
+      [`${titleId}:${versionId}`]: [...attributes].sort((a, b) => a.name.localeCompare(b.name)),
     }));
   }
 }

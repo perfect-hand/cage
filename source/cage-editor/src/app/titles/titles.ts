@@ -44,8 +44,8 @@ export class Titles implements OnInit {
         this.http.get<TitleDto[]>(`/organizations/${this.organizationId()}/titles`),
       );
 
-      this.titles.set(response ?? []);
       this.titlesService.setTitles(this.organizationId(), response ?? []);
+      this.titles.set(this.titlesService.getTitles(this.organizationId()));
     } catch (error) {
       console.error('Failed to load titles.', error);
       this.titles.set([]);
