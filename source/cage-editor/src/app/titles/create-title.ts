@@ -4,6 +4,7 @@ import { form, FormField, maxLength, pattern, required } from '@angular/forms/si
 import { MatButtonModule } from '@angular/material/button';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { TitleDto, TitleRequestDto } from './titles-model';
 import { TitlesService } from './titles-service';
 
 @Component({
@@ -41,10 +42,12 @@ export class CreateTitle {
         return;
       }
 
+      const title: TitleRequestDto = { name: this.name().trim() };
       await firstValueFrom(
-        this.http.post(`/organizations/${this.organizationId()}/titles`, {
-          name: this.name().trim(),
-        }),
+        this.http.post<TitleDto>(
+          `/organizations/${this.organizationId()}/titles`,
+          title,
+        ),
       );
       await this.router.navigate(['/organizations', this.organizationId(), 'titles']);
     } catch (error) {

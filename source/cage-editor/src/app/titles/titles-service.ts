@@ -1,19 +1,15 @@
 import { Service, signal } from '@angular/core';
-
-export interface Title {
-  id: string;
-  name: string;
-}
+import { TitleDto } from './titles-model';
 
 @Service()
 export class TitlesService {
-  private readonly titlesByOrganization = signal<Record<string, Title[]>>({});
+  private readonly titlesByOrganization = signal<Record<string, TitleDto[]>>({});
 
-  getTitles(organizationId: string): Title[] {
+  getTitles(organizationId: string): TitleDto[] {
     return this.titlesByOrganization()[organizationId] ?? [];
   }
 
-  setTitles(organizationId: string, titles: Title[]): void {
+  setTitles(organizationId: string, titles: TitleDto[]): void {
     this.titlesByOrganization.update((titlesByOrganization) => ({
       ...titlesByOrganization,
       [organizationId]: titles,

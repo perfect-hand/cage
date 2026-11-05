@@ -5,7 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { Title, TitlesService } from './titles-service';
+import { TitleDto, TitleRequestDto } from './titles-model';
+import { TitlesService } from './titles-service';
 
 @Component({
   selector: 'edit-title',
@@ -42,7 +43,7 @@ export class EditTitle implements OnInit {
     if (!title) {
       try {
         titles = await firstValueFrom(
-          this.http.get<Title[]>(`/organizations/${this.organizationId()}/titles`),
+          this.http.get<TitleDto[]>(`/organizations/${this.organizationId()}/titles`),
         ) ?? [];
         this.titlesService.setTitles(this.organizationId(), titles);
         title = titles.find((item) => item.id === this.titleId());
@@ -68,10 +69,11 @@ export class EditTitle implements OnInit {
 
     try {
       const name = this.name().trim();
+      const title: TitleRequestDto = { name };
       await firstValueFrom(
-        this.http.put(
+        this.http.put<void>(
           `/organizations/${this.organizationId()}/titles/${this.titleId()}`,
-          { name },
+          title,
         ),
       );
       const titles = this.titlesService

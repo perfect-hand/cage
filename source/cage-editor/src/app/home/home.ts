@@ -6,9 +6,11 @@ import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router
 import { firstValueFrom, filter } from 'rxjs';
 
 import { AuthService } from '../auth-service';
-import { Organization, OrganizationService } from '../organizations/organization-service';
+import { OrganizationDto } from '../organizations/organization-model';
+import { OrganizationService } from '../organizations/organization-service';
 import { TitleVersionsService } from '../titles/title-versions-service';
-import { Title, TitlesService } from '../titles/titles-service';
+import { TitleDto } from '../titles/titles-model';
+import { TitlesService } from '../titles/titles-service';
 
 @Component({
   selector: 'home',
@@ -117,7 +119,7 @@ export class Home {
 
   private async loadOrganizations(): Promise<void> {
     try {
-      const response = await firstValueFrom(this.http.get<Organization[]>('/organizations'));
+      const response = await firstValueFrom(this.http.get<OrganizationDto[]>('/organizations'));
       this.organizationService.setOrganizations(response ?? []);
     } catch (error) {
       console.error('Failed to load organizations.', error);
@@ -127,7 +129,7 @@ export class Home {
   private async loadTitles(organizationId: string): Promise<void> {
     try {
       const response = await firstValueFrom(
-        this.http.get<Title[]>(`/organizations/${organizationId}/titles`),
+        this.http.get<TitleDto[]>(`/organizations/${organizationId}/titles`),
       );
       this.titlesService.setTitles(organizationId, response ?? []);
     } catch (error) {

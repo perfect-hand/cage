@@ -5,7 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { maximumTitleVersions, TitleVersion, TitleVersionsService } from './title-versions-service';
+import { CreateTitleVersionRequestDto, TitleVersionDto } from './title-versions-model';
+import { maximumTitleVersions, TitleVersionsService } from './title-versions-service';
 
 @Component({
   selector: 'create-title-version',
@@ -21,7 +22,7 @@ export class CreateTitleVersion implements OnInit {
 
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
-  readonly versions = signal<TitleVersion[]>([]);
+  readonly versions = signal<TitleVersionDto[]>([]);
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
   readonly name = signal('');
@@ -65,10 +66,14 @@ export class CreateTitleVersion implements OnInit {
 
     this.isSubmitting.set(true);
     try {
+      const request: CreateTitleVersionRequestDto = {
+        name: this.name().trim(),
+        parentVersionId: this.parentVersionId() || null,
+      };
       const version = await firstValueFrom(
-        this.http.post<TitleVersion>(
+        this.http.post<TitleVersionDto>(
           `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions`,
-          { name: this.name().trim(), parentVersionId: this.parentVersionId() || null },
+          request,
         ),
       );
       this.versionsService.setVersions(this.titleId(), [...this.versions(), version]);

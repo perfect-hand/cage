@@ -1,15 +1,11 @@
 import { Service, signal } from '@angular/core';
-
-export interface Organization {
-  id: string;
-  name: string;
-}
+import { OrganizationDto } from './organization-model';
 
 @Service()
 export class OrganizationService {
-  readonly organizations = signal<Organization[]>([]);
+  readonly organizations = signal<OrganizationDto[]>([]);
 
-  setOrganizations(organizations: Organization[]): void {
+  setOrganizations(organizations: OrganizationDto[]): void {
     this.organizations.set(organizations);
   }
 }

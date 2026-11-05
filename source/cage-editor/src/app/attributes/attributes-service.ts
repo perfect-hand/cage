@@ -1,6 +1,5 @@
 import { Service, signal } from '@angular/core';
-
-export type AttributeType = 'Int' | 'String' | 'Entity' | 'EntityList';
+import { AttributeDto, AttributeType } from './attributes-model';
 
 export const attributeTypes: { value: AttributeType; label: string }[] = [
   { value: 'Int', label: 'Int' },
@@ -9,21 +8,15 @@ export const attributeTypes: { value: AttributeType; label: string }[] = [
   { value: 'EntityList', label: 'Entity List' },
 ];
 
-export interface Attribute {
-  id: string;
-  name: string;
-  type: AttributeType;
-}
-
 @Service()
 export class AttributesService {
-  private readonly attributesByVersion = signal<Record<string, Attribute[]>>({});
+  private readonly attributesByVersion = signal<Record<string, AttributeDto[]>>({});
 
-  getAttributes(titleId: string, versionId: string): Attribute[] {
+  getAttributes(titleId: string, versionId: string): AttributeDto[] {
     return this.attributesByVersion()[`${titleId}:${versionId}`] ?? [];
   }
 
-  setAttributes(titleId: string, versionId: string, attributes: Attribute[]): void {
+  setAttributes(titleId: string, versionId: string, attributes: AttributeDto[]): void {
     this.attributesByVersion.update((attributesByVersion) => ({
       ...attributesByVersion,
       [`${titleId}:${versionId}`]: attributes,

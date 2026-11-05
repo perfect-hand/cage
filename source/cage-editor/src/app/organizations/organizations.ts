@@ -12,8 +12,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { OrganizationDto } from './organization-model';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
-import { Organization, OrganizationService } from './organization-service';
+import { OrganizationService } from './organization-service';
 
 @Component({
   selector: 'organizations',
@@ -40,7 +41,7 @@ export class Organizations implements OnInit {
 
     try {
       const response = await firstValueFrom(
-        this.http.get<Organization[]>('/organizations'),
+        this.http.get<OrganizationDto[]>('/organizations'),
       );
 
       this.organizationService.setOrganizations(response ?? []);
@@ -76,7 +77,7 @@ export class Organizations implements OnInit {
     this.isDeleting.set(true);
 
     try {
-      await firstValueFrom(this.http.delete(`/organizations/${organizationId}`));
+      await firstValueFrom(this.http.delete<void>(`/organizations/${organizationId}`));
       this.organizationService.setOrganizations(
         this.organizations().filter((organization) => organization.id !== organizationId),
       );
