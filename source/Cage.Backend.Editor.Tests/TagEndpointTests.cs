@@ -324,6 +324,28 @@ public class TagEndpointTests : EndpointTest, IClassFixture<WebApplicationFactor
   }
 
   [Fact]
+  public async Task ChildVersionKeepsParentTagWhenParentTagIsDeleted()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var tagId = await testDao.AddTag(parentVersionId, "Resource");
+    var childVersionId = await testDao.AddVersion(titleId, "2.0", parentVersionId);
+
+    // WHEN
+    var deleteResponse = await httpClient.DeleteAsync(
+        $"{TagsPath(organizationId, titleId, parentVersionId)}/{tagId}");
+    var childResponse = await httpClient.GetAsync(TagsPath(organizationId, titleId, childVersionId));
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+    var childTags = await childResponse.Content.ReadFromJsonAsync<List<TagDto>>();
+    var childTag = Assert.Single(Assert.IsType<List<TagDto>>(childTags));
+    Assert.Equal(tagId, childTag.Id);
+    Assert.Equal("Resource", childTag.Name);
+  }
+
+  [Fact]
   public async Task ParentTagCreatedAfterForkIsHiddenFromChildVersion()
   {
     // GIVEN
