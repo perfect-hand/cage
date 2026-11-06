@@ -1,5 +1,6 @@
 using Cage.Backend.Editor.Attribute;
 using Cage.Backend.Editor.Organization;
+using Cage.Backend.Editor.Tag;
 
 namespace Cage.Backend.Editor.Title;
 
@@ -12,6 +13,7 @@ public class TitleService
   private readonly TitleDao titleDao;
   private readonly TitleVersionDao titleVersionDao;
   private readonly AttributeDao attributeDao;
+  private readonly TagDao tagDao;
   private readonly OrganizationDao organizationDao;
   private readonly ILogger<TitleService> logger;
 
@@ -21,6 +23,7 @@ public class TitleService
     titleDao = new TitleDao();
     titleVersionDao = new TitleVersionDao();
     attributeDao = new AttributeDao();
+    tagDao = new TagDao();
     organizationDao = new OrganizationDao();
     this.logger = logger;
   }
@@ -90,6 +93,7 @@ public class TitleService
       foreach (var version in versions)
       {
         await attributeDao.DeleteByTitleVersion(version.RowKey);
+        await tagDao.DeleteByTitleVersion(version.RowKey);
       }
 
       await titleVersionDao.DeleteByTitle(titleId);

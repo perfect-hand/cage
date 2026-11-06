@@ -1,5 +1,6 @@
 using Cage.Backend.Editor.Attribute;
 using Cage.Backend.Editor.Organization;
+using Cage.Backend.Editor.Tag;
 
 namespace Cage.Backend.Editor.Title;
 
@@ -13,6 +14,7 @@ public class TitleVersionService
   private readonly TitleVersionDao titleVersionDao = new();
   private readonly TitleDao titleDao = new();
   private readonly AttributeDao attributeDao = new();
+  private readonly TagDao tagDao = new();
   private readonly OrganizationDao organizationDao = new();
   private readonly ILogger<TitleVersionService> logger;
 
@@ -109,6 +111,7 @@ public class TitleVersionService
     {
       var parentVersionId = version.ParentVersionId;
       await attributeDao.DeleteByTitleVersion(versionId);
+      await tagDao.DeleteByTitleVersion(versionId);
       await titleVersionDao.Delete(titleId, versionId);
       await PruneDeletedAncestors(titleId, parentVersionId);
     }
@@ -135,6 +138,7 @@ public class TitleVersionService
 
       var parentVersionId = version.ParentVersionId;
       await attributeDao.DeleteByTitleVersion(versionId);
+      await tagDao.DeleteByTitleVersion(versionId);
       await titleVersionDao.Delete(titleId, versionId);
       logger.LogInformation("Deleted version {} storage pruned from title {}.", versionId, titleId);
       versionId = parentVersionId;
