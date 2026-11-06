@@ -57,7 +57,7 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
     existing.Name = dto.Name;
     existing.Type = dto.Type;
     existing.IsDeleted = false;
-    await entityDao.Set(versionId, existing);
+    await entityDao.Update(versionId, existing);
     logger.LogInformation("Attribute {} updated in title version {}.", attributeId, versionId);
     return true;
   }
@@ -83,13 +83,13 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
     {
       existing.PartitionKey = versionId;
       existing.IsDeleted = true;
-      await entityDao.Set(versionId, existing);
+      await entityDao.Update(versionId, existing);
     }
     logger.LogInformation("Attribute {} deleted from title version {}.", attributeId, versionId);
     return true;
   }
 
-  protected override AttributeEntity CreateVersionEntity(AttributeEntity attribute, string versionId, bool isDeleted)
+  protected override AttributeEntity CreateEntityVersion(AttributeEntity attribute, string versionId, bool isDeleted)
   {
     return new AttributeEntity
     {

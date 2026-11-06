@@ -56,7 +56,7 @@ public class TagService : VersionedTitleEntityService<TagEntity>
     existing.PartitionKey = versionId;
     existing.Name = dto.Name;
     existing.IsDeleted = false;
-    await entityDao.Set(versionId, existing);
+    await entityDao.Update(versionId, existing);
     logger.LogInformation("Tag {} updated in title version {}.", tagId, versionId);
     return true;
   }
@@ -82,13 +82,13 @@ public class TagService : VersionedTitleEntityService<TagEntity>
     {
       existing.PartitionKey = versionId;
       existing.IsDeleted = true;
-      await entityDao.Set(versionId, existing);
+      await entityDao.Update(versionId, existing);
     }
     logger.LogInformation("Tag {} deleted from title version {}.", tagId, versionId);
     return true;
   }
 
-  protected override TagEntity CreateVersionEntity(TagEntity tag, string versionId, bool isDeleted)
+  protected override TagEntity CreateEntityVersion(TagEntity tag, string versionId, bool isDeleted)
   {
     return new TagEntity
     {

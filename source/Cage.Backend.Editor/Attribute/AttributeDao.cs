@@ -15,7 +15,7 @@ public class AttributeDao : TableDao, IVersionedTitleEntityDao<AttributeEntity>
     attributesTableClient = CreateTableClient(AttributesTableName);
   }
 
-  public async Task AddAttribute(AttributeEntity attribute)
+  public async Task Add(AttributeEntity attribute)
   {
     await attributesTableClient.AddEntityAsync(attribute);
   }
@@ -25,19 +25,19 @@ public class AttributeDao : TableDao, IVersionedTitleEntityDao<AttributeEntity>
     return Task.FromResult(attributesTableClient.Query<AttributeEntity>(ent => ent.PartitionKey == titleVersionId).ToList());
   }
 
-  public async Task<AttributeEntity?> GetAttributeTitleVersion(string titleVersionId, string attributeId)
+  public async Task<AttributeEntity?> Get(string titleVersionId, string attributeId)
   {
     var response = await attributesTableClient.GetEntityIfExistsAsync<AttributeEntity>(titleVersionId, attributeId);
     return response.HasValue ? response.Value : null;
   }
 
-  public async Task SetAttributeTitleVersion(string titleVersionId, AttributeEntity attribute)
+  public async Task Update(string titleVersionId, AttributeEntity attribute)
   {
     attribute.PartitionKey = titleVersionId;
     await attributesTableClient.UpsertEntityAsync(attribute, TableUpdateMode.Replace);
   }
 
-  public async Task<bool> DeleteAttributeTitleVersion(string titleVersionId, string attributeId)
+  public async Task<bool> Delete(string titleVersionId, string attributeId)
   {
     var attribute = await attributesTableClient.GetEntityIfExistsAsync<AttributeEntity>(titleVersionId, attributeId);
     if (!attribute.HasValue)
@@ -57,14 +57,4 @@ public class AttributeDao : TableDao, IVersionedTitleEntityDao<AttributeEntity>
       await attributesTableClient.DeleteEntityAsync(titleVersionId, attribute.RowKey);
     }
   }
-
-  Task IVersionedTitleEntityDao<AttributeEntity>.Add(AttributeEntity attribute) => AddAttribute(attribute);
-  Task<AttributeEntity?> IVersionedTitleEntityDao<AttributeEntity>.Get(string titleVersionId, string entityId) =>
-      GetAttributeTitleVersion(titleVersionId, entityId);
-  Task IVersionedTitleEntityDao<AttributeEntity>.Set(string titleVersionId, AttributeEntity attribute) =>
-      SetAttributeTitleVersion(titleVersionId, attribute);
-  Task<bool> IVersionedTitleEntityDao<AttributeEntity>.Delete(string titleVersionId, string entityId) =>
-      DeleteAttributeTitleVersion(titleVersionId, entityId);
-  Task IVersionedTitleEntityDao<AttributeEntity>.DeleteByTitleVersion(string titleVersionId) =>
-      DeleteByTitleVersion(titleVersionId);
 }

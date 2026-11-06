@@ -72,7 +72,7 @@ public abstract class VersionedTitleEntityService<TEntity> where TEntity : class
         continue;
       }
 
-      await entityDao.Set(child.RowKey, CreateVersionEntity(entity, child.RowKey, isDeleted));
+      await entityDao.Update(child.RowKey, CreateEntityVersion(entity, child.RowKey, isDeleted));
     }
   }
 
@@ -105,5 +105,5 @@ public abstract class VersionedTitleEntityService<TEntity> where TEntity : class
     }
   }
 
-  protected abstract TEntity CreateVersionEntity(TEntity entity, string versionId, bool isDeleted);
+  protected abstract TEntity CreateEntityVersion(TEntity entity, string versionId, bool isDeleted);
 }
