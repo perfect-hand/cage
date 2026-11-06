@@ -22,11 +22,21 @@
       @if (organizationId(); as organizationId) {
       @if (activeTitleId(); as titleId) {
       @if (activeVersionId(); as versionId) {
-      <a mat-button [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions', versionId, 'attributes']">
+      <a
+        mat-button
+        [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions', versionId, 'attributes']"
+        routerLinkActive="feature-button-active"
+        ariaCurrentWhenActive="page"
+      >
         <mat-icon aria-hidden="true">data_table</mat-icon>
         Attributes
       </a>
-      <a mat-button [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions', versionId, 'tags']">
+      <a
+        mat-button
+        [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions', versionId, 'tags']"
+        routerLinkActive="feature-button-active"
+        ariaCurrentWhenActive="page"
+      >
         <mat-icon aria-hidden="true">sell</mat-icon>
         Tags
       </a>

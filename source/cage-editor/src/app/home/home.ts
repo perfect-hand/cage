@@ -2,7 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import {
+  NavigationEnd,
+  Router,
+  RouterLink,
+  RouterLinkActive,
+  RouterOutlet,
+} from '@angular/router';
 import { firstValueFrom, filter } from 'rxjs';
 
 import { AuthService } from '../auth-service';
@@ -14,7 +20,7 @@ import { TitlesService } from '../titles/titles-service';
 
 @Component({
   selector: 'home',
-  imports: [MatButtonModule, MatIconModule, RouterLink, RouterOutlet],
+  imports: [MatButtonModule, MatIconModule, RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.scss',

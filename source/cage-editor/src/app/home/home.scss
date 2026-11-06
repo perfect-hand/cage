@@ -37,6 +37,11 @@
   gap: var(--app-space-sm);
 }
 
+.feature-button-active {
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
 .user-menu {
   display: flex;
   align-items: center;
