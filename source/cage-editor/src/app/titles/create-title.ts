@@ -43,12 +43,13 @@ export class CreateTitle {
       }
 
       const title: TitleRequestDto = { name: this.name().trim() };
-      await firstValueFrom(
-        this.http.post<TitleDto>(
-          `/organizations/${this.organizationId()}/titles`,
-          title,
-        ),
+      const createdTitle = await firstValueFrom(
+        this.http.post<TitleDto>(`/organizations/${this.organizationId()}/titles`, title),
       );
+      this.titlesService.setTitles(this.organizationId(), [
+        ...this.titlesService.getTitles(this.organizationId()),
+        createdTitle,
+      ]);
       await this.router.navigate(['/organizations', this.organizationId(), 'titles']);
     } catch (error) {
       console.error('Failed to create title.', error);

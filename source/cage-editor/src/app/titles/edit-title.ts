@@ -37,19 +37,12 @@ export class EditTitle implements OnInit {
   }
 
   private async loadTitle(): Promise<void> {
-    let titles = this.titlesService.getTitles(this.organizationId());
-    let title = titles.find((item) => item.id === this.titleId());
-
-    if (!title) {
-      try {
-        titles = await firstValueFrom(
-          this.http.get<TitleDto[]>(`/organizations/${this.organizationId()}/titles`),
-        ) ?? [];
-        this.titlesService.setTitles(this.organizationId(), titles);
-        title = titles.find((item) => item.id === this.titleId());
-      } catch (error) {
-        console.error('Failed to load titles.', error);
-      }
+    let title: TitleDto | undefined;
+    try {
+      const titles = await this.titlesService.loadTitles(this.organizationId());
+      title = titles.find((item) => item.id === this.titleId());
+    } catch (error) {
+      console.error('Failed to load titles.', error);
     }
 
     if (title) {

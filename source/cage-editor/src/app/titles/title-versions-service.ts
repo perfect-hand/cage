@@ -15,10 +15,13 @@ export class TitleVersionsService {
     return this.versionsByTitle()[titleId] ?? [];
   }
 
+  hasVersions(titleId: string): boolean {
+    return Object.prototype.hasOwnProperty.call(this.versionsByTitle(), titleId);
+  }
+
   loadVersions(organizationId: string, titleId: string): Promise<TitleVersionDto[]> {
-    const cachedVersions = this.getVersions(titleId);
-    if (cachedVersions.length > 0) {
-      return Promise.resolve(cachedVersions);
+    if (this.hasVersions(titleId)) {
+      return Promise.resolve(this.getVersions(titleId));
     }
 
     const pendingRequest = this.pendingRequests.get(titleId);

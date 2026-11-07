@@ -40,21 +40,16 @@ export class EditTag implements OnInit {
 
   private async loadTag(): Promise<void> {
     const versionId = this.versionId();
-    let tags = this.tagsService.getTags(this.titleId(), versionId);
-    let tag = tags.find((item) => item.id === this.tagId());
-    if (!tag) {
-      try {
-        tags =
-          (await firstValueFrom(
-            this.http.get<TagDto[]>(
-              `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/tags`,
-            ),
-          )) ?? [];
-        this.tagsService.setTags(this.titleId(), versionId, tags);
-        tag = tags.find((item) => item.id === this.tagId());
-      } catch (error) {
-        console.error('Failed to load tags.', error);
-      }
+    let tag: TagDto | undefined;
+    try {
+      const tags = await this.tagsService.loadTags(
+        this.organizationId(),
+        this.titleId(),
+        versionId,
+      );
+      tag = tags.find((item) => item.id === this.tagId());
+    } catch (error) {
+      console.error('Failed to load tags.', error);
     }
 
     if (tag) {

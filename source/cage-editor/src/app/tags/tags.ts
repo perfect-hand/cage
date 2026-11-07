@@ -73,19 +73,15 @@ export class Tags implements OnInit {
       }
       this.isReadOnly.set(version.isReadOnly);
 
-      const response =
-        (await firstValueFrom(
-          this.http.get<TagDto[]>(
-            `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/tags`,
-          ),
-        )) ?? [];
-
-      this.tagsService.setTags(this.titleId(), versionId, response);
-      this.tags.set(this.tagsService.getTags(this.titleId(), versionId));
+      const tags = await this.tagsService.loadTags(
+        this.organizationId(),
+        this.titleId(),
+        versionId,
+      );
+      this.tags.set(tags);
     } catch (error) {
       console.error('Failed to load tags.', error);
       this.tags.set([]);
-      this.tagsService.setTags(this.titleId(), versionId, []);
     } finally {
       this.isLoading.set(false);
     }

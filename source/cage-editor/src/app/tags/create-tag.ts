@@ -41,18 +41,24 @@ export class CreateTag {
     this.isSubmitting.set(true);
     const versionId = this.versionId();
     try {
-      if (this.tagsService.getTags(this.titleId(), versionId).length >= maximumTags) {
+      const tags = await this.tagsService.loadTags(
+        this.organizationId(),
+        this.titleId(),
+        versionId,
+      );
+      if (tags.length >= maximumTags) {
         this.atLimit.set(true);
         return;
       }
 
       const tag: TagRequestDto = { name: this.model().name.trim() };
-      await firstValueFrom(
+      const createdTag = await firstValueFrom(
         this.http.post<TagDto>(
           `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/tags`,
           tag,
         ),
       );
+      this.tagsService.setTags(this.titleId(), versionId, [...tags, createdTag]);
       await this.router.navigate([
         '/organizations',
         this.organizationId(),
