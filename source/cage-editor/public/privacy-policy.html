@@ -83,17 +83,30 @@
 
       <h2>Storage and service providers</h2>
       <p>
-        CaGE is hosted on Microsoft Azure. Application resources are deployed in the Germany West
-        Central region where the relevant Azure service supports it. The editor stores its
-        application records in Azure Table Storage, and the game service stores match records in
-        Azure Blob Storage. Microsoft Entra External ID provides sign-in.
+        CaGE’s Azure application and storage resources are deployed in the Germany West Central
+        region where the relevant Azure service supports it. The editor stores its application
+        records in Azure Table Storage, and the game service stores match records in Azure Blob
+        Storage. Microsoft Entra External ID provides sign-in; its tenant geography is separate
+        from the Azure resource region. Microsoft explains that an Entra tenant’s country or
+        region is selected when the tenant is created and maps to a geo-location that may include
+        multiple Azure regions. Azure residency commitments and exceptions vary by service. See
+        Microsoft’s
+        <a href="https://learn.microsoft.com/en-us/entra/fundamentals/data-residency">Entra data residency</a>
+        and
+        <a href="https://azure.microsoft.com/global-infrastructure/data-residency/">Azure data residency</a>
+        information.
       </p>
       <p>
-        Microsoft processes data to provide these cloud and identity services. Some provider
-        operations, such as identity processing, support, or diagnostics, may be subject to
-        Microsoft’s service configuration and terms and may not be limited to the hosting region.
-        The operator should confirm the applicable Microsoft agreements, processing locations,
-        and safeguards before publication.
+        Microsoft processes data to provide its cloud and identity services. The applicable
+        Microsoft agreement and
+        <a href="https://aka.ms/DPA">Data Protection Addendum</a>
+        set out the processing terms and safeguards for covered services, including safeguards
+        for applicable international transfers. The precise terms and service coverage depend on
+        the operator’s agreement and configuration. A Germany West Central deployment does not
+        by itself mean that every identity, support, or diagnostic operation takes place only in
+        Germany or the European Economic Area. The operator should verify the Entra tenant’s
+        assigned geography, the relevant service-specific commitments, and its applicable
+        Microsoft contract.
       </p>
       <p>We do not sell personal data.</p>
 
