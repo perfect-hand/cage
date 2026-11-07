@@ -13,7 +13,7 @@
       Nick Prühs<br />
       Auf dem Langstücken 36<br />
       21031 Hamburg, Germany<br />
-      Email: <a href="mailto:info@perfecthand.de">info@perfecthand.de</a>
+      Email: <a href="mailto:mail@perfecthand.de">mail@perfecthand.de</a>
     </address>
     <p>
       Please use these contact details to contact the operator about this policy or your personal
@@ -50,39 +50,35 @@
 
     <h2>Legal bases for processing</h2>
     <p>
-      Our current assessment, which the operator should review, is that we process sign-in and
-      account data, organization membership, and content you submit as necessary to provide the
-      editor and game services you request (Article 6(1)(b) GDPR, performance of a contract). We may
-      process technical and diagnostic information to operate, maintain, and protect the services,
-      prevent misuse, and investigate faults based on our legitimate interests (Article 6(1)(f)
-      GDPR). We will review whether any specific processing is required by law and update this
-      policy if necessary. These are working assumptions, not legal advice.
+      We process sign-in and account data, organization membership, and content you submit as
+      necessary to provide the editor and game services you request (Article 6(1)(b) GDPR,
+      performance of a contract). We process technical and diagnostic information to operate,
+      maintain, and protect the services, prevent misuse, and investigate faults based on our
+      legitimate interests (Article 6(1)(f) GDPR).
     </p>
 
     <h2>Storage and service providers</h2>
     <p>
-      CaGE’s Azure application and storage resources are deployed in the Germany West Central region
-      where the relevant Azure service supports it. The editor stores its application records in
-      Azure Table Storage, and the game service stores match records in Azure Blob Storage. Microsoft
-      Entra External ID provides sign-in; its tenant geography is separate from the Azure resource
-      region. Microsoft explains that an Entra tenant’s country or region is selected when the
-      tenant is created and maps to a geo-location that may include multiple Azure regions. Azure
-      residency commitments and exceptions vary by service. See Microsoft’s
+      All Azure resources used by CaGE are deployed in the Germany West Central region. The editor
+      stores its application records in Azure Table Storage, and the game service stores match
+      records in Azure Blob Storage. Microsoft Entra External ID provides sign-in. The tenant’s
+      country/region is Germany, and its “Data location (Primary Copy)” property is “EU Model Clause
+      compliant datacenters.” These tenant properties are separate from the Azure resource region.
+      Azure residency commitments and exceptions vary by service. See Microsoft’s
       <a href="https://learn.microsoft.com/en-us/entra/fundamentals/data-residency">Entra data residency</a>
       and
       <a href="https://azure.microsoft.com/global-infrastructure/data-residency/">Azure data residency</a>
       information.
     </p>
     <p>
-      Microsoft processes data to provide its cloud and identity services. The applicable Microsoft
-      agreement and
+      The Azure subscription uses a Microsoft Customer Agreement for Self-Service, purchased
+      directly from Microsoft. Microsoft processes data to provide its cloud and identity services.
+      Microsoft’s
       <a href="https://aka.ms/DPA">Data Protection Addendum</a>
-      set out the processing terms and safeguards for covered services, including safeguards for
-      applicable international transfers. The precise terms and service coverage depend on the
-      operator’s agreement and configuration. A Germany West Central deployment does not by itself
-      mean that every identity, support, or diagnostic operation takes place only in Germany or the
-      European Economic Area. The operator should verify the Entra tenant’s assigned geography, the
-      relevant service-specific commitments, and its applicable Microsoft contract.
+      describes data protection terms and safeguards for covered services, including applicable
+      international transfers. A Germany West Central deployment and the Entra tenant properties
+      do not mean that every identity, support, or diagnostic operation takes place only in Germany
+      or the European Economic Area.
     </p>
     <p>We do not sell personal data.</p>
 
@@ -98,9 +94,9 @@
       Some content can be deleted through the application, but deleting versioned content may not
       remove it while it is needed by other versions. The application does not provide a dedicated
       account-deletion flow; contact the operator if you want account data removed. The current
-      application does not define a general retention period or an automatic expiry/deletion
-      process for match records. The operator must set and publish appropriate retention periods,
-      including for diagnostic data and provider backups.
+      application does not automatically delete match records; they remain in Azure Blob Storage
+      until deleted. Blob soft delete and versioning are disabled, and no backups are configured.
+      Diagnostic data in the Log Analytics workspace is retained for no more than 90 days.
     </p>
 
     <h2>Your rights</h2>
