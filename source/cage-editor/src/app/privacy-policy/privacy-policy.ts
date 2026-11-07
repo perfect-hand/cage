@@ -1,16 +1,12 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
-import { Title } from '@angular/platform-browser';
+import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'privacy-policy',
+  imports: [RouterLink],
   templateUrl: './privacy-policy.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './privacy-policy.scss',
 })
-export class PrivacyPolicy implements OnInit {
-  private readonly browserTitle = inject(Title);
+export class PrivacyPolicy {}
 
-  ngOnInit(): void {
-    this.browserTitle.setTitle('Privacy policy · CaGE');
-  }
-}

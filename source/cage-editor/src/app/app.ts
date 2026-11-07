@@ -1,16 +1,15 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { MatIconRegistry } from '@angular/material/icon';
 import { Title } from '@angular/platform-browser';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 
 import { AuthService } from './auth-service';
-import { Landing } from './landing/landing';
 import { environment } from '../environments/environment';
 import { version } from '../environments/version';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, Landing],
+  imports: [RouterLink, RouterOutlet],
   templateUrl: './app.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './app.scss',
@@ -21,8 +20,6 @@ export class App implements OnInit {
   private readonly matIconRegistry = inject(MatIconRegistry);
   private readonly browserTitle = inject(Title);
 
-  readonly isSignedIn = this.authService.isSignedIn;
-  readonly isPrivacyPolicy = window.location.pathname === '/privacy-policy';
   readonly environmentLabel = environment.label;
   readonly version = version;
 
