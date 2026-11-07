@@ -1,0 +1,59 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>Version overview</h2>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-state" aria-live="polite">
+        <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+        <span>Loading version overview...</span>
+      </div>
+    } @else if (notFound()) {
+      <p>Title version not found.</p>
+    } @else if (version(); as version) {
+      <dl class="version-details">
+        <dt>Version name</dt>
+        <dd>{{ version.name }}</dd>
+
+        <dt>Created</dt>
+        <dd>{{ version.createdAt | date: 'medium' }}</dd>
+
+        <dt>Parent version</dt>
+        <dd>{{ parentVersionName() ?? 'None' }}</dd>
+
+        <dt>Attributes</dt>
+        <dd>
+          <a
+            [routerLink]="[
+              '/organizations',
+              organizationId(),
+              'titles',
+              titleId(),
+              'versions',
+              version.id,
+              'attributes',
+            ]"
+            >{{ attributeCount() }}</a
+          >
+        </dd>
+
+        <dt>Tags</dt>
+        <dd>
+          <a
+            [routerLink]="[
+              '/organizations',
+              organizationId(),
+              'titles',
+              titleId(),
+              'versions',
+              version.id,
+              'tags',
+            ]"
+            >{{ tagCount() }}</a
+          >
+        </dd>
+      </dl>
+    }
+  </section>
+</main>

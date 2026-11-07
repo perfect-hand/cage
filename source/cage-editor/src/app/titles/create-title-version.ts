@@ -84,7 +84,6 @@ export class CreateTitleVersion implements OnInit {
         this.titleId(),
         'versions',
         version.id,
-        'attributes',
       ]);
     } catch (error) {
       console.error('Failed to create title version.', error);

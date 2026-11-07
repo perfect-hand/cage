@@ -11,7 +11,13 @@
           <a [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions']">{{ titleName() }}</a>
         </li>
         @if (activeVersionName(); as versionName) {
-        <li aria-current="page">{{ versionName }}</li>
+        <li>
+          @if (activeVersionIsOverview()) {
+          <span aria-current="page">{{ versionName }}</span>
+          } @else {
+          <a [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions', activeVersionId()]">{{ versionName }}</a>
+          }
+        </li>
         }
         }
       </ol>
@@ -22,6 +28,16 @@
       @if (organizationId(); as organizationId) {
       @if (activeTitleId(); as titleId) {
       @if (activeVersionId(); as versionId) {
+      <a
+        mat-button
+        [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions', versionId]"
+        routerLinkActive="feature-button-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        ariaCurrentWhenActive="page"
+      >
+        <mat-icon aria-hidden="true">info</mat-icon>
+        Overview
+      </a>
       <a
         mat-button
         [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions', versionId, 'attributes']"

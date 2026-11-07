@@ -14,6 +14,7 @@ import { CreateTag } from './tags/create-tag';
 import { EditTag } from './tags/edit-tag';
 import { Titles } from './titles/titles';
 import { TitleVersions } from './titles/title-versions';
+import { TitleVersionOverview } from './titles/title-version-overview';
 import { Organizations } from './organizations/organizations';
 
 export const routes: Routes = [
@@ -29,6 +30,7 @@ export const routes: Routes = [
       { path: 'organizations/:organizationId/titles/:titleId/edit', component: EditTitle },
       { path: 'organizations/:organizationId/titles/:titleId/versions/new', component: CreateTitleVersion },
       { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/edit', component: EditTitleVersion },
+      { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId', component: TitleVersionOverview },
       { path: 'organizations/:organizationId/titles/:titleId/versions', component: TitleVersions },
       { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/attributes', component: Attributes },
       { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/attributes/new', component: CreateAttribute },
