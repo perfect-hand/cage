@@ -22,6 +22,7 @@ export class App implements OnInit {
   private readonly browserTitle = inject(Title);
 
   readonly isSignedIn = this.authService.isSignedIn;
+  readonly isPrivacyPolicy = window.location.pathname === '/privacy-policy';
   readonly environmentLabel = environment.label;
   readonly version = version;
 
