@@ -1,0 +1,29 @@
+:host {
+  display: block;
+}
+
+.version-details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--app-space-sm) var(--app-space-lg);
+  margin: 0;
+}
+
+.version-details dt {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.version-details dd {
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .version-details {
+    grid-template-columns: 1fr;
+    gap: var(--app-space-xs);
+  }
+
+  .version-details dd:not(:last-child) {
+    margin-bottom: var(--app-space-sm);
+  }
+}

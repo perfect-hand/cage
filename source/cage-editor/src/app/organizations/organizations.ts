@@ -12,7 +12,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { OrganizationDto } from './organization-model';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
 import { OrganizationService } from './organization-service';
 
@@ -40,14 +39,9 @@ export class Organizations implements OnInit {
     this.isLoading.set(true);
 
     try {
-      const response = await firstValueFrom(
-        this.http.get<OrganizationDto[]>('/organizations'),
-      );
-
-      this.organizationService.setOrganizations(response ?? []);
+      await this.organizationService.loadOrganizations();
     } catch (error) {
       console.error('Failed to load organizations.', error);
-      this.organizationService.setOrganizations([]);
     } finally {
       this.isLoading.set(false);
     }

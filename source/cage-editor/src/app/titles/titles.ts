@@ -6,8 +6,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { TitleDto } from './titles-model';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
+import { TitleDto } from './titles-model';
 import { TitlesService } from './titles-service';
 
 @Component({
@@ -40,16 +40,11 @@ export class Titles implements OnInit {
     this.isLoading.set(true);
 
     try {
-      const response = await firstValueFrom(
-        this.http.get<TitleDto[]>(`/organizations/${this.organizationId()}/titles`),
-      );
-
-      this.titlesService.setTitles(this.organizationId(), response ?? []);
-      this.titles.set(this.titlesService.getTitles(this.organizationId()));
+      const titles = await this.titlesService.loadTitles(this.organizationId());
+      this.titles.set(titles);
     } catch (error) {
       console.error('Failed to load titles.', error);
       this.titles.set([]);
-      this.titlesService.setTitles(this.organizationId(), []);
     } finally {
       this.isLoading.set(false);
     }

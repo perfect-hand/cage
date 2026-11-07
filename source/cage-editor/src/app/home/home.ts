@@ -1,4 +1,3 @@
-import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -9,13 +8,11 @@ import {
   RouterLinkActive,
   RouterOutlet,
 } from '@angular/router';
-import { firstValueFrom, filter } from 'rxjs';
+import { filter } from 'rxjs';
 
 import { AuthService } from '../auth-service';
-import { OrganizationDto } from '../organizations/organization-model';
 import { OrganizationService } from '../organizations/organization-service';
 import { TitleVersionsService } from '../titles/title-versions-service';
-import { TitleDto } from '../titles/titles-model';
 import { TitlesService } from '../titles/titles-service';
 
 @Component({
@@ -27,7 +24,6 @@ import { TitlesService } from '../titles/titles-service';
 })
 export class Home {
   private readonly authService = inject(AuthService);
-  private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly organizationService = inject(OrganizationService);
   private readonly titlesService = inject(TitlesService);
@@ -125,8 +121,7 @@ export class Home {
 
   private async loadOrganizations(): Promise<void> {
     try {
-      const response = await firstValueFrom(this.http.get<OrganizationDto[]>('/organizations'));
-      this.organizationService.setOrganizations(response ?? []);
+      await this.organizationService.loadOrganizations();
     } catch (error) {
       console.error('Failed to load organizations.', error);
     }
@@ -134,10 +129,7 @@ export class Home {
 
   private async loadTitles(organizationId: string): Promise<void> {
     try {
-      const response = await firstValueFrom(
-        this.http.get<TitleDto[]>(`/organizations/${organizationId}/titles`),
-      );
-      this.titlesService.setTitles(organizationId, response ?? []);
+      await this.titlesService.loadTitles(organizationId);
     } catch (error) {
       console.error('Failed to load titles.', error);
     }

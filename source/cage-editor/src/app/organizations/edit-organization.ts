@@ -36,20 +36,12 @@ export class EditOrganization implements OnInit {
   }
 
   private async loadOrganization(): Promise<void> {
-    let organization = this.organizationService
-      .organizations()
-      .find((item) => item.id === this.organizationId());
-
-    if (!organization) {
-      try {
-        const organizations = await firstValueFrom(
-          this.http.get<OrganizationDto[]>('/organizations'),
-        );
-        this.organizationService.setOrganizations(organizations ?? []);
-        organization = organizations?.find((item) => item.id === this.organizationId());
-      } catch (error) {
-        console.error('Failed to load organizations.', error);
-      }
+    let organization: OrganizationDto | undefined;
+    try {
+      const organizations = await this.organizationService.loadOrganizations();
+      organization = organizations.find((item) => item.id === this.organizationId());
+    } catch (error) {
+      console.error('Failed to load organizations.', error);
     }
 
     if (organization) {

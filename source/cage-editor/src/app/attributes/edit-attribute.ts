@@ -41,22 +41,16 @@ export class EditAttribute implements OnInit {
 
   private async loadAttribute(): Promise<void> {
     const versionId = this.versionId();
-    let attributes = this.attributesService.getAttributes(this.titleId(), versionId);
-    let attribute = attributes.find((item) => item.id === this.attributeId());
-
-    if (!attribute) {
-      try {
-        attributes =
-          (await firstValueFrom(
-            this.http.get<AttributeDto[]>(
-              `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/attributes`,
-            ),
-          )) ?? [];
-        this.attributesService.setAttributes(this.titleId(), versionId, attributes);
-        attribute = attributes.find((item) => item.id === this.attributeId());
-      } catch (error) {
-        console.error('Failed to load attributes.', error);
-      }
+    let attribute: AttributeDto | undefined;
+    try {
+      const attributes = await this.attributesService.loadAttributes(
+        this.organizationId(),
+        this.titleId(),
+        versionId,
+      );
+      attribute = attributes.find((item) => item.id === this.attributeId());
+    } catch (error) {
+      console.error('Failed to load attributes.', error);
     }
 
     if (attribute) {

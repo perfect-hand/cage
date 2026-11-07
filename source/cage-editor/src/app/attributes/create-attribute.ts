@@ -43,7 +43,12 @@ export class CreateAttribute {
     const versionId = this.versionId();
 
     try {
-      if (this.attributesService.getAttributes(this.titleId(), versionId).length >= maximumAttributes) {
+      const attributes = await this.attributesService.loadAttributes(
+        this.organizationId(),
+        this.titleId(),
+        versionId,
+      );
+      if (attributes.length >= maximumAttributes) {
         this.atLimit.set(true);
         return;
       }
@@ -52,12 +57,16 @@ export class CreateAttribute {
         name: this.model().name.trim(),
         type: this.model().type,
       };
-      await firstValueFrom(
+      const createdAttribute = await firstValueFrom(
         this.http.post<AttributeDto>(
           `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/attributes`,
           attribute,
         ),
       );
+      this.attributesService.setAttributes(this.titleId(), versionId, [
+        ...attributes,
+        createdAttribute,
+      ]);
       await this.router.navigate([
         '/organizations',
         this.organizationId(),

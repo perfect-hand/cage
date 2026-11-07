@@ -42,9 +42,13 @@ export class CreateOrganization {
       }
 
       const organization: OrganizationRequestDto = { name: this.name().trim() };
-      await firstValueFrom(
+      const createdOrganization = await firstValueFrom(
         this.http.post<OrganizationDto>('/organizations', organization),
       );
+      this.organizationService.setOrganizations([
+        ...this.organizationService.organizations(),
+        createdOrganization,
+      ]);
       await this.router.navigateByUrl('/');
     } catch (error) {
       console.error('Failed to create organization.', error);

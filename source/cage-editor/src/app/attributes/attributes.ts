@@ -66,19 +66,15 @@ export class Attributes implements OnInit {
       }
       this.isReadOnly.set(version.isReadOnly);
 
-      const response =
-        (await firstValueFrom(
-          this.http.get<AttributeDto[]>(
-            `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/attributes`,
-          ),
-        )) ?? [];
-
-      this.attributesService.setAttributes(this.titleId(), versionId, response);
-      this.attributes.set(this.attributesService.getAttributes(this.titleId(), versionId));
+      const attributes = await this.attributesService.loadAttributes(
+        this.organizationId(),
+        this.titleId(),
+        versionId,
+      );
+      this.attributes.set(attributes);
     } catch (error) {
       console.error('Failed to load attributes.', error);
       this.attributes.set([]);
-      this.attributesService.setAttributes(this.titleId(), versionId, []);
     } finally {
       this.isLoading.set(false);
     }
