@@ -11,13 +11,14 @@ import {
 import { filter } from 'rxjs';
 
 import { AuthService } from '../auth-service';
+import { Landing } from '../landing/landing';
 import { OrganizationService } from '../organizations/organization-service';
 import { TitleVersionsService } from '../titles/title-versions-service';
 import { TitlesService } from '../titles/titles-service';
 
 @Component({
   selector: 'home',
-  imports: [MatButtonModule, MatIconModule, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [MatButtonModule, MatIconModule, RouterLink, RouterLinkActive, RouterOutlet, Landing],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.scss',
@@ -31,6 +32,7 @@ export class Home {
   private readonly url = signal(this.router.url);
   private readonly requested = new Set<string>();
 
+  readonly isSignedIn = this.authService.isSignedIn;
   readonly userName = this.authService.userName;
   readonly organizationId = computed(
     () => /^\/organizations\/([^/?#]+)/.exec(this.url())?.[1] ?? undefined,

@@ -1,3 +1,4 @@
+@if (isSignedIn()) {
 <header class="home-header">
   <a class="application-name" routerLink="/">CaGE Editor</a>
 
@@ -72,3 +73,6 @@
 </header>
 
 <router-outlet />
+} @else {
+<landing />
+}

@@ -16,8 +16,10 @@ import { Titles } from './titles/titles';
 import { TitleVersions } from './titles/title-versions';
 import { TitleVersionOverview } from './titles/title-version-overview';
 import { Organizations } from './organizations/organizations';
+import { PrivacyPolicy } from './privacy-policy/privacy-policy';
 
 export const routes: Routes = [
+  { path: 'privacy-policy', component: PrivacyPolicy },
   {
     path: '',
     component: Home,
