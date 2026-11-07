@@ -70,9 +70,6 @@ export class Home {
       return versionId === 'new' ? undefined : versionId;
     },
   );
-  readonly activeVersionIsOverview = computed(() =>
-    /^\/organizations\/[^/?#]+\/titles\/[^/?#]+\/versions\/[^/?#]+(?:[?#]|$)/.test(this.url()),
-  );
   readonly activeVersionName = computed(() => {
     const titleId = this.activeTitleId();
     const versionId = this.activeVersionId();

@@ -1,7 +1,9 @@
 <main class="content-panel">
   <section class="content-section">
     <div class="section-header">
-      <h2>Version overview</h2>
+      @if (version(); as version) {
+        <h2>{{ version.name }}</h2>
+      }
     </div>
 
     @if (isLoading()) {
@@ -13,9 +15,6 @@
       <p>Title version not found.</p>
     } @else if (version(); as version) {
       <dl class="version-details">
-        <dt>Version name</dt>
-        <dd>{{ version.name }}</dd>
-
         <dt>Created</dt>
         <dd>{{ version.createdAt | date: 'medium' }}</dd>
 

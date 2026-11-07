@@ -13,7 +13,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AttributeDto } from '../attributes/attributes-model';
+import { AttributesService } from '../attributes/attributes-service';
 import { TagDto } from '../tags/tags-model';
+import { TagsService } from '../tags/tags-service';
 import { TitleVersionDto } from './title-versions-model';
 import { TitleVersionsService } from './title-versions-service';
 
@@ -27,6 +29,8 @@ import { TitleVersionsService } from './title-versions-service';
 export class TitleVersionOverview implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly versionsService = inject(TitleVersionsService);
+  private readonly attributesService = inject(AttributesService);
+  private readonly tagsService = inject(TagsService);
 
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
@@ -66,9 +70,15 @@ export class TitleVersionOverview implements OnInit {
 
       const baseUrl = `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${version.id}`;
       const [attributes, tags] = await Promise.all([
-        firstValueFrom(this.http.get<AttributeDto[]>(`${baseUrl}/attributes`)),
-        firstValueFrom(this.http.get<TagDto[]>(`${baseUrl}/tags`)),
+        this.attributesService.hasAttributes(this.titleId(), version.id)
+          ? Promise.resolve(this.attributesService.getAttributes(this.titleId(), version.id))
+          : firstValueFrom(this.http.get<AttributeDto[]>(`${baseUrl}/attributes`)),
+        this.tagsService.hasTags(this.titleId(), version.id)
+          ? Promise.resolve(this.tagsService.getTags(this.titleId(), version.id))
+          : firstValueFrom(this.http.get<TagDto[]>(`${baseUrl}/tags`)),
       ]);
+      this.attributesService.setAttributes(this.titleId(), version.id, attributes ?? []);
+      this.tagsService.setTags(this.titleId(), version.id, tags ?? []);
       this.attributeCount.set(attributes?.length ?? 0);
       this.tagCount.set(tags?.length ?? 0);
     } catch (error) {

@@ -16,6 +16,13 @@ export class AttributesService {
     return this.attributesByVersion()[`${titleId}:${versionId}`] ?? [];
   }
 
+  hasAttributes(titleId: string, versionId: string): boolean {
+    return Object.prototype.hasOwnProperty.call(
+      this.attributesByVersion(),
+      `${titleId}:${versionId}`,
+    );
+  }
+
   setAttributes(titleId: string, versionId: string, attributes: AttributeDto[]): void {
     this.attributesByVersion.update((attributesByVersion) => ({
       ...attributesByVersion,

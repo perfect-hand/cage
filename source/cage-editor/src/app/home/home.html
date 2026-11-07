@@ -12,11 +12,7 @@
         </li>
         @if (activeVersionName(); as versionName) {
         <li>
-          @if (activeVersionIsOverview()) {
-          <span aria-current="page">{{ versionName }}</span>
-          } @else {
           <a [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions', activeVersionId()]">{{ versionName }}</a>
-          }
         </li>
         }
         }

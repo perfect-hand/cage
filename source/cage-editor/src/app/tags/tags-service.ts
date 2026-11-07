@@ -9,6 +9,10 @@ export class TagsService {
     return this.tagsByVersion()[`${titleId}:${versionId}`] ?? [];
   }
 
+  hasTags(titleId: string, versionId: string): boolean {
+    return Object.prototype.hasOwnProperty.call(this.tagsByVersion(), `${titleId}:${versionId}`);
+  }
+
   setTags(titleId: string, versionId: string, tags: TagDto[]): void {
     this.tagsByVersion.update((tagsByVersion) => ({
       ...tagsByVersion,
