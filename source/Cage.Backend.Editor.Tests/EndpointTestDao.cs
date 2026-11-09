@@ -1,5 +1,6 @@
 using Azure.Data.Tables;
 using Cage.Backend.Editor.Attribute;
+using Cage.Backend.Editor.CardType;
 using Cage.Backend.Editor.Organization;
 using Cage.Backend.Editor.Tag;
 using Cage.Backend.Editor.Title;
@@ -15,6 +16,7 @@ public class EndpointTestDao
   private readonly TableClient titleVersionsTableClient;
   private readonly TableClient attributesTableClient;
   private readonly TableClient tagsTableClient;
+  private readonly TableClient cardTypesTableClient;
 
   public EndpointTestDao(string connectionString)
   {
@@ -25,8 +27,10 @@ public class EndpointTestDao
     tableServiceClient.CreateTableIfNotExists(TitleVersionDao.TitleVersionsTableName);
     tableServiceClient.CreateTableIfNotExists(AttributeDao.AttributesTableName);
     tableServiceClient.CreateTableIfNotExists(TagDao.TagsTableName);
+    tableServiceClient.CreateTableIfNotExists(CardTypeDao.CardTypesTableName);
     attributesTableClient = tableServiceClient.GetTableClient(AttributeDao.AttributesTableName);
     tagsTableClient = tableServiceClient.GetTableClient(TagDao.TagsTableName);
+    cardTypesTableClient = tableServiceClient.GetTableClient(CardTypeDao.CardTypesTableName);
     organizationsTableClient = tableServiceClient.GetTableClient(OrganizationDao.OrganizationsTableName);
     usersInOrganizationTableClient = tableServiceClient.GetTableClient(OrganizationDao.UsersInOrganizationTableName);
     titlesTableClient = tableServiceClient.GetTableClient(TitleDao.TitlesTableName);
@@ -114,6 +118,19 @@ public class EndpointTestDao
     return tag.RowKey;
   }
 
+  public async Task<string> AddCardType(string titleVersionId, string name, string? parentId = null)
+  {
+    var cardType = new CardTypeEntity
+    {
+      PartitionKey = titleVersionId,
+      RowKey = Guid.NewGuid().ToString(),
+      Name = name,
+      ParentId = parentId
+    };
+    await cardTypesTableClient.AddEntityAsync(cardType);
+    return cardType.RowKey;
+  }
+
   public async Task<string> AddVersion(string titleId, string name, string? parentVersionId = null, bool isReadOnly = false)
   {
     var version = new TitleVersionEntity
@@ -150,6 +167,11 @@ public class EndpointTestDao
   public List<TagEntity> QueryTagsByTitleVersion(string titleVersionId)
   {
     return tagsTableClient.Query<TagEntity>(entity => entity.PartitionKey == titleVersionId).ToList();
+  }
+
+  public List<CardTypeEntity> QueryCardTypesByTitleVersion(string titleVersionId)
+  {
+    return cardTypesTableClient.Query<CardTypeEntity>(entity => entity.PartitionKey == titleVersionId).ToList();
   }
 
   public List<TitleEntity> QueryTitlesByOrganization(string organizationId)
