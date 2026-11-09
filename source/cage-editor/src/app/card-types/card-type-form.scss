@@ -1,0 +1,27 @@
+:host {
+  display: block;
+}
+
+form {
+  display: grid;
+  gap: var(--app-space-sm);
+  max-width: 40rem;
+}
+
+fieldset {
+  display: grid;
+  gap: var(--app-space-sm);
+  border: 1px solid var(--app-outline-subtle);
+  border-radius: var(--mat-sys-corner-small);
+  padding: var(--app-space-md);
+}
+
+.card-type-form-entry {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-sm);
+}
+
+textarea {
+  resize: vertical;
+}

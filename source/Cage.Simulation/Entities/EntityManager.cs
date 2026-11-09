@@ -68,19 +68,39 @@ public class EntityManager
       return null;
     }
 
-    var entity = new Entity(nextEntityId++);
-
-    // Copy attributes from blueprint
-    foreach (var kvp in blueprint.Attributes)
-    {
-      entity.Attributes[kvp.Key] = kvp.Value;
-    }
-
-    // Copy tags from blueprint
-    entity.Tags.AddRange(blueprint.Tags);
-
+    var entity = new Entity(nextEntityId);
+    ApplyBlueprint(entity, blueprint, new HashSet<string>());
+    nextEntityId++;
     entities.Add(entity);
     return entity;
+  }
+
+  private void ApplyBlueprint(Entity entity, EntityBlueprint blueprint, HashSet<string> visited)
+  {
+    if (!visited.Add(blueprint.Id))
+    {
+      throw new InvalidOperationException("The entity blueprint hierarchy contains a cycle.");
+    }
+
+    if (blueprint.ParentId is not null)
+    {
+      var parent = blueprintRegistry.Get(blueprint.ParentId)
+          ?? throw new InvalidOperationException($"Parent entity blueprint '{blueprint.ParentId}' does not exist.");
+      ApplyBlueprint(entity, parent, visited);
+    }
+
+    foreach (var attribute in blueprint.Attributes)
+    {
+      entity.Attributes[attribute.Key] = attribute.Value;
+    }
+
+    foreach (var tag in blueprint.Tags)
+    {
+      if (!entity.Tags.Contains(tag))
+      {
+        entity.Tags.Add(tag);
+      }
+    }
   }
 
   public Entity? FindEntity(int id)

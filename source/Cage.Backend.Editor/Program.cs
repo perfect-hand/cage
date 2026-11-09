@@ -1,4 +1,5 @@
 using Cage.Backend.Editor.Attribute;
+using Cage.Backend.Editor.CardType;
 using Cage.Backend.Editor.Info;
 using Cage.Backend.Editor.Organization;
 using Cage.Backend.Editor.Tag;
@@ -49,6 +50,7 @@ builder.Services.AddScoped<TitleService>();
 builder.Services.AddScoped<TitleVersionService>();
 builder.Services.AddScoped<AttributeService>();
 builder.Services.AddScoped<TagService>();
+builder.Services.AddScoped<CardTypeService>();
 
 var app = builder.Build();
 app.UseHttpsRedirection();
@@ -85,6 +87,10 @@ organizations.MapGet("/{organizationId}/titles/{titleId}/versions/{versionId}/ta
 organizations.MapPost("/{organizationId}/titles/{titleId}/versions/{versionId}/tags", CreateVersionTag);
 organizations.MapPut("/{organizationId}/titles/{titleId}/versions/{versionId}/tags/{tagId}", UpdateVersionTag);
 organizations.MapDelete("/{organizationId}/titles/{titleId}/versions/{versionId}/tags/{tagId}", DeleteVersionTag);
+organizations.MapGet("/{organizationId}/titles/{titleId}/versions/{versionId}/card-types", GetAllVersionCardTypes);
+organizations.MapPost("/{organizationId}/titles/{titleId}/versions/{versionId}/card-types", CreateVersionCardType);
+organizations.MapPut("/{organizationId}/titles/{titleId}/versions/{versionId}/card-types/{cardTypeId}", UpdateVersionCardType);
+organizations.MapDelete("/{organizationId}/titles/{titleId}/versions/{versionId}/card-types/{cardTypeId}", DeleteVersionCardType);
 
 static async Task<IResult> GetInfo(InfoService infoService)
 {
@@ -453,6 +459,83 @@ static async Task<IResult> DeleteVersionTag(TagService tagService, string organi
   try
   {
     return await tagService.Delete(organizationId, titleId, versionId, tagId, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+  }
+}
+
+static async Task<IResult> GetAllVersionCardTypes(CardTypeService cardTypeService, string organizationId, string titleId, string versionId, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return TypedResults.Ok(await cardTypeService.ReadAll(organizationId, titleId, versionId, user));
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+}
+
+static async Task<IResult> CreateVersionCardType(CardTypeService cardTypeService, string organizationId, string titleId, string versionId, CardTypeDto dto, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    var cardType = await cardTypeService.Create(organizationId, titleId, versionId, dto, user);
+    return TypedResults.Created($"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}/card-types/{cardType.Id}", cardType);
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (ArgumentException)
+  {
+    return TypedResults.BadRequest();
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+  }
+}
+
+static async Task<IResult> UpdateVersionCardType(CardTypeService cardTypeService, string organizationId, string titleId, string versionId, string cardTypeId, CardTypeDto dto, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await cardTypeService.Update(organizationId, titleId, versionId, cardTypeId, dto, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (ArgumentException)
+  {
+    return TypedResults.BadRequest();
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+  }
+}
+
+static async Task<IResult> DeleteVersionCardType(CardTypeService cardTypeService, string organizationId, string titleId, string versionId, string cardTypeId, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await cardTypeService.Delete(organizationId, titleId, versionId, cardTypeId, user)
         ? TypedResults.NoContent()
         : TypedResults.NotFound();
   }
