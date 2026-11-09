@@ -57,10 +57,6 @@ export class CardTypes implements OnInit {
     this.searchTerm.set((event.target as HTMLInputElement).value);
   }
 
-  displayAttributes(cardType: CardTypeDto): string {
-    return Object.keys(cardType.attributes).join(', ');
-  }
-
   displayParent(cardType: CardTypeDto): string {
     return this.cardTypes().find((item) => item.id === cardType.parentId)?.name ?? '';
   }

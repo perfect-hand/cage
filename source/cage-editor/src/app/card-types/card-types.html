@@ -27,8 +27,6 @@
           <tr>
             <th scope="col">Name</th>
             <th scope="col">Parent</th>
-            <th scope="col">Attributes</th>
-            <th scope="col">Tags</th>
             @if (!isReadOnly()) {
               <th scope="col">Actions</th>
             }
@@ -39,8 +37,6 @@
             <tr>
               <td>{{ cardType.name }}</td>
               <td>{{ displayParent(cardType) }}</td>
-              <td>{{ displayAttributes(cardType) }}</td>
-              <td>{{ cardType.tags.join(', ') }}</td>
               @if (!isReadOnly()) {
                 <td>
                   <div class="card-type-actions">
@@ -78,7 +74,7 @@
           } @empty {
             @if (searchTerm().trim()) {
               <tr>
-                <td [attr.colspan]="isReadOnly() ? 4 : 5">No card types match your search.</td>
+                <td [attr.colspan]="isReadOnly() ? 2 : 3">No card types match your search.</td>
               </tr>
             }
           }
