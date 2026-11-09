@@ -1,78 +1,135 @@
 @if (isSignedIn()) {
-<header class="home-header">
-  <a class="application-name" routerLink="/">CaGE Editor</a>
+  <header class="home-header">
+    <a class="application-name" routerLink="/">CaGE Editor</a>
 
-  <div class="navigation">
-    @if (organizationId(); as organizationId) {
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <ol>
-        <li><a [routerLink]="['/organizations', organizationId, 'titles']">{{ organizationName() }}</a></li>
-        @if (activeTitleId(); as titleId) {
-        <li>
-          <a [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions']">{{ titleName() }}</a>
-        </li>
-        @if (activeVersionName(); as versionName) {
-        <li>
-          <a [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions', activeVersionId()]">{{ versionName }}</a>
-        </li>
-        }
-        }
-      </ol>
-    </nav>
-    }
-
-    <nav class="feature-buttons" aria-label="Title features">
+    <div class="navigation">
       @if (organizationId(); as organizationId) {
-      @if (activeTitleId(); as titleId) {
-      @if (activeVersionId(); as versionId) {
-      <a
-        mat-button
-        [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions', versionId]"
-        routerLinkActive="feature-button-active"
-        [routerLinkActiveOptions]="{ exact: true }"
-        ariaCurrentWhenActive="page"
-      >
-        <mat-icon aria-hidden="true">info</mat-icon>
-        Overview
-      </a>
-      <a
-        mat-button
-        [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions', versionId, 'attributes']"
-        routerLinkActive="feature-button-active"
-        ariaCurrentWhenActive="page"
-      >
-        <mat-icon aria-hidden="true">data_table</mat-icon>
-        Attributes
-      </a>
-      <a
-        mat-button
-        [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions', versionId, 'tags']"
-        routerLinkActive="feature-button-active"
-        ariaCurrentWhenActive="page"
-      >
-        <mat-icon aria-hidden="true">sell</mat-icon>
-        Tags
-      </a>
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol>
+            <li>
+              <a [routerLink]="['/organizations', organizationId, 'titles']">{{
+                organizationName()
+              }}</a>
+            </li>
+            @if (activeTitleId(); as titleId) {
+              <li>
+                <a
+                  [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions']"
+                  >{{ titleName() }}</a
+                >
+              </li>
+              @if (activeVersionName(); as versionName) {
+                <li>
+                  <a
+                    [routerLink]="[
+                      '/organizations',
+                      organizationId,
+                      'titles',
+                      titleId,
+                      'versions',
+                      activeVersionId(),
+                    ]"
+                    >{{ versionName }}</a
+                  >
+                </li>
+              }
+            }
+          </ol>
+        </nav>
       }
-      }
-      }
-    </nav>
-  </div>
 
-  <div class="user-menu">
-    <div class="user-info">
-      <mat-icon aria-hidden="true">account_circle</mat-icon>
-      <span>{{ userName() }}</span>
+      <nav class="feature-buttons" aria-label="Title features">
+        @if (organizationId(); as organizationId) {
+          @if (activeTitleId(); as titleId) {
+            @if (activeVersionId(); as versionId) {
+              <a
+                mat-button
+                [routerLink]="[
+                  '/organizations',
+                  organizationId,
+                  'titles',
+                  titleId,
+                  'versions',
+                  versionId,
+                ]"
+                routerLinkActive="feature-button-active"
+                [routerLinkActiveOptions]="{ exact: true }"
+                ariaCurrentWhenActive="page"
+              >
+                <mat-icon aria-hidden="true">info</mat-icon>
+                Overview
+              </a>
+              <a
+                mat-button
+                [routerLink]="[
+                  '/organizations',
+                  organizationId,
+                  'titles',
+                  titleId,
+                  'versions',
+                  versionId,
+                  'attributes',
+                ]"
+                routerLinkActive="feature-button-active"
+                ariaCurrentWhenActive="page"
+              >
+                <mat-icon aria-hidden="true">data_table</mat-icon>
+                Attributes
+              </a>
+              <a
+                mat-button
+                [routerLink]="[
+                  '/organizations',
+                  organizationId,
+                  'titles',
+                  titleId,
+                  'versions',
+                  versionId,
+                  'tags',
+                ]"
+                routerLinkActive="feature-button-active"
+                ariaCurrentWhenActive="page"
+              >
+                <mat-icon aria-hidden="true">sell</mat-icon>
+                Tags
+              </a>
+              <a
+                mat-button
+                [routerLink]="[
+                  '/organizations',
+                  organizationId,
+                  'titles',
+                  titleId,
+                  'versions',
+                  versionId,
+                  'card-types',
+                ]"
+                routerLinkActive="feature-button-active"
+                ariaCurrentWhenActive="page"
+              >
+                <mat-icon aria-hidden="true">style</mat-icon>
+                Card Types
+              </a>
+            }
+          }
+        }
+      </nav>
     </div>
 
-    <button class="sign-out-link" mat-button type="button" (click)="signOut()">
-      <mat-icon aria-hidden="true">logout</mat-icon>
-      <span>Sign Out</span>
-    </button>
-  </div>
-</header>
+    <div class="user-menu">
+      <div class="user-info">
+        <mat-icon aria-hidden="true">account_circle</mat-icon>
+        <span>{{ userName() }}</span>
+      </div>
 
-<router-outlet />
+      <button class="sign-out-link" mat-button type="button" (click)="signOut()">
+        <mat-icon aria-hidden="true">logout</mat-icon>
+        <span>Sign Out</span>
+      </button>
+    </div>
+  </header>
+
+  <router-outlet />
 } @else {
-<landing />
+  <landing />
 }

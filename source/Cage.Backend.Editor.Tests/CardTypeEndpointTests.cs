@@ -338,6 +338,61 @@ public class CardTypeEndpointTests : EndpointTest, IClassFixture<WebApplicationF
     Assert.Empty(Assert.IsType<List<CardTypeDto>>(await childResponse.Content.ReadFromJsonAsync<List<CardTypeDto>>()));
   }
 
+  [Fact]
+  public async Task ChildVersionKeepsParentCardTypeValueWhenParentIsUpdated()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var cardTypeId = await testDao.AddCardType(parentVersionId, "Resource");
+    var childVersionId = await testDao.AddVersion(titleId, "2.0", parentVersionId);
+
+    // WHEN
+    var updateResponse = await httpClient.PutAsJsonAsync(
+        $"{CardTypesPath(organizationId, titleId, parentVersionId)}/{cardTypeId}",
+        new CardTypeDto { Name = "Monster" });
+    var childResponse = await httpClient.GetAsync(CardTypesPath(organizationId, titleId, childVersionId));
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
+    var childCardTypes = await childResponse.Content.ReadFromJsonAsync<List<CardTypeDto>>();
+    Assert.Equal("Resource", Assert.Single(Assert.IsType<List<CardTypeDto>>(childCardTypes)).Name);
+  }
+
+  [Fact]
+  public async Task DeletesCardTypesWhenDeletingTitleVersion()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var rootVersionId = testDao.GetInitialVersionId(titleId);
+    var childVersionId = await testDao.AddVersion(titleId, "2.0", rootVersionId);
+    await testDao.AddCardType(childVersionId, "Monster");
+
+    // WHEN
+    var response = await httpClient.DeleteAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{childVersionId}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    Assert.Empty(testDao.QueryCardTypesByTitleVersion(childVersionId));
+  }
+
+  [Fact]
+  public async Task DeletesCardTypesWhenDeletingTitle()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    await testDao.AddCardType(versionId, "Resource");
+
+    // WHEN
+    var response = await httpClient.DeleteAsync($"/organizations/{organizationId}/titles/{titleId}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    Assert.Empty(testDao.QueryCardTypesByTitleVersion(versionId));
+  }
+
   private static string CardTypesPath(string organizationId, string titleId, string versionId)
   {
     return $"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}/card-types";

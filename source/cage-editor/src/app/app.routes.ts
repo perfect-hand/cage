@@ -12,6 +12,9 @@ import { EditAttribute } from './attributes/edit-attribute';
 import { Tags } from './tags/tags';
 import { CreateTag } from './tags/create-tag';
 import { EditTag } from './tags/edit-tag';
+import { CardTypes } from './card-types/card-types';
+import { CreateCardType } from './card-types/create-card-type';
+import { EditCardType } from './card-types/edit-card-type';
 import { Titles } from './titles/titles';
 import { TitleVersions } from './titles/title-versions';
 import { TitleVersionOverview } from './titles/title-version-overview';
@@ -30,16 +33,55 @@ export const routes: Routes = [
       { path: 'organizations/:organizationId/titles', component: Titles },
       { path: 'organizations/:organizationId/titles/new', component: CreateTitle },
       { path: 'organizations/:organizationId/titles/:titleId/edit', component: EditTitle },
-      { path: 'organizations/:organizationId/titles/:titleId/versions/new', component: CreateTitleVersion },
-      { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/edit', component: EditTitleVersion },
-      { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId', component: TitleVersionOverview },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/new',
+        component: CreateTitleVersion,
+      },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/edit',
+        component: EditTitleVersion,
+      },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId',
+        component: TitleVersionOverview,
+      },
       { path: 'organizations/:organizationId/titles/:titleId/versions', component: TitleVersions },
-      { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/attributes', component: Attributes },
-      { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/attributes/new', component: CreateAttribute },
-      { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/attributes/:attributeId/edit', component: EditAttribute },
-      { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/tags', component: Tags },
-      { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/tags/new', component: CreateTag },
-      { path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/tags/:tagId/edit', component: EditTag },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/attributes',
+        component: Attributes,
+      },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/attributes/new',
+        component: CreateAttribute,
+      },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/attributes/:attributeId/edit',
+        component: EditAttribute,
+      },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/tags',
+        component: Tags,
+      },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/tags/new',
+        component: CreateTag,
+      },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/tags/:tagId/edit',
+        component: EditTag,
+      },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/card-types',
+        component: CardTypes,
+      },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/card-types/new',
+        component: CreateCardType,
+      },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/card-types/:cardTypeId/edit',
+        component: EditCardType,
+      },
     ],
   },
 ];

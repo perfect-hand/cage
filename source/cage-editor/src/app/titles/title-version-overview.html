@@ -52,6 +52,22 @@
             >{{ tagCount() }}</a
           >
         </dd>
+
+        <dt>Card types</dt>
+        <dd>
+          <a
+            [routerLink]="[
+              '/organizations',
+              organizationId(),
+              'titles',
+              titleId(),
+              'versions',
+              version.id,
+              'card-types',
+            ]"
+            >{{ cardTypeCount() }}</a
+          >
+        </dd>
       </dl>
     }
   </section>

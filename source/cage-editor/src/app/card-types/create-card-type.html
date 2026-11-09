@@ -1,0 +1,128 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>New card type</h2>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-state" aria-live="polite">
+        <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+        <span>Loading card type form...</span>
+      </div>
+    } @else if (notFound()) {
+      <p class="field-error" role="alert">Title version not found.</p>
+    } @else if (isReadOnly()) {
+      <p>This version is read-only.</p>
+    } @else {
+      <form (submit)="createCardType(); $event.preventDefault()" novalidate>
+        <label for="card-type-name">Card type name</label>
+        <input
+          id="card-type-name"
+          class="text-input"
+          type="text"
+          [formField]="cardTypeForm.name"
+          autocomplete="off"
+        />
+        @if (cardTypeForm.name().touched() && cardTypeForm.name().invalid()) {
+          <p class="field-error" role="alert">Enter a card type name of at most 50 characters.</p>
+        }
+
+        <label for="card-type-parent">Parent card type</label>
+        <select
+          id="card-type-parent"
+          class="text-input"
+          [value]="model().parentId"
+          (change)="setParentId($event)"
+        >
+          <option value="">None</option>
+          @for (cardType of parentCardTypes(); track cardType.id) {
+            <option [value]="cardType.id">{{ cardType.name }}</option>
+          }
+        </select>
+
+        <fieldset>
+          <legend>Attributes</legend>
+          @for (attribute of attributes(); track attribute.id) {
+            <div class="card-type-form-entry">
+              <label>
+                <input
+                  type="checkbox"
+                  [checked]="isAttributeSelected(attribute.name)"
+                  (change)="toggleAttribute(attribute, $event)"
+                />
+                {{ attribute.name }} ({{ attribute.type }})
+              </label>
+              @if (isAttributeSelected(attribute.name)) {
+                @if (attribute.type === 'Entity' || attribute.type === 'EntityList') {
+                  <textarea
+                    class="text-input"
+                    rows="4"
+                    [value]="model().attributeValues[attribute.name]"
+                    (input)="setAttributeValue(attribute.name, $event)"
+                    [attr.aria-label]="attribute.name + ' JSON value'"
+                  ></textarea>
+                } @else {
+                  <input
+                    class="text-input"
+                    [type]="attribute.type === 'Int' ? 'number' : 'text'"
+                    [value]="model().attributeValues[attribute.name]"
+                    (input)="setAttributeValue(attribute.name, $event)"
+                    [attr.aria-label]="attribute.name + ' value'"
+                  />
+                }
+              }
+            </div>
+          } @empty {
+            <p>No attributes are defined for this title version.</p>
+          }
+        </fieldset>
+
+        <fieldset>
+          <legend>Tags</legend>
+          @for (tag of tags(); track tag.id) {
+            <label class="card-type-form-entry">
+              <input
+                type="checkbox"
+                [checked]="model().tagIds.includes(tag.id)"
+                (change)="toggleTag(tag, $event)"
+              />
+              {{ tag.name }}
+            </label>
+          } @empty {
+            <p>No tags are defined for this title version.</p>
+          }
+        </fieldset>
+
+        @if (atLimit()) {
+          <p class="field-error" role="alert">
+            A title can have at most {{ maximumCardTypes }} card types.
+          </p>
+        }
+        @if (errorMessage()) {
+          <p class="field-error" role="alert">{{ errorMessage() }}</p>
+        }
+
+        <div class="form-actions">
+          <button
+            mat-button
+            type="button"
+            [routerLink]="[
+              '/organizations',
+              organizationId(),
+              'titles',
+              titleId(),
+              'versions',
+              versionId(),
+              'card-types',
+            ]"
+          >
+            Cancel
+          </button>
+          <button mat-button type="submit" [disabled]="isSubmitting() || atLimit()">
+            {{ isSubmitting() ? 'Creating...' : 'Create card type' }}
+          </button>
+        </div>
+      </form>
+    }
+  </section>
+</main>

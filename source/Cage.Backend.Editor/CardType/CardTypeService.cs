@@ -161,6 +161,11 @@ public class CardTypeService : VersionedTitleEntityService<CardTypeEntity>
     var tags = await tagService.ReadAll(organizationId, titleId, versionId, user);
     foreach (var attribute in dto.Attributes)
     {
+      if (attribute.Value is null)
+      {
+        throw new ArgumentException($"Card type attribute '{attribute.Key}' must have a value.", nameof(dto));
+      }
+
       var definition = attributes.FirstOrDefault(item => item.Name == attribute.Key);
       if (definition is null || definition.Type != attribute.Value.Type)
       {

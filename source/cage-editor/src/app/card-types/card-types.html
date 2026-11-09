@@ -1,0 +1,114 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>Card types</h2>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-state" aria-live="polite">
+        <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+        <span>Loading card types...</span>
+      </div>
+    } @else if (notFound()) {
+      <p class="field-error" role="alert">Title version not found.</p>
+    } @else {
+      <label for="card-type-search">Search card types</label>
+      <input
+        id="card-type-search"
+        class="text-input"
+        type="search"
+        [value]="searchTerm()"
+        (input)="setSearchTerm($event)"
+        autocomplete="off"
+        aria-controls="card-type-table"
+      />
+      <table id="card-type-table" class="card-type-table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Parent</th>
+            <th scope="col">Attributes</th>
+            <th scope="col">Tags</th>
+            @if (!isReadOnly()) {
+              <th scope="col">Actions</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (cardType of filteredCardTypes(); track cardType.id) {
+            <tr>
+              <td>{{ cardType.name }}</td>
+              <td>{{ displayParent(cardType) }}</td>
+              <td>{{ displayAttributes(cardType) }}</td>
+              <td>{{ cardType.tags.join(', ') }}</td>
+              @if (!isReadOnly()) {
+                <td>
+                  <div class="card-type-actions">
+                    <button
+                      mat-icon-button
+                      type="button"
+                      [routerLink]="[
+                        '/organizations',
+                        organizationId(),
+                        'titles',
+                        titleId(),
+                        'versions',
+                        versionId(),
+                        'card-types',
+                        cardType.id,
+                        'edit',
+                      ]"
+                      [attr.aria-label]="'Edit card type ' + cardType.name"
+                    >
+                      <mat-icon aria-hidden="true">edit</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      type="button"
+                      (click)="deleteCardType(cardType.id, cardType.name)"
+                      [disabled]="isDeleting()"
+                      [attr.aria-label]="'Delete card type ' + cardType.name"
+                    >
+                      <mat-icon aria-hidden="true">delete</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              }
+            </tr>
+          } @empty {
+            @if (searchTerm().trim()) {
+              <tr>
+                <td [attr.colspan]="isReadOnly() ? 4 : 5">No card types match your search.</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+
+      <div class="form-actions">
+        <button
+          mat-button
+          type="button"
+          [routerLink]="[
+            '/organizations',
+            organizationId(),
+            'titles',
+            titleId(),
+            'versions',
+            versionId(),
+            'card-types',
+            'new',
+          ]"
+          [disabled]="isReadOnly() || cardTypes().length >= maximumCardTypes"
+        >
+          New card type
+        </button>
+        @if (isReadOnly()) {
+          <span>This version is read-only.</span>
+        } @else if (cardTypes().length >= maximumCardTypes) {
+          <span>Maximum of {{ maximumCardTypes }} card types reached.</span>
+        }
+      </div>
+    }
+  </section>
+</main>
