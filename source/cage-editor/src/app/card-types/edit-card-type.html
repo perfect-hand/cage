@@ -42,7 +42,7 @@
 
         <fieldset>
           <legend>Attributes</legend>
-          @for (attribute of attributes(); track attribute.id) {
+          @for (attribute of editableAttributes(); track attribute.id) {
             <div class="card-type-form-entry">
               <label>
                 <input
@@ -53,27 +53,17 @@
                 {{ attribute.name }} ({{ attribute.type }})
               </label>
               @if (isAttributeSelected(attribute.name)) {
-                @if (attribute.type === 'Entity' || attribute.type === 'EntityList') {
-                  <textarea
-                    class="text-input"
-                    rows="4"
-                    [value]="model().attributeValues[attribute.name]"
-                    (input)="setAttributeValue(attribute.name, $event)"
-                    [attr.aria-label]="attribute.name + ' JSON value'"
-                  ></textarea>
-                } @else {
-                  <input
-                    class="text-input"
-                    [type]="attribute.type === 'Int' ? 'number' : 'text'"
-                    [value]="model().attributeValues[attribute.name]"
-                    (input)="setAttributeValue(attribute.name, $event)"
-                    [attr.aria-label]="attribute.name + ' value'"
-                  />
-                }
+                <input
+                  class="text-input"
+                  [type]="attribute.type === 'Int' ? 'number' : 'text'"
+                  [value]="model().attributeValues[attribute.name]"
+                  (input)="setAttributeValue(attribute.name, $event)"
+                  [attr.aria-label]="attribute.name + ' value'"
+                />
               }
             </div>
           } @empty {
-            <p>No attributes are defined for this title version.</p>
+            <p>No editable attributes are defined for this title version.</p>
           }
         </fieldset>
 

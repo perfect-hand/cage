@@ -1,5 +1,13 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { form, FormField, maxLength, pattern, required } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -15,6 +23,7 @@ import { CardTypesService } from './card-types-service';
 import {
   defaultAttributeValue,
   formatAttributeValue,
+  isEditableAttributeType,
   parseAttributeValue,
 } from './card-type-form-utils';
 
@@ -45,6 +54,9 @@ export class EditCardType implements OnInit {
   readonly versionId = input.required<string>();
   readonly cardTypeId = input.required<string>();
   readonly attributes = signal<AttributeDto[]>([]);
+  readonly editableAttributes = computed(() =>
+    this.attributes().filter((attribute) => isEditableAttributeType(attribute.type)),
+  );
   readonly tags = signal<TagDto[]>([]);
   readonly parentCardTypes = signal<CardTypeDto[]>([]);
   readonly isLoading = signal(true);
@@ -52,6 +64,7 @@ export class EditCardType implements OnInit {
   readonly isReadOnly = signal(false);
   readonly notFound = signal(false);
   readonly errorMessage = signal('');
+  private readonly preservedAttributes = signal<Record<string, TypedValueDto>>({});
   readonly model = signal<CardTypeFormModel>({
     name: '',
     parentId: '',
@@ -83,11 +96,16 @@ export class EditCardType implements OnInit {
   }
 
   toggleAttribute(attribute: AttributeDto, event: Event): void {
+    if (!isEditableAttributeType(attribute.type)) {
+      return;
+    }
+
     const checked = (event.target as HTMLInputElement).checked;
+    const defaultValue = defaultAttributeValue(attribute.type);
     this.model.update((model) => {
       const attributeValues = { ...model.attributeValues };
       if (checked) {
-        attributeValues[attribute.name] = defaultAttributeValue(attribute.type);
+        attributeValues[attribute.name] = defaultValue;
       } else {
         delete attributeValues[attribute.name];
       }
@@ -119,8 +137,12 @@ export class EditCardType implements OnInit {
     this.errorMessage.set('');
     const versionId = this.versionId();
     try {
-      const attributes: Record<string, TypedValueDto> = {};
-      for (const definition of this.attributes()) {
+      const attributes: Record<string, TypedValueDto> = { ...this.preservedAttributes() };
+      for (const definition of this.editableAttributes()) {
+        if (!isEditableAttributeType(definition.type)) {
+          continue;
+        }
+
         const value = this.model().attributeValues[definition.name];
         if (value !== undefined) {
           attributes[definition.name] = parseAttributeValue(definition.type, value);
@@ -187,6 +209,16 @@ export class EditCardType implements OnInit {
       this.attributes.set(attributes);
       this.tags.set(tags);
       this.parentCardTypes.set(cardTypes.filter((item) => item.id !== cardType.id));
+      const editableAttributeNames = new Set(
+        attributes
+          .filter((attribute) => isEditableAttributeType(attribute.type))
+          .map((attribute) => attribute.name),
+      );
+      this.preservedAttributes.set(
+        Object.fromEntries(
+          Object.entries(cardType.attributes).filter(([name]) => !editableAttributeNames.has(name)),
+        ),
+      );
       this.model.set(this.toFormModel(cardType, attributes, tags));
     } catch (error) {
       console.error('Failed to load card type form data.', error);
@@ -202,7 +234,7 @@ export class EditCardType implements OnInit {
     tags: TagDto[],
   ): CardTypeFormModel {
     const attributeValues: Record<string, string> = {};
-    for (const attribute of attributes) {
+    for (const attribute of attributes.filter((item) => isEditableAttributeType(item.type))) {
       const value = cardType.attributes[attribute.name];
       if (value) {
         attributeValues[attribute.name] = formatAttributeValue(value);

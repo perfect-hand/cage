@@ -16,7 +16,6 @@ import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { CardTypeDto } from './card-types-model';
 import { CardTypesService } from './card-types-service';
-import { formatAttributeValue } from './card-type-form-utils';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
 import { TitleVersionsService } from '../titles/title-versions-service';
 
@@ -59,9 +58,7 @@ export class CardTypes implements OnInit {
   }
 
   displayAttributes(cardType: CardTypeDto): string {
-    return Object.entries(cardType.attributes)
-      .map(([name, value]) => `${name}: ${formatAttributeValue(value)}`)
-      .join(', ');
+    return Object.keys(cardType.attributes).join(', ');
   }
 
   displayParent(cardType: CardTypeDto): string {
