@@ -8,6 +8,7 @@ namespace Cage.Simulation.Entities;
 public class EntityBlueprint
 {
   public string Id { get; private set; }
+  public string? ParentId { get; set; }
   public Dictionary<string, TypedValue> Attributes { get; private set; } = new();
   public List<string> Tags { get; private set; } = new();
 
