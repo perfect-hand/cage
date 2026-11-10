@@ -24,7 +24,7 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
     EnsureWritable(version);
     ValidateDto(dto);
 
-    if ((await entityDao.FindAllVersions(titleId, versionId)).Count >= MaximumAttributesPerTitle)
+    if ((await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId)).Count >= MaximumAttributesPerTitle)
     {
       throw new ArgumentException($"Titles cannot have more than {MaximumAttributesPerTitle} attributes.", nameof(dto));
     }
@@ -40,7 +40,7 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
   {
     await EnsureAccess(organizationId, titleId, versionId, user);
     var referenceCounts = await cardTypeService.CountAttributeReferences(titleId, versionId);
-    return (await entityDao.FindAllVersions(titleId, versionId))
+    return (await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId))
         .Select(attribute =>
         {
           var dto = mapper.ToDto(attribute);
@@ -56,7 +56,7 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
     EnsureWritable(version);
     ValidateDto(dto);
 
-    var attributes = await entityDao.FindAllVersions(titleId, versionId);
+    var attributes = await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId);
     var existing = attributes.SingleOrDefault(attribute => attribute.RowKey == attributeId);
     if (existing is null)
     {
@@ -79,7 +79,7 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
     var version = await EnsureAccess(organizationId, titleId, versionId, user);
     EnsureWritable(version);
 
-    var attributes = await entityDao.FindAllVersions(titleId, versionId);
+    var attributes = await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId);
     var existing = attributes.SingleOrDefault(attribute => attribute.RowKey == attributeId);
     if (existing is null)
     {

@@ -24,7 +24,7 @@ public class TagService : VersionedTitleEntityService<TagEntity>
     EnsureWritable(version);
     ValidateDto(dto);
 
-    if ((await entityDao.FindAllVersions(titleId, versionId)).Count >= MaximumTagsPerTitle)
+    if ((await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId)).Count >= MaximumTagsPerTitle)
     {
       throw new ArgumentException($"Titles cannot have more than {MaximumTagsPerTitle} tags.", nameof(dto));
     }
@@ -40,7 +40,7 @@ public class TagService : VersionedTitleEntityService<TagEntity>
   {
     await EnsureAccess(organizationId, titleId, versionId, user);
     var referenceCounts = await cardTypeService.CountTagReferences(titleId, versionId);
-    return (await entityDao.FindAllVersions(titleId, versionId))
+    return (await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId))
         .Select(tag =>
         {
           var dto = mapper.ToDto(tag);
@@ -56,7 +56,7 @@ public class TagService : VersionedTitleEntityService<TagEntity>
     EnsureWritable(version);
     ValidateDto(dto);
 
-    var tags = await entityDao.FindAllVersions(titleId, versionId);
+    var tags = await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId);
     var existing = tags.SingleOrDefault(tag => tag.RowKey == tagId);
     if (existing is null)
     {
@@ -78,7 +78,7 @@ public class TagService : VersionedTitleEntityService<TagEntity>
     var version = await EnsureAccess(organizationId, titleId, versionId, user);
     EnsureWritable(version);
 
-    var tags = await entityDao.FindAllVersions(titleId, versionId);
+    var tags = await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId);
     var existing = tags.SingleOrDefault(tag => tag.RowKey == tagId);
     if (existing is null)
     {

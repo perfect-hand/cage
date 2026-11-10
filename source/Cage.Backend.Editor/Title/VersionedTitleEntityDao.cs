@@ -1,17 +1,6 @@
 namespace Cage.Backend.Editor.Title;
 
-public interface IVersionedTitleEntityDao<TEntity> where TEntity : IVersionedTitleEntity
-{
-  Task Add(TEntity entity);
-  Task<List<TEntity>> QueryByTitleVersion(string titleVersionId);
-  Task<TEntity?> Get(string titleVersionId, string entityId);
-  Task Update(string titleVersionId, TEntity entity);
-  Task<bool> Delete(string titleVersionId, string entityId);
-  Task DeleteByTitleVersion(string titleVersionId);
-  Task<List<TEntity>> FindAllVersions(string titleId, string versionId);
-}
-
-public abstract class VersionedTitleEntityDao<TEntity> : TableDao, IVersionedTitleEntityDao<TEntity>
+public abstract class VersionedTitleEntityDao<TEntity> : TableDao
     where TEntity : class, IVersionedTitleEntity
 {
   private readonly TitleVersionDao titleVersionDao = new();
@@ -23,7 +12,7 @@ public abstract class VersionedTitleEntityDao<TEntity> : TableDao, IVersionedTit
   public abstract Task<bool> Delete(string titleVersionId, string entityId);
   public abstract Task DeleteByTitleVersion(string titleVersionId);
 
-  public async Task<List<TEntity>> FindAllVersions(string titleId, string versionId)
+  public async Task<List<TEntity>> QueryByTitleVersionAndAncestors(string titleId, string versionId)
   {
     var versions = new List<TitleVersionEntity>();
     var visited = new HashSet<string>();

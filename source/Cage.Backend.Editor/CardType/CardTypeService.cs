@@ -31,7 +31,7 @@ public class CardTypeService : VersionedTitleEntityService<CardTypeEntity>
     EnsureWritable(version);
     ValidateName(dto);
 
-    var cardTypes = await entityDao.FindAllVersions(titleId, versionId);
+    var cardTypes = await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId);
     if (cardTypes.Count >= MaximumCardTypesPerTitle)
     {
       throw new ArgumentException($"Titles cannot have more than {MaximumCardTypesPerTitle} card types.", nameof(dto));
@@ -48,7 +48,7 @@ public class CardTypeService : VersionedTitleEntityService<CardTypeEntity>
   public async Task<List<CardTypeDto>> ReadAll(string organizationId, string titleId, string versionId, string? user)
   {
     await EnsureAccess(organizationId, titleId, versionId, user);
-    return (await entityDao.FindAllVersions(titleId, versionId)).Select(mapper.ToDto).ToList();
+    return (await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId)).Select(mapper.ToDto).ToList();
   }
 
   public async Task<bool> Update(string organizationId, string titleId, string versionId, string cardTypeId, CardTypeDto dto, string? user)
@@ -57,7 +57,7 @@ public class CardTypeService : VersionedTitleEntityService<CardTypeEntity>
     EnsureWritable(version);
     ValidateName(dto);
 
-    var cardTypes = await entityDao.FindAllVersions(titleId, versionId);
+    var cardTypes = await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId);
     var existing = cardTypes.SingleOrDefault(cardType => cardType.RowKey == cardTypeId);
     if (existing is null)
     {
@@ -82,7 +82,7 @@ public class CardTypeService : VersionedTitleEntityService<CardTypeEntity>
     var version = await EnsureAccess(organizationId, titleId, versionId, user);
     EnsureWritable(version);
 
-    var cardTypes = await entityDao.FindAllVersions(titleId, versionId);
+    var cardTypes = await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId);
     var existing = cardTypes.SingleOrDefault(cardType => cardType.RowKey == cardTypeId);
     if (existing is null)
     {
@@ -112,7 +112,7 @@ public class CardTypeService : VersionedTitleEntityService<CardTypeEntity>
   public async Task<Dictionary<string, int>> CountAttributeReferences(string titleId, string versionId)
   {
     var counts = new Dictionary<string, int>(StringComparer.Ordinal);
-    foreach (var cardType in await entityDao.FindAllVersions(titleId, versionId))
+    foreach (var cardType in await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId))
     {
       var attributes = JsonSerializer.Deserialize<Dictionary<string, TypedValue>>(cardType.AttributesJson) ?? new();
       foreach (var name in attributes.Keys)
@@ -127,7 +127,7 @@ public class CardTypeService : VersionedTitleEntityService<CardTypeEntity>
   public async Task<Dictionary<string, int>> CountTagReferences(string titleId, string versionId)
   {
     var counts = new Dictionary<string, int>(StringComparer.Ordinal);
-    foreach (var cardType in await entityDao.FindAllVersions(titleId, versionId))
+    foreach (var cardType in await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId))
     {
       var tags = JsonSerializer.Deserialize<List<string>>(cardType.TagsJson) ?? new();
       foreach (var name in tags.Distinct(StringComparer.Ordinal))
@@ -146,7 +146,7 @@ public class CardTypeService : VersionedTitleEntityService<CardTypeEntity>
       return;
     }
 
-    var cardTypes = (await entityDao.FindAllVersions(titleId, versionId))
+    var cardTypes = (await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId))
         .Where(cardType => (JsonSerializer.Deserialize<Dictionary<string, TypedValue>>(cardType.AttributesJson) ?? new())
             .ContainsKey(oldName))
         .ToList();
@@ -176,7 +176,7 @@ public class CardTypeService : VersionedTitleEntityService<CardTypeEntity>
       return;
     }
 
-    foreach (var cardType in await entityDao.FindAllVersions(titleId, versionId))
+    foreach (var cardType in await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId))
     {
       var tags = JsonSerializer.Deserialize<List<string>>(cardType.TagsJson) ?? new();
       if (!tags.Contains(oldName, StringComparer.Ordinal))
@@ -194,7 +194,7 @@ public class CardTypeService : VersionedTitleEntityService<CardTypeEntity>
 
   public async Task DeleteAttributeReferences(string titleId, string versionId, string name)
   {
-    foreach (var cardType in await entityDao.FindAllVersions(titleId, versionId))
+    foreach (var cardType in await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId))
     {
       var attributes = JsonSerializer.Deserialize<Dictionary<string, TypedValue>>(cardType.AttributesJson) ?? new();
       if (!attributes.Remove(name))
@@ -211,7 +211,7 @@ public class CardTypeService : VersionedTitleEntityService<CardTypeEntity>
 
   public async Task DeleteTagReferences(string titleId, string versionId, string name)
   {
-    foreach (var cardType in await entityDao.FindAllVersions(titleId, versionId))
+    foreach (var cardType in await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId))
     {
       var tags = JsonSerializer.Deserialize<List<string>>(cardType.TagsJson) ?? new();
       if (tags.RemoveAll(tag => tag == name) > 0)
@@ -265,8 +265,8 @@ public class CardTypeService : VersionedTitleEntityService<CardTypeEntity>
       throw new ArgumentException("Card type data is too large.", nameof(dto));
     }
 
-    var attributes = await attributeDao.FindAllVersions(titleId, versionId);
-    var tags = await tagDao.FindAllVersions(titleId, versionId);
+    var attributes = await attributeDao.QueryByTitleVersionAndAncestors(titleId, versionId);
+    var tags = await tagDao.QueryByTitleVersionAndAncestors(titleId, versionId);
     foreach (var attribute in dto.Attributes)
     {
       if (attribute.Value is null)

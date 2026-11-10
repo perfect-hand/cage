@@ -4,12 +4,12 @@ namespace Cage.Backend.Editor.Title;
 
 public abstract class VersionedTitleEntityService<TEntity> where TEntity : class, IVersionedTitleEntity
 {
-  protected readonly IVersionedTitleEntityDao<TEntity> entityDao;
+  protected readonly VersionedTitleEntityDao<TEntity> entityDao;
   private readonly TitleDao titleDao = new();
   private readonly TitleVersionDao titleVersionDao = new();
   private readonly OrganizationDao organizationDao = new();
 
-  protected VersionedTitleEntityService(IVersionedTitleEntityDao<TEntity> entityDao)
+  protected VersionedTitleEntityService(VersionedTitleEntityDao<TEntity> entityDao)
   {
     this.entityDao = entityDao;
   }
