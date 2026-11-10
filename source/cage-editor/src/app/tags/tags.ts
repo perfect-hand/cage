@@ -99,7 +99,7 @@ export class Tags implements OnInit {
           data: {
             name,
             consequence: referenceCount > 0
-              ? `This tag is referenced by ${referenceCount} card type${referenceCount === 1 ? '' : 's'}. Deleting it may leave those card types with a missing tag.`
+              ? `This tag is referenced by ${referenceCount} card type${referenceCount === 1 ? '' : 's'}. Deleting it will remove the tag from those card types.`
               : undefined,
           },
         })

@@ -92,7 +92,7 @@ export class Attributes implements OnInit {
           data: {
             name,
             consequence: referenceCount > 0
-              ? `This attribute is referenced by ${referenceCount} card type${referenceCount === 1 ? '' : 's'}. Deleting it may leave those card types without a matching attribute.`
+              ? `This attribute is referenced by ${referenceCount} card type${referenceCount === 1 ? '' : 's'}. Deleting it will remove the attribute value from those card types.`
               : undefined,
           },
         })

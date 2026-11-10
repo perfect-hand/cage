@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Cage.Backend.Editor.CardType;
 using Cage.Backend.Editor.Tag;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -181,7 +182,28 @@ public class TagEndpointTests : EndpointTest, IClassFixture<WebApplicationFactor
   }
 
   [Fact]
-  public async Task TagRenameUpdatesCardTypeReferencesAndPreservesChildVersion()
+  public async Task TagRenameUpdatesCardTypeReferences()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var tagId = await testDao.AddTag(parentVersionId, "Resource");
+    await testDao.AddCardType(parentVersionId, "Monster", tags: ["Resource"]);
+    // WHEN
+    var updateResponse = await httpClient.PutAsJsonAsync(
+        $"{TagsPath(organizationId, titleId, parentVersionId)}/{tagId}",
+        new TagDto { Name = "Creature" });
+    var parentCardTypesResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{parentVersionId}/card-types");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
+    var parentCardTypes = await parentCardTypesResponse.Content.ReadFromJsonAsync<List<CardTypeDto>>();
+    Assert.Contains("Creature", Assert.Single(Assert.IsType<List<CardTypeDto>>(parentCardTypes)).Tags);
+  }
+
+  [Fact]
+  public async Task ChildVersionKeepsParentCardTypeTagWhenParentTagIsRenamed()
   {
     // GIVEN
     var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
@@ -194,17 +216,32 @@ public class TagEndpointTests : EndpointTest, IClassFixture<WebApplicationFactor
     var updateResponse = await httpClient.PutAsJsonAsync(
         $"{TagsPath(organizationId, titleId, parentVersionId)}/{tagId}",
         new TagDto { Name = "Creature" });
-    var parentCardTypesResponse = await httpClient.GetAsync(
-        $"/organizations/{organizationId}/titles/{titleId}/versions/{parentVersionId}/card-types");
     var childCardTypesResponse = await httpClient.GetAsync(
         $"/organizations/{organizationId}/titles/{titleId}/versions/{childVersionId}/card-types");
 
     // THEN
     Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
-    var parentCardTypes = await parentCardTypesResponse.Content.ReadFromJsonAsync<List<CardTypeDto>>();
-    Assert.Contains("Creature", Assert.Single(Assert.IsType<List<CardTypeDto>>(parentCardTypes)).Tags);
     var childCardTypes = await childCardTypesResponse.Content.ReadFromJsonAsync<List<CardTypeDto>>();
     Assert.Contains("Resource", Assert.Single(Assert.IsType<List<CardTypeDto>>(childCardTypes)).Tags);
+  }
+
+  [Fact]
+  public async Task DeletingTagRemovesReferencesFromCardTypes()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var tagId = await testDao.AddTag(versionId, "Resource");
+    var cardTypeId = await testDao.AddCardType(versionId, "Monster", tags: ["Resource"]);
+
+    // WHEN
+    var response = await httpClient.DeleteAsync($"{TagsPath(organizationId, titleId, versionId)}/{tagId}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    var stored = Assert.Single(testDao.QueryCardTypesByTitleVersion(versionId));
+    Assert.Empty(JsonSerializer.Deserialize<List<string>>(stored.TagsJson)!);
+    Assert.Equal(cardTypeId, stored.RowKey);
   }
 
   [Fact]
@@ -345,6 +382,27 @@ public class TagEndpointTests : EndpointTest, IClassFixture<WebApplicationFactor
     // THEN
     Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     Assert.Single(testDao.QueryTagsByTitleVersion(foreignVersionId));
+  }
+
+  [Fact]
+  public async Task ChildVersionKeepsParentCardTypeTagWhenParentTagIsDeleted()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var tagId = await testDao.AddTag(parentVersionId, "Resource");
+    await testDao.AddCardType(parentVersionId, "Monster", tags: ["Resource"]);
+    var childVersionId = await testDao.AddVersion(titleId, "2.0", parentVersionId);
+
+    // WHEN
+    var response = await httpClient.DeleteAsync($"{TagsPath(organizationId, titleId, parentVersionId)}/{tagId}");
+    var childResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{childVersionId}/card-types");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    var childCardTypes = await childResponse.Content.ReadFromJsonAsync<List<CardTypeDto>>();
+    Assert.Contains("Resource", Assert.Single(Assert.IsType<List<CardTypeDto>>(childCardTypes)).Tags);
   }
 
   [Fact]
