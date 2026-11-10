@@ -1,3 +1,4 @@
+using Cage.Backend.Editor.CardType;
 using Cage.Backend.Editor.Title;
 
 namespace Cage.Backend.Editor.Attribute;
@@ -8,11 +9,13 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
   public const int MaximumAttributeNameLength = 50;
 
   private readonly AttributeMapper mapper = new();
+  private readonly CardTypeService cardTypeService;
   private readonly ILogger<AttributeService> logger;
 
-  public AttributeService(ILogger<AttributeService> logger) : base(new AttributeDao())
+  public AttributeService(ILogger<AttributeService> logger, CardTypeService cardTypeService) : base(new AttributeDao())
   {
     this.logger = logger;
+    this.cardTypeService = cardTypeService;
   }
 
   public async Task<AttributeDto> Create(string organizationId, string titleId, string versionId, AttributeDto dto, string? user)
@@ -21,7 +24,7 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
     EnsureWritable(version);
     ValidateDto(dto);
 
-    if ((await ReadAllVersions(titleId, versionId)).Count >= MaximumAttributesPerTitle)
+    if ((await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId)).Count >= MaximumAttributesPerTitle)
     {
       throw new ArgumentException($"Titles cannot have more than {MaximumAttributesPerTitle} attributes.", nameof(dto));
     }
@@ -36,7 +39,15 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
   public async Task<List<AttributeDto>> ReadAll(string organizationId, string titleId, string versionId, string? user)
   {
     await EnsureAccess(organizationId, titleId, versionId, user);
-    return (await ReadAllVersions(titleId, versionId)).Select(mapper.ToDto).ToList();
+    var referenceCounts = await cardTypeService.CountAttributeReferences(titleId, versionId);
+    return (await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId))
+        .Select(attribute =>
+        {
+          var dto = mapper.ToDto(attribute);
+          dto.ReferenceCount = referenceCounts.GetValueOrDefault(attribute.Name);
+          return dto;
+        })
+        .ToList();
   }
 
   public async Task<bool> Update(string organizationId, string titleId, string versionId, string attributeId, AttributeDto dto, string? user)
@@ -45,13 +56,14 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
     EnsureWritable(version);
     ValidateDto(dto);
 
-    var attributes = await ReadAllVersions(titleId, versionId);
+    var attributes = await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId);
     var existing = attributes.SingleOrDefault(attribute => attribute.RowKey == attributeId);
     if (existing is null)
     {
       return false;
     }
 
+    await cardTypeService.RenameAttributeReferences(titleId, versionId, existing.Name, dto.Name);
     await PreserveForChildren(titleId, versionId, existing);
     existing.PartitionKey = versionId;
     existing.Name = dto.Name;
@@ -67,13 +79,14 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
     var version = await EnsureAccess(organizationId, titleId, versionId, user);
     EnsureWritable(version);
 
-    var attributes = await ReadAllVersions(titleId, versionId);
+    var attributes = await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId);
     var existing = attributes.SingleOrDefault(attribute => attribute.RowKey == attributeId);
     if (existing is null)
     {
       return false;
     }
 
+    await cardTypeService.DeleteAttributeReferences(titleId, versionId, existing.Name);
     await PreserveForChildren(titleId, versionId, existing);
     if (version.ParentVersionId is null)
     {

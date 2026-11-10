@@ -8,6 +8,7 @@ public class AttributeDto
 {
   public string? Id { get; set; }
   public required string Name { get; set; }
+  public int ReferenceCount { get; set; }
 
   [JsonConverter(typeof(JsonStringEnumConverter))]
   public CageType Type { get; set; }

@@ -217,6 +217,25 @@ public class CardTypeEndpointTests : EndpointTest, IClassFixture<WebApplicationF
   }
 
   [Fact]
+  public async Task FailsToUpdateCardTypeWithCyclicParentReference()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var parentId = await testDao.AddCardType(versionId, "Parent");
+    var childId = await testDao.AddCardType(versionId, "Child", parentId);
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"{CardTypesPath(organizationId, titleId, versionId)}/{parentId}",
+        new CardTypeDto { Name = "Parent", ParentId = childId });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Null(testDao.QueryCardTypesByTitleVersion(versionId).Single(cardType => cardType.RowKey == parentId).ParentId);
+  }
+
+  [Fact]
   public async Task FailsToUpdateCardTypeWithoutAuthentication()
   {
     // GIVEN
@@ -267,6 +286,28 @@ public class CardTypeEndpointTests : EndpointTest, IClassFixture<WebApplicationF
     // THEN
     Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     Assert.Empty(testDao.QueryCardTypesByTitleVersion(versionId));
+  }
+
+  [Fact]
+  public async Task ChildVersionKeepsParentCardTypeWhenParentCardTypeIsDeleted()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var cardTypeId = await testDao.AddCardType(parentVersionId, "Monster");
+    var childVersionId = await testDao.AddVersion(titleId, "2.0", parentVersionId);
+
+    // WHEN
+    var deleteResponse = await httpClient.DeleteAsync(
+        $"{CardTypesPath(organizationId, titleId, parentVersionId)}/{cardTypeId}");
+    var childResponse = await httpClient.GetAsync(CardTypesPath(organizationId, titleId, childVersionId));
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+    var childCardTypes = await childResponse.Content.ReadFromJsonAsync<List<CardTypeDto>>();
+    var childCardType = Assert.Single(Assert.IsType<List<CardTypeDto>>(childCardTypes));
+    Assert.Equal(cardTypeId, childCardType.Id);
+    Assert.Equal("Monster", childCardType.Name);
   }
 
   [Fact]

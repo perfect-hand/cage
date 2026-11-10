@@ -80,7 +80,7 @@ export class Attributes implements OnInit {
     }
   }
 
-  async deleteAttribute(attributeId: string, name: string): Promise<void> {
+  async deleteAttribute(attributeId: string, name: string, referenceCount: number): Promise<void> {
     if (this.isDeleting() || this.isReadOnly()) {
       return;
     }
@@ -91,6 +91,9 @@ export class Attributes implements OnInit {
         .open(ConfirmDeleteDialog, {
           data: {
             name,
+            consequence: referenceCount > 0
+              ? `This attribute is referenced by ${referenceCount} card type${referenceCount === 1 ? '' : 's'}. Deleting it will remove the attribute value from those card types.`
+              : undefined,
           },
         })
         .afterClosed(),

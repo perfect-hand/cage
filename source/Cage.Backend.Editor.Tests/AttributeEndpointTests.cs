@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Cage.Backend.Editor.Attribute;
+using Cage.Backend.Editor.CardType;
 using Cage.Simulation.Types;
 using Microsoft.AspNetCore.Mvc.Testing;
 
@@ -171,6 +173,135 @@ public class AttributeEndpointTests : EndpointTest, IClassFixture<WebApplication
     var updated = Assert.Single(testDao.QueryAttributesByTitleVersion(titleVersionId));
     Assert.Equal("New", updated.Name);
     Assert.Equal(CageType.String, updated.Type);
+  }
+
+  [Fact]
+  public async Task AttributeRenameUpdatesCardTypeReferences()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var attributeId = await testDao.AddAttribute(parentVersionId, "Health", CageType.Int);
+    await testDao.AddCardType(
+        parentVersionId,
+        "Monster",
+        attributes: new Dictionary<string, TypedValue> { ["Health"] = new(1) });
+    // WHEN
+    var updateResponse = await httpClient.PutAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{parentVersionId}/attributes/{attributeId}",
+        new AttributeDto { Name = "HitPoints", Type = CageType.Int });
+    var parentCardTypesResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{parentVersionId}/card-types");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
+    var parentCardTypes = await parentCardTypesResponse.Content.ReadFromJsonAsync<List<CardTypeDto>>();
+    Assert.Contains("HitPoints", Assert.Single(Assert.IsType<List<CardTypeDto>>(parentCardTypes)).Attributes.Keys);
+  }
+
+  [Fact]
+  public async Task ChildVersionKeepsParentCardTypeAttributeWhenParentAttributeIsRenamed()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var attributeId = await testDao.AddAttribute(parentVersionId, "Health", CageType.Int);
+    await testDao.AddCardType(
+        parentVersionId,
+        "Monster",
+        attributes: new Dictionary<string, TypedValue> { ["Health"] = new(1) });
+    var childVersionId = await testDao.AddVersion(titleId, "2.0", parentVersionId);
+
+    // WHEN
+    var updateResponse = await httpClient.PutAsJsonAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{parentVersionId}/attributes/{attributeId}",
+        new AttributeDto { Name = "HitPoints", Type = CageType.Int });
+    var childCardTypesResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{childVersionId}/card-types");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, updateResponse.StatusCode);
+    var childCardTypes = await childCardTypesResponse.Content.ReadFromJsonAsync<List<CardTypeDto>>();
+    Assert.Contains("Health", Assert.Single(Assert.IsType<List<CardTypeDto>>(childCardTypes)).Attributes.Keys);
+  }
+
+  [Fact]
+  public async Task DeletingAttributeRemovesReferencesFromCardTypes()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var attributeId = await testDao.AddAttribute(versionId, "Health", CageType.Int);
+    var cardTypeId = await testDao.AddCardType(
+        versionId,
+        "Monster",
+        attributes: new Dictionary<string, TypedValue> { ["Health"] = new(1) });
+
+    // WHEN
+    var response = await httpClient.DeleteAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}/attributes/{attributeId}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    var stored = Assert.Single(testDao.QueryCardTypesByTitleVersion(versionId));
+    Assert.Empty(JsonSerializer.Deserialize<Dictionary<string, TypedValue>>(stored.AttributesJson)!);
+    Assert.Equal(cardTypeId, stored.RowKey);
+  }
+
+  [Fact]
+  public async Task ReportsAttributeCardTypeReferenceCount()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    await testDao.AddAttribute(versionId, "Health", CageType.Int);
+    for (var i = 0; i < 2; i++)
+    {
+      await testDao.AddCardType(
+          versionId,
+          $"Monster{i}",
+          attributes: new Dictionary<string, TypedValue> { ["Health"] = new(1) });
+    }
+
+    // WHEN
+    var response = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}/attributes");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    var attributes = await response.Content.ReadFromJsonAsync<List<AttributeDto>>();
+    Assert.Equal(2, Assert.Single(Assert.IsType<List<AttributeDto>>(attributes)).ReferenceCount);
+  }
+
+  [Fact]
+  public async Task ChildVersionKeepsParentDataWhenParentAttributeIsDeleted()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var attributeId = await testDao.AddAttribute(parentVersionId, "Health", CageType.Int);
+    await testDao.AddCardType(
+        parentVersionId,
+        "Monster",
+        attributes: new Dictionary<string, TypedValue> { ["Health"] = new(1) });
+    var childVersionId = await testDao.AddVersion(titleId, "2.0", parentVersionId);
+
+    // WHEN
+    var deleteResponse = await httpClient.DeleteAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{parentVersionId}/attributes/{attributeId}");
+    var childResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{childVersionId}/attributes");
+    var childCardTypesResponse = await httpClient.GetAsync(
+        $"/organizations/{organizationId}/titles/{titleId}/versions/{childVersionId}/card-types");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+    var childAttributes = await childResponse.Content.ReadFromJsonAsync<List<AttributeDto>>();
+    var childAttribute = Assert.Single(Assert.IsType<List<AttributeDto>>(childAttributes));
+    Assert.Equal(attributeId, childAttribute.Id);
+    Assert.Equal("Health", childAttribute.Name);
+    var childCardTypes = await childCardTypesResponse.Content.ReadFromJsonAsync<List<CardTypeDto>>();
+    Assert.Contains("Health", Assert.Single(Assert.IsType<List<CardTypeDto>>(childCardTypes)).Attributes.Keys);
   }
 
   [Fact]

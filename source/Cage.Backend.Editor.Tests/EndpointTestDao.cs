@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Azure.Data.Tables;
 using Cage.Backend.Editor.Attribute;
 using Cage.Backend.Editor.CardType;
@@ -118,14 +119,21 @@ public class EndpointTestDao
     return tag.RowKey;
   }
 
-  public async Task<string> AddCardType(string titleVersionId, string name, string? parentId = null)
+  public async Task<string> AddCardType(
+      string titleVersionId,
+      string name,
+      string? parentId = null,
+      Dictionary<string, TypedValue>? attributes = null,
+      List<string>? tags = null)
   {
     var cardType = new CardTypeEntity
     {
       PartitionKey = titleVersionId,
       RowKey = Guid.NewGuid().ToString(),
       Name = name,
-      ParentId = parentId
+      ParentId = parentId,
+      AttributesJson = JsonSerializer.Serialize(attributes ?? new Dictionary<string, TypedValue>()),
+      TagsJson = JsonSerializer.Serialize(tags ?? new List<string>())
     };
     await cardTypesTableClient.AddEntityAsync(cardType);
     return cardType.RowKey;

@@ -87,14 +87,23 @@ export class Tags implements OnInit {
     }
   }
 
-  async deleteTag(tagId: string, name: string): Promise<void> {
+  async deleteTag(tagId: string, name: string, referenceCount: number): Promise<void> {
     if (this.isDeleting() || this.isReadOnly()) {
       return;
     }
 
     const versionId = this.versionId();
     const confirmed = await firstValueFrom(
-      this.dialog.open(ConfirmDeleteDialog, { data: { name } }).afterClosed(),
+      this.dialog
+        .open(ConfirmDeleteDialog, {
+          data: {
+            name,
+            consequence: referenceCount > 0
+              ? `This tag is referenced by ${referenceCount} card type${referenceCount === 1 ? '' : 's'}. Deleting it will remove the tag from those card types.`
+              : undefined,
+          },
+        })
+        .afterClosed(),
     );
     if (!confirmed) {
       return;
