@@ -14,52 +14,6 @@ public abstract class VersionedTitleEntityService<TEntity> where TEntity : class
     this.entityDao = entityDao;
   }
 
-  protected async Task<List<TEntity>> ReadAllVersions(string titleId, string versionId)
-  {
-    var versions = new List<TitleVersionEntity>();
-    var visited = new HashSet<string>();
-    var currentId = versionId;
-    while (true)
-    {
-      if (!visited.Add(currentId))
-      {
-        throw new InvalidOperationException("The title version hierarchy is invalid.");
-      }
-
-      var version = await titleVersionDao.Get(titleId, currentId);
-      if (version is null)
-      {
-        throw new UnauthorizedAccessException();
-      }
-
-      versions.Add(version);
-      if (version.ParentVersionId is null)
-      {
-        break;
-      }
-
-      currentId = version.ParentVersionId;
-    }
-
-    var entitiesById = new Dictionary<string, TEntity>();
-    foreach (var version in versions.AsEnumerable().Reverse())
-    {
-      foreach (var entity in await entityDao.QueryByTitleVersion(version.RowKey))
-      {
-        if (entity.IsDeleted)
-        {
-          entitiesById.Remove(entity.RowKey);
-        }
-        else
-        {
-          entitiesById[entity.RowKey] = entity;
-        }
-      }
-    }
-
-    return entitiesById.Values.ToList();
-  }
-
   protected async Task PreserveForChildren(string titleId, string versionId, TEntity entity, bool isDeleted = false)
   {
     var children = (await titleVersionDao.QueryByTitle(titleId))
