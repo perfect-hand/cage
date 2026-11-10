@@ -1,5 +1,5 @@
-using Cage.Backend.Editor.Title;
 using Cage.Backend.Editor.CardType;
+using Cage.Backend.Editor.Title;
 
 namespace Cage.Backend.Editor.Attribute;
 

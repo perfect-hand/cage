@@ -1,5 +1,5 @@
-using Azure.Data.Tables;
 using System.Text.Json;
+using Azure.Data.Tables;
 using Cage.Backend.Editor.Attribute;
 using Cage.Backend.Editor.CardType;
 using Cage.Backend.Editor.Organization;

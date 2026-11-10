@@ -4,10 +4,11 @@ using Cage.Simulation.Types;
 
 namespace Cage.Backend.Editor.CardType;
 
-public class CardTypeReferenceService
+public class CardTypeReferenceService : VersionedTitleEntityService<CardTypeEntity>
 {
-  private readonly CardTypeDao cardTypeDao = new();
-  private readonly TitleVersionDao titleVersionDao = new();
+  public CardTypeReferenceService() : base(new CardTypeDao())
+  {
+  }
 
   public async Task<Dictionary<string, int>> CountAttributeReferences(string titleId, string versionId)
   {
@@ -65,7 +66,7 @@ public class CardTypeReferenceService
       attributes.Remove(oldName);
       cardType.PartitionKey = versionId;
       cardType.AttributesJson = JsonSerializer.Serialize(attributes);
-      await cardTypeDao.Update(versionId, cardType);
+      await entityDao.Update(versionId, cardType);
     }
   }
 
@@ -88,77 +89,21 @@ public class CardTypeReferenceService
       cardType.PartitionKey = versionId;
       cardType.TagsJson = JsonSerializer.Serialize(
           tags.Select(tag => tag == oldName ? newName : tag).Distinct(StringComparer.Ordinal));
-      await cardTypeDao.Update(versionId, cardType);
+      await entityDao.Update(versionId, cardType);
     }
   }
 
-  private async Task<List<CardTypeEntity>> ReadAllVersions(string titleId, string versionId)
+  protected override CardTypeEntity CreateEntityVersion(CardTypeEntity cardType, string versionId, bool isDeleted)
   {
-    var versions = new List<TitleVersionEntity>();
-    var visited = new HashSet<string>(StringComparer.Ordinal);
-    var currentId = versionId;
-    while (true)
+    return new CardTypeEntity
     {
-      if (!visited.Add(currentId))
-      {
-        throw new InvalidOperationException("The title version hierarchy is invalid.");
-      }
-
-      var version = await titleVersionDao.Get(titleId, currentId);
-      if (version is null)
-      {
-        throw new UnauthorizedAccessException();
-      }
-
-      versions.Add(version);
-      if (version.ParentVersionId is null)
-      {
-        break;
-      }
-
-      currentId = version.ParentVersionId;
-    }
-
-    var cardTypesById = new Dictionary<string, CardTypeEntity>(StringComparer.Ordinal);
-    foreach (var version in versions.AsEnumerable().Reverse())
-    {
-      foreach (var cardType in await cardTypeDao.QueryByTitleVersion(version.RowKey))
-      {
-        if (cardType.IsDeleted)
-        {
-          cardTypesById.Remove(cardType.RowKey);
-        }
-        else
-        {
-          cardTypesById[cardType.RowKey] = cardType;
-        }
-      }
-    }
-
-    return cardTypesById.Values.ToList();
-  }
-
-  private async Task PreserveForChildren(string titleId, string versionId, CardTypeEntity cardType)
-  {
-    var children = (await titleVersionDao.QueryByTitle(titleId))
-        .Where(version => version.ParentVersionId == versionId);
-    foreach (var child in children)
-    {
-      if (await cardTypeDao.Get(child.RowKey, cardType.RowKey) is not null)
-      {
-        continue;
-      }
-
-      await cardTypeDao.Update(child.RowKey, new CardTypeEntity
-      {
-        PartitionKey = child.RowKey,
-        RowKey = cardType.RowKey,
-        Name = cardType.Name,
-        ParentId = cardType.ParentId,
-        AttributesJson = cardType.AttributesJson,
-        TagsJson = cardType.TagsJson,
-        IsDeleted = cardType.IsDeleted
-      });
-    }
+      PartitionKey = versionId,
+      RowKey = cardType.RowKey,
+      Name = cardType.Name,
+      ParentId = cardType.ParentId,
+      AttributesJson = cardType.AttributesJson,
+      TagsJson = cardType.TagsJson,
+      IsDeleted = isDeleted
+    };
   }
 }
