@@ -6,6 +6,7 @@ public class TagDto
 {
   public string? Id { get; set; }
   public required string Name { get; set; }
+  public int ReferenceCount { get; set; }
 
   public override string ToString()
   {

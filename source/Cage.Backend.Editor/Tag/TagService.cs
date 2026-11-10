@@ -1,4 +1,5 @@
 using Cage.Backend.Editor.Title;
+using Cage.Backend.Editor.CardType;
 
 namespace Cage.Backend.Editor.Tag;
 
@@ -8,6 +9,7 @@ public class TagService : VersionedTitleEntityService<TagEntity>
   public const int MaximumTagNameLength = 50;
 
   private readonly TagMapper mapper = new();
+  private readonly CardTypeReferenceService cardTypeReferenceService = new();
   private readonly ILogger<TagService> logger;
 
   public TagService(ILogger<TagService> logger) : base(new TagDao())
@@ -36,7 +38,15 @@ public class TagService : VersionedTitleEntityService<TagEntity>
   public async Task<List<TagDto>> ReadAll(string organizationId, string titleId, string versionId, string? user)
   {
     await EnsureAccess(organizationId, titleId, versionId, user);
-    return (await ReadAllVersions(titleId, versionId)).Select(mapper.ToDto).ToList();
+    var referenceCounts = await cardTypeReferenceService.CountTagReferences(titleId, versionId);
+    return (await ReadAllVersions(titleId, versionId))
+        .Select(tag =>
+        {
+          var dto = mapper.ToDto(tag);
+          dto.ReferenceCount = referenceCounts.GetValueOrDefault(tag.Name);
+          return dto;
+        })
+        .ToList();
   }
 
   public async Task<bool> Update(string organizationId, string titleId, string versionId, string tagId, TagDto dto, string? user)
@@ -52,6 +62,7 @@ public class TagService : VersionedTitleEntityService<TagEntity>
       return false;
     }
 
+    await cardTypeReferenceService.RenameTagReferences(titleId, versionId, existing.Name, dto.Name);
     await PreserveForChildren(titleId, versionId, existing);
     existing.PartitionKey = versionId;
     existing.Name = dto.Name;

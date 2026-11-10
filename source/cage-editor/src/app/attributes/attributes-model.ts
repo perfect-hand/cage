@@ -4,6 +4,7 @@ export interface AttributeDto {
   id: string;
   name: string;
   type: AttributeType;
+  referenceCount?: number;
 }
 
 export interface AttributeRequestDto {

@@ -59,7 +59,7 @@
                     <button
                       mat-icon-button
                       type="button"
-                      (click)="deleteTag(tag.id, tag.name)"
+                      (click)="deleteTag(tag.id, tag.name, tag.referenceCount ?? 0)"
                       [disabled]="isDeleting()"
                       [attr.aria-label]="'Delete tag ' + tag.name"
                     >

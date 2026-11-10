@@ -51,7 +51,7 @@
                   <button
                     mat-icon-button
                     type="button"
-                    (click)="deleteAttribute(attribute.id, attribute.name)"
+                    (click)="deleteAttribute(attribute.id, attribute.name, attribute.referenceCount ?? 0)"
                     [disabled]="isDeleting()"
                     [attr.aria-label]="'Delete attribute ' + attribute.name"
                   >

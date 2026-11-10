@@ -1,4 +1,5 @@
 using Cage.Backend.Editor.Title;
+using Cage.Backend.Editor.CardType;
 
 namespace Cage.Backend.Editor.Attribute;
 
@@ -8,6 +9,7 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
   public const int MaximumAttributeNameLength = 50;
 
   private readonly AttributeMapper mapper = new();
+  private readonly CardTypeReferenceService cardTypeReferenceService = new();
   private readonly ILogger<AttributeService> logger;
 
   public AttributeService(ILogger<AttributeService> logger) : base(new AttributeDao())
@@ -36,7 +38,15 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
   public async Task<List<AttributeDto>> ReadAll(string organizationId, string titleId, string versionId, string? user)
   {
     await EnsureAccess(organizationId, titleId, versionId, user);
-    return (await ReadAllVersions(titleId, versionId)).Select(mapper.ToDto).ToList();
+    var referenceCounts = await cardTypeReferenceService.CountAttributeReferences(titleId, versionId);
+    return (await ReadAllVersions(titleId, versionId))
+        .Select(attribute =>
+        {
+          var dto = mapper.ToDto(attribute);
+          dto.ReferenceCount = referenceCounts.GetValueOrDefault(attribute.Name);
+          return dto;
+        })
+        .ToList();
   }
 
   public async Task<bool> Update(string organizationId, string titleId, string versionId, string attributeId, AttributeDto dto, string? user)
@@ -52,6 +62,7 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
       return false;
     }
 
+    await cardTypeReferenceService.RenameAttributeReferences(titleId, versionId, existing.Name, dto.Name);
     await PreserveForChildren(titleId, versionId, existing);
     existing.PartitionKey = versionId;
     existing.Name = dto.Name;
