@@ -4,38 +4,40 @@
 
     <div class="navigation">
       @if (organizationId(); as organizationId) {
-        <nav class="breadcrumb" aria-label="Breadcrumb">
-          <ol>
-            <li>
-              <a [routerLink]="['/organizations', organizationId, 'titles']">{{
-                organizationName()
-              }}</a>
-            </li>
-            @if (activeTitleId(); as titleId) {
+        @if (organizationId !== 'new') {
+          <nav class="breadcrumb" aria-label="Breadcrumb">
+            <ol>
               <li>
-                <a
-                  [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions']"
-                  >{{ titleName() }}</a
-                >
+                <a [routerLink]="['/organizations', organizationId, 'titles']">{{
+                  organizationName()
+                }}</a>
               </li>
-              @if (activeVersionName(); as versionName) {
+              @if (activeTitleId(); as titleId) {
                 <li>
                   <a
-                    [routerLink]="[
-                      '/organizations',
-                      organizationId,
-                      'titles',
-                      titleId,
-                      'versions',
-                      activeVersionId(),
-                    ]"
-                    >{{ versionName }}</a
+                    [routerLink]="['/organizations', organizationId, 'titles', titleId, 'versions']"
+                    >{{ titleName() }}</a
                   >
                 </li>
+                @if (activeVersionName(); as versionName) {
+                  <li>
+                    <a
+                      [routerLink]="[
+                        '/organizations',
+                        organizationId,
+                        'titles',
+                        titleId,
+                        'versions',
+                        activeVersionId(),
+                      ]"
+                      >{{ versionName }}</a
+                    >
+                  </li>
+                }
               }
-            }
-          </ol>
-        </nav>
+            </ol>
+          </nav>
+        }
       }
 
       <nav class="feature-buttons" aria-label="Title features">
