@@ -7,6 +7,7 @@ import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AttributeDto, AttributeRequestDto, AttributeType } from './attributes-model';
 import { AttributesService, attributeTypes } from './attributes-service';
+import { CardTypesService } from '../card-types/card-types-service';
 
 @Component({
   selector: 'edit-attribute',
@@ -19,6 +20,7 @@ export class EditAttribute implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly attributesService = inject(AttributesService);
+  private readonly cardTypesService = inject(CardTypesService);
 
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
@@ -79,6 +81,7 @@ export class EditAttribute implements OnInit {
           attribute,
         ),
       );
+      this.cardTypesService.invalidateCardTypes(this.titleId(), versionId);
       const attributes = this.attributesService
         .getAttributes(this.titleId(), versionId)
         .map((attribute) =>

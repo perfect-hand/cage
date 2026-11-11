@@ -1,0 +1,39 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>Usages@if (name()) { of {{ name() }} }</h2>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-state" aria-live="polite">
+        <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+        <span>Loading usages...</span>
+      </div>
+    } @else if (error()) {
+      <p class="field-error" role="alert">Failed to load usages.</p>
+    } @else if (notFound()) {
+      <p class="field-error" role="alert">{{ attributeId() ? 'Attribute' : 'Tag' }} not found.</p>
+    } @else {
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Type</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (cardType of cardTypes(); track cardType.id) {
+            <tr>
+              <td>
+                <a [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId(), 'card-types', cardType.id, 'edit']">{{ cardType.name }}</a>
+              </td>
+              <td>Card Type</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="2">No usages found.</td></tr>
+          }
+        </tbody>
+      </table>
+    }
+  </section>
+</main>

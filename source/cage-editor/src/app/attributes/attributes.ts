@@ -10,6 +10,7 @@ import { AttributeDto } from './attributes-model';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
 import { TitleVersionsService } from '../titles/title-versions-service';
 import { AttributesService } from './attributes-service';
+import { CardTypesService } from '../card-types/card-types-service';
 
 export const maximumAttributes = 100;
 
@@ -24,6 +25,7 @@ export class Attributes implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly dialog = inject(MatDialog);
   private readonly attributesService = inject(AttributesService);
+  private readonly cardTypesService = inject(CardTypesService);
   private readonly versionsService = inject(TitleVersionsService);
 
   readonly organizationId = input.required<string>();
@@ -111,6 +113,7 @@ export class Attributes implements OnInit {
           `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/attributes/${attributeId}`,
         ),
       );
+      this.cardTypesService.invalidateCardTypes(this.titleId(), versionId);
       const attributes = this.attributes().filter((attribute) => attribute.id !== attributeId);
       this.attributes.set(attributes);
       this.attributesService.setAttributes(this.titleId(), versionId, attributes);

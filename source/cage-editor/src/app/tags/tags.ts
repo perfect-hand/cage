@@ -18,6 +18,7 @@ import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
 import { TitleVersionsService } from '../titles/title-versions-service';
 import { TagDto } from './tags-model';
 import { TagsService } from './tags-service';
+import { CardTypesService } from '../card-types/card-types-service';
 
 export const maximumTags = 100;
 
@@ -32,6 +33,7 @@ export class Tags implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly dialog = inject(MatDialog);
   private readonly tagsService = inject(TagsService);
+  private readonly cardTypesService = inject(CardTypesService);
   private readonly versionsService = inject(TitleVersionsService);
 
   readonly organizationId = input.required<string>();
@@ -116,6 +118,7 @@ export class Tags implements OnInit {
           `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/tags/${tagId}`,
         ),
       );
+      this.cardTypesService.invalidateCardTypes(this.titleId(), versionId);
       const tags = this.tags().filter((tag) => tag.id !== tagId);
       this.tags.set(tags);
       this.tagsService.setTags(this.titleId(), versionId, tags);
