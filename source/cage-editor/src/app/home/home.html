@@ -40,82 +40,102 @@
         }
       }
 
-      <nav class="feature-buttons" aria-label="Title features">
-        @if (organizationId(); as organizationId) {
-          @if (activeTitleId(); as titleId) {
-            @if (activeVersionId(); as versionId) {
-              <a
-                mat-button
-                [routerLink]="[
-                  '/organizations',
-                  organizationId,
-                  'titles',
-                  titleId,
-                  'versions',
-                  versionId,
-                ]"
-                routerLinkActive="feature-button-active"
-                [routerLinkActiveOptions]="{ exact: true }"
-                ariaCurrentWhenActive="page"
-              >
-                <mat-icon aria-hidden="true">info</mat-icon>
-                Overview
-              </a>
-              <a
-                mat-button
-                [routerLink]="[
-                  '/organizations',
-                  organizationId,
-                  'titles',
-                  titleId,
-                  'versions',
-                  versionId,
-                  'attributes',
-                ]"
-                routerLinkActive="feature-button-active"
-                ariaCurrentWhenActive="page"
-              >
-                <mat-icon aria-hidden="true">data_table</mat-icon>
-                Attributes
-              </a>
-              <a
-                mat-button
-                [routerLink]="[
-                  '/organizations',
-                  organizationId,
-                  'titles',
-                  titleId,
-                  'versions',
-                  versionId,
-                  'tags',
-                ]"
-                routerLinkActive="feature-button-active"
-                ariaCurrentWhenActive="page"
-              >
-                <mat-icon aria-hidden="true">sell</mat-icon>
-                Tags
-              </a>
-              <a
-                mat-button
-                [routerLink]="[
-                  '/organizations',
-                  organizationId,
-                  'titles',
-                  titleId,
-                  'versions',
-                  versionId,
-                  'card-types',
-                ]"
-                routerLinkActive="feature-button-active"
-                ariaCurrentWhenActive="page"
-              >
-                <mat-icon aria-hidden="true">style</mat-icon>
-                Card Types
-              </a>
+      <div class="feature-navigation" [class.feature-menu-open]="featureMenuOpen()">
+        @if (activeVersionId()) {
+          <button
+            class="feature-menu-toggle"
+            mat-icon-button
+            type="button"
+            aria-label="Toggle title features"
+            aria-controls="title-feature-buttons"
+            [attr.aria-expanded]="featureMenuOpen()"
+            (click)="toggleFeatureMenu()"
+          >
+            <mat-icon aria-hidden="true">menu</mat-icon>
+          </button>
+        }
+        <nav
+          class="feature-buttons"
+          id="title-feature-buttons"
+          aria-label="Title features"
+          (click)="closeFeatureMenu()"
+        >
+          @if (organizationId(); as organizationId) {
+            @if (activeTitleId(); as titleId) {
+              @if (activeVersionId(); as versionId) {
+                <a
+                  mat-button
+                  [routerLink]="[
+                    '/organizations',
+                    organizationId,
+                    'titles',
+                    titleId,
+                    'versions',
+                    versionId,
+                  ]"
+                  routerLinkActive="feature-button-active"
+                  [routerLinkActiveOptions]="{ exact: true }"
+                  ariaCurrentWhenActive="page"
+                >
+                  <mat-icon aria-hidden="true">info</mat-icon>
+                  Overview
+                </a>
+                <a
+                  mat-button
+                  [routerLink]="[
+                    '/organizations',
+                    organizationId,
+                    'titles',
+                    titleId,
+                    'versions',
+                    versionId,
+                    'attributes',
+                  ]"
+                  routerLinkActive="feature-button-active"
+                  ariaCurrentWhenActive="page"
+                >
+                  <mat-icon aria-hidden="true">data_table</mat-icon>
+                  Attributes
+                </a>
+                <a
+                  mat-button
+                  [routerLink]="[
+                    '/organizations',
+                    organizationId,
+                    'titles',
+                    titleId,
+                    'versions',
+                    versionId,
+                    'tags',
+                  ]"
+                  routerLinkActive="feature-button-active"
+                  ariaCurrentWhenActive="page"
+                >
+                  <mat-icon aria-hidden="true">sell</mat-icon>
+                  Tags
+                </a>
+                <a
+                  mat-button
+                  [routerLink]="[
+                    '/organizations',
+                    organizationId,
+                    'titles',
+                    titleId,
+                    'versions',
+                    versionId,
+                    'card-types',
+                  ]"
+                  routerLinkActive="feature-button-active"
+                  ariaCurrentWhenActive="page"
+                >
+                  <mat-icon aria-hidden="true">style</mat-icon>
+                  Card Types
+                </a>
+              }
             }
           }
-        }
-      </nav>
+        </nav>
+      </div>
     </div>
 
     <div class="user-menu">
@@ -124,7 +144,13 @@
         <span>{{ userName() }}</span>
       </div>
 
-      <button class="sign-out-link" mat-button type="button" (click)="signOut()">
+      <button
+        class="sign-out-link"
+        mat-button
+        type="button"
+        aria-label="Sign Out"
+        (click)="signOut()"
+      >
         <mat-icon aria-hidden="true">logout</mat-icon>
         <span>Sign Out</span>
       </button>

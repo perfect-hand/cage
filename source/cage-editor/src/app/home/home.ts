@@ -32,6 +32,7 @@ export class Home {
   private readonly url = signal(this.router.url);
   private readonly requested = new Set<string>();
 
+  readonly featureMenuOpen = signal(false);
   readonly isSignedIn = this.authService.isSignedIn;
   readonly userName = this.authService.userName;
   readonly organizationId = computed(
@@ -119,6 +120,14 @@ export class Home {
 
   signOut(): Promise<void> {
     return this.authService.signOut();
+  }
+
+  toggleFeatureMenu(): void {
+    this.featureMenuOpen.update((open) => !open);
+  }
+
+  closeFeatureMenu(): void {
+    this.featureMenuOpen.set(false);
   }
 
   private async loadOrganizations(): Promise<void> {
