@@ -48,15 +48,19 @@
                 <input
                   type="checkbox"
                   [checked]="isAttributeSelected(attribute.name)"
+                  [disabled]="isAttributeInherited(attribute.name)"
                   (change)="toggleAttribute(attribute, $event)"
                 />
                 {{ attribute.name }} ({{ attribute.type }})
+                @if (isAttributeInherited(attribute.name)) {
+                  <span>Inherited</span>
+                }
               </label>
               @if (isAttributeSelected(attribute.name)) {
                 <input
                   class="text-input"
                   [type]="attribute.type === 'Int' ? 'number' : 'text'"
-                  [value]="model().attributeValues[attribute.name]"
+                  [value]="attributeValue(attribute.name)"
                   (input)="setAttributeValue(attribute.name, $event)"
                   [attr.aria-label]="attribute.name + ' value'"
                 />
@@ -73,10 +77,14 @@
             <label class="card-type-form-entry">
               <input
                 type="checkbox"
-                [checked]="model().tagIds.includes(tag.id)"
+                [checked]="isTagSelected(tag)"
+                [disabled]="isTagInherited(tag.name)"
                 (change)="toggleTag(tag, $event)"
               />
               {{ tag.name }}
+              @if (isTagInherited(tag.name)) {
+                <span>Inherited</span>
+              }
             </label>
           } @empty {
             <p>No tags are defined for this title version.</p>
