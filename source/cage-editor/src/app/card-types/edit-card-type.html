@@ -44,6 +44,16 @@
           <legend>Attributes</legend>
           @for (attribute of editableAttributes(); track attribute.id) {
             <div class="card-type-form-entry">
+              @if (isAttributeInherited(attribute.name)) {
+                <mat-icon
+                  matTooltip="Inherited from parent card type"
+                  aria-label="Inherited from parent card type"
+                  tabindex="0"
+                  >arrow_upward</mat-icon
+                >
+              } @else {
+                <span class="inheritance-indicator-placeholder" aria-hidden="true"></span>
+              }
               <label>
                 <input
                   type="checkbox"
@@ -52,9 +62,6 @@
                   (change)="toggleAttribute(attribute, $event)"
                 />
                 {{ attribute.name }} ({{ attribute.type }})
-                @if (isAttributeInherited(attribute.name)) {
-                  <span>Inherited</span>
-                }
               </label>
               @if (isAttributeSelected(attribute.name)) {
                 <input
@@ -74,18 +81,27 @@
         <fieldset>
           <legend>Tags</legend>
           @for (tag of tags(); track tag.id) {
-            <label class="card-type-form-entry">
-              <input
-                type="checkbox"
-                [checked]="isTagSelected(tag)"
-                [disabled]="isTagInherited(tag.name)"
-                (change)="toggleTag(tag, $event)"
-              />
-              {{ tag.name }}
+            <div class="card-type-form-entry">
               @if (isTagInherited(tag.name)) {
-                <span>Inherited</span>
+                <mat-icon
+                  matTooltip="Inherited from parent card type"
+                  aria-label="Inherited from parent card type"
+                  tabindex="0"
+                  >arrow_upward</mat-icon
+                >
+              } @else {
+                <span class="inheritance-indicator-placeholder" aria-hidden="true"></span>
               }
-            </label>
+              <label>
+                <input
+                  type="checkbox"
+                  [checked]="isTagSelected(tag)"
+                  [disabled]="isTagInherited(tag.name)"
+                  (change)="toggleTag(tag, $event)"
+                />
+                {{ tag.name }}
+              </label>
+            </div>
           } @empty {
             <p>No tags are defined for this title version.</p>
           }

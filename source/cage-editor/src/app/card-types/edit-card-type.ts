@@ -10,7 +10,9 @@ import {
 } from '@angular/core';
 import { form, FormField, maxLength, pattern, required } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AttributeDto } from '../attributes/attributes-model';
@@ -36,7 +38,14 @@ interface CardTypeFormModel {
 
 @Component({
   selector: 'edit-card-type',
-  imports: [FormField, MatButtonModule, MatProgressSpinnerModule, RouterLink],
+  imports: [
+    FormField,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+    RouterLink,
+  ],
   templateUrl: './edit-card-type.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './card-type-form.scss',

@@ -17,9 +17,15 @@ fieldset {
 }
 
 .card-type-form-entry {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.5rem auto minmax(0, 1fr);
   align-items: center;
   gap: var(--app-space-sm);
+}
+
+.inheritance-indicator-placeholder {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 textarea {
