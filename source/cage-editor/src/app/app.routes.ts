@@ -20,6 +20,7 @@ import { TitleVersions } from './titles/title-versions';
 import { TitleVersionOverview } from './titles/title-version-overview';
 import { Organizations } from './organizations/organizations';
 import { PrivacyPolicy } from './privacy-policy/privacy-policy';
+import { Usages } from './usages/usages';
 
 export const routes: Routes = [
   { path: 'privacy-policy', component: PrivacyPolicy },
@@ -59,6 +60,10 @@ export const routes: Routes = [
         component: EditAttribute,
       },
       {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/attributes/:attributeId/usages',
+        component: Usages,
+      },
+      {
         path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/tags',
         component: Tags,
       },
@@ -69,6 +74,10 @@ export const routes: Routes = [
       {
         path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/tags/:tagId/edit',
         component: EditTag,
+      },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/tags/:tagId/usages',
+        component: Usages,
       },
       {
         path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/card-types',

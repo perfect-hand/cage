@@ -27,9 +27,7 @@
           <tr>
             <th scope="col">Name</th>
             <th scope="col">Type</th>
-            @if (!isReadOnly()) {
             <th scope="col">Actions</th>
-            }
           </tr>
         </thead>
         <tbody>
@@ -37,9 +35,16 @@
             <tr>
               <td>{{ attribute.name }}</td>
               <td>{{ attribute.type }}</td>
-              @if (!isReadOnly()) {
               <td>
                 <div class="attribute-actions">
+                  <a
+                    mat-icon-button
+                    [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId(), 'attributes', attribute.id, 'usages']"
+                    [attr.aria-label]="'Find usages of attribute ' + attribute.name"
+                  >
+                    <mat-icon aria-hidden="true">search</mat-icon>
+                  </a>
+                  @if (!isReadOnly()) {
                   <button
                     mat-icon-button
                     type="button"
@@ -57,14 +62,14 @@
                   >
                     <mat-icon aria-hidden="true">delete</mat-icon>
                   </button>
+                  }
                 </div>
               </td>
-              }
             </tr>
           } @empty {
             @if (searchTerm().trim()) {
             <tr>
-              <td [attr.colspan]="isReadOnly() ? 2 : 3">No attributes match your search.</td>
+              <td colspan="3">No attributes match your search.</td>
             </tr>
             }
           }

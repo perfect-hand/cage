@@ -61,6 +61,18 @@
     font: var(--mat-sys-headline-small);
 }
 
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+
+    th,
+    td {
+        padding: var(--app-space-sm) var(--app-space-md);
+        border-bottom: 1px solid var(--app-outline-subtle);
+    }
+}
+
 .loading-state {
     display: flex;
     align-items: center;

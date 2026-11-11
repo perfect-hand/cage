@@ -55,4 +55,12 @@ export class CardTypesService {
       [`${titleId}:${versionId}`]: [...cardTypes].sort((a, b) => a.name.localeCompare(b.name)),
     }));
   }
+
+  invalidateCardTypes(titleId: string, versionId: string): void {
+    this.cardTypesByVersion.update((cardTypesByVersion) => {
+      const updated = { ...cardTypesByVersion };
+      delete updated[`${titleId}:${versionId}`];
+      return updated;
+    });
+  }
 }

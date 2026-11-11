@@ -26,18 +26,23 @@
         <thead>
           <tr>
             <th scope="col">Name</th>
-            @if (!isReadOnly()) {
-              <th scope="col">Actions</th>
-            }
+            <th scope="col">Actions</th>
           </tr>
         </thead>
         <tbody>
           @for (tag of filteredTags(); track tag.id) {
             <tr>
               <td>{{ tag.name }}</td>
-              @if (!isReadOnly()) {
                 <td>
                   <div class="tag-actions">
+                    <a
+                      mat-icon-button
+                      [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId(), 'tags', tag.id, 'usages']"
+                      [attr.aria-label]="'Find usages of tag ' + tag.name"
+                    >
+                      <mat-icon aria-hidden="true">search</mat-icon>
+                    </a>
+                    @if (!isReadOnly()) {
                     <button
                       mat-icon-button
                       type="button"
@@ -65,14 +70,14 @@
                     >
                       <mat-icon aria-hidden="true">delete</mat-icon>
                     </button>
+                    }
                   </div>
                 </td>
-              }
             </tr>
           } @empty {
             @if (searchTerm().trim()) {
               <tr>
-                <td [attr.colspan]="isReadOnly() ? 1 : 2">No tags match your search.</td>
+                <td colspan="2">No tags match your search.</td>
               </tr>
             }
           }
