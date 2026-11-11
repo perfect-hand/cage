@@ -10,7 +10,9 @@ import {
 } from '@angular/core';
 import { form, FormField, maxLength, pattern, required } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AttributeDto } from '../attributes/attributes-model';
@@ -36,7 +38,14 @@ interface CardTypeFormModel {
 
 @Component({
   selector: 'edit-card-type',
-  imports: [FormField, MatButtonModule, MatProgressSpinnerModule, RouterLink],
+  imports: [
+    FormField,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
+    RouterLink,
+  ],
   templateUrl: './edit-card-type.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './card-type-form.scss',
@@ -59,6 +68,48 @@ export class EditCardType implements OnInit {
   );
   readonly tags = signal<TagDto[]>([]);
   readonly parentCardTypes = signal<CardTypeDto[]>([]);
+  readonly inheritedAttributeValues = computed(() => {
+    const inherited = new Map<string, TypedValueDto>();
+    const cardTypes = this.parentCardTypes();
+    const visited = new Set<string>();
+    let parentId = this.model().parentId;
+
+    while (parentId && !visited.has(parentId)) {
+      visited.add(parentId);
+      const parent = cardTypes.find((cardType) => cardType.id === parentId);
+      if (!parent) {
+        break;
+      }
+
+      for (const [name, value] of Object.entries(parent.attributes)) {
+        if (!inherited.has(name)) {
+          inherited.set(name, value);
+        }
+      }
+      parentId = parent.parentId ?? '';
+    }
+
+    return inherited;
+  });
+  readonly inheritedTagNames = computed(() => {
+    const inherited = new Set<string>();
+    const cardTypes = this.parentCardTypes();
+    const visited = new Set<string>();
+    let parentId = this.model().parentId;
+
+    while (parentId && !visited.has(parentId)) {
+      visited.add(parentId);
+      const parent = cardTypes.find((cardType) => cardType.id === parentId);
+      if (!parent) {
+        break;
+      }
+
+      parent.tags.forEach((tag) => inherited.add(tag));
+      parentId = parent.parentId ?? '';
+    }
+
+    return inherited;
+  });
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
   readonly isReadOnly = signal(false);
@@ -82,10 +133,38 @@ export class EditCardType implements OnInit {
   }
 
   isAttributeSelected(name: string): boolean {
-    return Object.prototype.hasOwnProperty.call(this.model().attributeValues, name);
+    return (
+      Object.prototype.hasOwnProperty.call(this.model().attributeValues, name) ||
+      this.inheritedAttributeValues().has(name)
+    );
+  }
+
+  isAttributeInherited(name: string): boolean {
+    return this.inheritedAttributeValues().has(name);
+  }
+
+  attributeValue(name: string): string {
+    if (Object.prototype.hasOwnProperty.call(this.model().attributeValues, name)) {
+      return this.model().attributeValues[name];
+    }
+
+    const inheritedValue = this.inheritedAttributeValues().get(name);
+    return inheritedValue ? formatAttributeValue(inheritedValue) : '';
+  }
+
+  isTagSelected(tag: TagDto): boolean {
+    return this.model().tagIds.includes(tag.id) || this.inheritedTagNames().has(tag.name);
+  }
+
+  isTagInherited(name: string): boolean {
+    return this.inheritedTagNames().has(name);
   }
 
   toggleTag(tag: TagDto, event: Event): void {
+    if (this.isTagInherited(tag.name)) {
+      return;
+    }
+
     const checked = (event.target as HTMLInputElement).checked;
     this.model.update((model) => ({
       ...model,
@@ -96,7 +175,7 @@ export class EditCardType implements OnInit {
   }
 
   toggleAttribute(attribute: AttributeDto, event: Event): void {
-    if (!isEditableAttributeType(attribute.type)) {
+    if (!isEditableAttributeType(attribute.type) || this.isAttributeInherited(attribute.name)) {
       return;
     }
 

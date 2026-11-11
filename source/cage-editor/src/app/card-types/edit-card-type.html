@@ -44,10 +44,21 @@
           <legend>Attributes</legend>
           @for (attribute of editableAttributes(); track attribute.id) {
             <div class="card-type-form-entry">
+              @if (isAttributeInherited(attribute.name)) {
+                <mat-icon
+                  matTooltip="Inherited from parent card type"
+                  aria-label="Inherited from parent card type"
+                  tabindex="0"
+                  >arrow_upward</mat-icon
+                >
+              } @else {
+                <span class="inheritance-indicator-placeholder" aria-hidden="true"></span>
+              }
               <label>
                 <input
                   type="checkbox"
                   [checked]="isAttributeSelected(attribute.name)"
+                  [disabled]="isAttributeInherited(attribute.name)"
                   (change)="toggleAttribute(attribute, $event)"
                 />
                 {{ attribute.name }} ({{ attribute.type }})
@@ -56,7 +67,7 @@
                 <input
                   class="text-input"
                   [type]="attribute.type === 'Int' ? 'number' : 'text'"
-                  [value]="model().attributeValues[attribute.name]"
+                  [value]="attributeValue(attribute.name)"
                   (input)="setAttributeValue(attribute.name, $event)"
                   [attr.aria-label]="attribute.name + ' value'"
                 />
@@ -70,14 +81,27 @@
         <fieldset>
           <legend>Tags</legend>
           @for (tag of tags(); track tag.id) {
-            <label class="card-type-form-entry">
-              <input
-                type="checkbox"
-                [checked]="model().tagIds.includes(tag.id)"
-                (change)="toggleTag(tag, $event)"
-              />
-              {{ tag.name }}
-            </label>
+            <div class="card-type-form-entry">
+              @if (isTagInherited(tag.name)) {
+                <mat-icon
+                  matTooltip="Inherited from parent card type"
+                  aria-label="Inherited from parent card type"
+                  tabindex="0"
+                  >arrow_upward</mat-icon
+                >
+              } @else {
+                <span class="inheritance-indicator-placeholder" aria-hidden="true"></span>
+              }
+              <label>
+                <input
+                  type="checkbox"
+                  [checked]="isTagSelected(tag)"
+                  [disabled]="isTagInherited(tag.name)"
+                  (change)="toggleTag(tag, $event)"
+                />
+                {{ tag.name }}
+              </label>
+            </div>
           } @empty {
             <p>No tags are defined for this title version.</p>
           }
