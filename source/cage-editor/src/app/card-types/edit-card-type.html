@@ -34,9 +34,11 @@
           [value]="model().parentId"
           (change)="setParentId($event)"
         >
-          <option value="">None</option>
+          <option value="" [selected]="!model().parentId">None</option>
           @for (cardType of parentCardTypes(); track cardType.id) {
-            <option [value]="cardType.id">{{ cardType.name }}</option>
+            <option [value]="cardType.id" [selected]="cardType.id === model().parentId">
+              {{ cardType.name }}
+            </option>
           }
         </select>
 
