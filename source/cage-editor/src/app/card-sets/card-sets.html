@@ -1,0 +1,106 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>Card Sets</h2>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-state" aria-live="polite">
+        <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+        <span>Loading card sets...</span>
+      </div>
+    } @else if (notFound()) {
+      <p class="field-error" role="alert">Title version not found.</p>
+    } @else {
+      <label for="card-set-search">Search card sets</label>
+      <input
+        id="card-set-search"
+        class="text-input"
+        type="search"
+        [value]="searchTerm()"
+        (input)="setSearchTerm($event)"
+        autocomplete="off"
+        aria-controls="card-set-table"
+      />
+      <table id="card-set-table" class="card-set-table">
+        <thead>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (cardSet of filteredCardSets(); track cardSet.id) {
+            <tr>
+              <td>{{ cardSet.name }}</td>
+              <td>
+                @if (!isReadOnly()) {
+                  <div class="card-set-actions">
+                    <button
+                      mat-icon-button
+                      type="button"
+                      [routerLink]="[
+                        '/organizations',
+                        organizationId(),
+                        'titles',
+                        titleId(),
+                        'versions',
+                        versionId(),
+                        'card-sets',
+                        cardSet.id,
+                        'edit',
+                      ]"
+                      [attr.aria-label]="'Edit card set ' + cardSet.name"
+                    >
+                      <mat-icon aria-hidden="true">edit</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      type="button"
+                      (click)="deleteCardSet(cardSet.id, cardSet.name)"
+                      [disabled]="isDeleting()"
+                      [attr.aria-label]="'Delete card set ' + cardSet.name"
+                    >
+                      <mat-icon aria-hidden="true">delete</mat-icon>
+                    </button>
+                  </div>
+                }
+              </td>
+            </tr>
+          } @empty {
+            @if (searchTerm().trim()) {
+              <tr>
+                <td colspan="2">No card sets match your search.</td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+
+      <div class="form-actions">
+        <button
+          mat-button
+          type="button"
+          [routerLink]="[
+            '/organizations',
+            organizationId(),
+            'titles',
+            titleId(),
+            'versions',
+            versionId(),
+            'card-sets',
+            'new',
+          ]"
+          [disabled]="isReadOnly() || cardSets().length >= maximumCardSets"
+        >
+          New card set
+        </button>
+        @if (isReadOnly()) {
+          <span>This version is read-only.</span>
+        } @else if (cardSets().length >= maximumCardSets) {
+          <span>Maximum of {{ maximumCardSets }} card sets reached.</span>
+        }
+      </div>
+    }
+  </section>
+</main>

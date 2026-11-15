@@ -1,0 +1,48 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>New card set</h2>
+    </div>
+
+    <form (submit)="createCardSet(); $event.preventDefault()" novalidate>
+      <label for="card-set-name">Card set name</label>
+      <input
+        id="card-set-name"
+        class="text-input"
+        type="text"
+        [formField]="cardSetForm.name"
+        autocomplete="off"
+      />
+      @if (cardSetForm.name().touched() && cardSetForm.name().invalid()) {
+        <p class="field-error" role="alert">Enter a card set name of at most 50 characters.</p>
+      }
+
+      @if (atLimit()) {
+        <p class="field-error" role="alert">
+          A title can have at most {{ maximumCardSets }} card sets.
+        </p>
+      }
+
+      <div class="form-actions">
+        <button
+          mat-button
+          type="button"
+          [routerLink]="[
+            '/organizations',
+            organizationId(),
+            'titles',
+            titleId(),
+            'versions',
+            versionId(),
+            'card-sets',
+          ]"
+        >
+          Cancel
+        </button>
+        <button mat-button type="submit" [disabled]="isSubmitting() || atLimit()">
+          {{ isSubmitting() ? 'Creating...' : 'Create card set' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</main>

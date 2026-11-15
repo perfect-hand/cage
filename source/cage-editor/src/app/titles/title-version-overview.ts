@@ -13,6 +13,7 @@ import { RouterLink } from '@angular/router';
 import { AttributesService } from '../attributes/attributes-service';
 import { TagsService } from '../tags/tags-service';
 import { CardTypesService } from '../card-types/card-types-service';
+import { CardSetsService } from '../card-sets/card-sets-service';
 import { TitleVersionDto } from './title-versions-model';
 import { TitleVersionsService } from './title-versions-service';
 
@@ -28,6 +29,7 @@ export class TitleVersionOverview implements OnInit {
   private readonly attributesService = inject(AttributesService);
   private readonly tagsService = inject(TagsService);
   private readonly cardTypesService = inject(CardTypesService);
+  private readonly cardSetsService = inject(CardSetsService);
 
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
@@ -44,6 +46,7 @@ export class TitleVersionOverview implements OnInit {
   readonly attributeCount = signal(0);
   readonly tagCount = signal(0);
   readonly cardTypeCount = signal(0);
+  readonly cardSetCount = signal(0);
   readonly isLoading = signal(true);
   readonly notFound = signal(false);
 
@@ -66,13 +69,15 @@ export class TitleVersionOverview implements OnInit {
       }
       this.version.set(version);
 
-      const [attributes, tags, cardTypes] = await Promise.all([
+      const [attributes, tags, cardSets, cardTypes] = await Promise.all([
         this.attributesService.loadAttributes(this.organizationId(), this.titleId(), version.id),
         this.tagsService.loadTags(this.organizationId(), this.titleId(), version.id),
+        this.cardSetsService.loadCardSets(this.organizationId(), this.titleId(), version.id),
         this.cardTypesService.loadCardTypes(this.organizationId(), this.titleId(), version.id),
       ]);
       this.attributeCount.set(attributes.length);
       this.tagCount.set(tags.length);
+      this.cardSetCount.set(cardSets.length);
       this.cardTypeCount.set(cardTypes.length);
     } catch (error) {
       console.error('Failed to load title version overview.', error);
