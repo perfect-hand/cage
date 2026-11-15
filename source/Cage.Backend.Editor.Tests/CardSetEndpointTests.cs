@@ -45,6 +45,22 @@ public class CardSetEndpointTests : EndpointTest, IClassFixture<WebApplicationFa
   }
 
   [Fact]
+  public async Task FailsToGetCardSetsFromForeignOrganization()
+  {
+    // GIVEN
+    var foreignOrganizationId = Guid.NewGuid().ToString();
+    var foreignTitleId = await testDao.AddTitle(foreignOrganizationId, "Title");
+    var foreignVersionId = testDao.GetInitialVersionId(foreignTitleId);
+    await testDao.AddCardSet(foreignVersionId, "Characters");
+
+    // WHEN
+    var response = await httpClient.GetAsync(CardSetsPath(foreignOrganizationId, foreignTitleId, foreignVersionId));
+
+    // THEN
+    Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+  }
+
+  [Fact]
   public async Task CreatesCardSet()
   {
     // GIVEN
@@ -280,6 +296,29 @@ public class CardSetEndpointTests : EndpointTest, IClassFixture<WebApplicationFa
     Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     var cardSets = await childResponse.Content.ReadFromJsonAsync<List<CardSetDto>>();
     Assert.Equal("Characters", Assert.Single(Assert.IsType<List<CardSetDto>>(cardSets)).Name);
+  }
+
+  [Fact]
+  public async Task ChildVersionKeepsCardSetWhenParentCardSetIsDeleted()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var cardSetId = await testDao.AddCardSet(parentVersionId, "Characters");
+    var childVersionId = await testDao.AddVersion(titleId, "2.0", parentVersionId);
+
+    // WHEN
+    var deleteResponse = await httpClient.DeleteAsync(
+        $"{CardSetsPath(organizationId, titleId, parentVersionId)}/{cardSetId}");
+    var childResponse = await httpClient.GetAsync(CardSetsPath(organizationId, titleId, childVersionId));
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+    Assert.Equal(HttpStatusCode.OK, childResponse.StatusCode);
+    var cardSets = await childResponse.Content.ReadFromJsonAsync<List<CardSetDto>>();
+    var cardSet = Assert.Single(Assert.IsType<List<CardSetDto>>(cardSets));
+    Assert.Equal(cardSetId, cardSet.Id);
+    Assert.Equal("Characters", cardSet.Name);
   }
 
   [Fact]
