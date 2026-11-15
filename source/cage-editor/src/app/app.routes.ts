@@ -15,6 +15,9 @@ import { EditTag } from './tags/edit-tag';
 import { CardTypes } from './card-types/card-types';
 import { CreateCardType } from './card-types/create-card-type';
 import { EditCardType } from './card-types/edit-card-type';
+import { CardSets } from './card-sets/card-sets';
+import { CreateCardSet } from './card-sets/create-card-set';
+import { EditCardSet } from './card-sets/edit-card-set';
 import { Titles } from './titles/titles';
 import { TitleVersions } from './titles/title-versions';
 import { TitleVersionOverview } from './titles/title-version-overview';
@@ -78,6 +81,18 @@ export const routes: Routes = [
       {
         path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/tags/:tagId/usages',
         component: Usages,
+      },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/card-sets',
+        component: CardSets,
+      },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/card-sets/new',
+        component: CreateCardSet,
+      },
+      {
+        path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/card-sets/:cardSetId/edit',
+        component: EditCardSet,
       },
       {
         path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/card-types',
