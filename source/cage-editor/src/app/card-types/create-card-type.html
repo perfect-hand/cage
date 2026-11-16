@@ -40,48 +40,16 @@
           }
         </select>
 
-        <fieldset>
-          <legend>Attributes</legend>
-          @for (attribute of editableAttributes(); track attribute.id) {
-            <div class="card-type-form-entry">
-              <label>
-                <input
-                  type="checkbox"
-                  [checked]="isAttributeSelected(attribute.name)"
-                  (change)="toggleAttribute(attribute, $event)"
-                />
-                {{ attribute.name }} ({{ attribute.type }})
-              </label>
-              @if (isAttributeSelected(attribute.name)) {
-                <input
-                  class="text-input"
-                  [type]="attribute.type === 'Int' ? 'number' : 'text'"
-                  [value]="model().attributeValues[attribute.name]"
-                  (input)="setAttributeValue(attribute.name, $event)"
-                  [attr.aria-label]="attribute.name + ' value'"
-                />
-              }
-            </div>
-          } @empty {
-            <p>No editable attributes are defined for this title version.</p>
-          }
-        </fieldset>
-
-        <fieldset>
-          <legend>Tags</legend>
-          @for (tag of tags(); track tag.id) {
-            <label class="card-type-form-entry">
-              <input
-                type="checkbox"
-                [checked]="model().tagIds.includes(tag.id)"
-                (change)="toggleTag(tag, $event)"
-              />
-              {{ tag.name }}
-            </label>
-          } @empty {
-            <p>No tags are defined for this title version.</p>
-          }
-        </fieldset>
+        <app-entity-values-editor
+          [attributes]="attributes()"
+          [tags]="tags()"
+          [inheritedAttributes]="inheritedValues().attributes"
+          [inheritedTags]="inheritedValues().tags"
+          [attributeValues]="model().attributeValues"
+          (attributeValuesChange)="setAttributeValues($event)"
+          [tagIds]="model().tagIds"
+          (tagIdsChange)="setTagIds($event)"
+        />
 
         @if (atLimit()) {
           <p class="field-error" role="alert">

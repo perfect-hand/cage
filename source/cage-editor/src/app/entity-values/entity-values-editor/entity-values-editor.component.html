@@ -1,0 +1,101 @@
+<fieldset>
+  <legend>Attributes</legend>
+  <label for="add-attribute">Add attribute</label>
+  <input
+    #attributeInput
+    id="add-attribute"
+    class="text-input"
+    type="text"
+    autocomplete="off"
+    [matAutocomplete]="attributeAutocomplete"
+    (input)="attributeQuery.set(attributeInput.value)"
+  />
+  <mat-autocomplete
+    #attributeAutocomplete="matAutocomplete"
+    (optionSelected)="addAttribute($event, attributeInput)"
+  >
+    @for (attribute of availableAttributes(); track attribute.id) {
+      <mat-option [value]="attribute.id">{{ attribute.name }}</mat-option>
+    }
+  </mat-autocomplete>
+  @for (attribute of selectedAttributes(); track attribute.id) {
+    <div class="entity-value-entry">
+      @if (inheritedAttributes().has(attribute.name)) {
+        <mat-icon
+          matTooltip="Inherited from parent"
+          aria-label="Inherited from parent"
+          tabindex="0"
+        >
+          arrow_upward
+        </mat-icon>
+      } @else {
+        <span class="inheritance-indicator-placeholder" aria-hidden="true"></span>
+      }
+      <label [for]="'attribute-value-' + attribute.id"
+        >{{ attribute.name }}</label
+      >
+      <input
+        [id]="'attribute-value-' + attribute.id"
+        class="text-input"
+        [type]="attribute.type === 'Int' ? 'number' : 'text'"
+        [value]="attributeValue(attribute.name)"
+        (input)="setAttributeValue(attribute.name, $event)"
+      />
+      @if (!inheritedAttributes().has(attribute.name)) {
+        <button
+          mat-icon-button
+          type="button"
+          [attr.aria-label]="'Remove attribute ' + attribute.name"
+          (click)="removeAttribute(attribute.name)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      }
+    </div>
+  }
+</fieldset>
+
+<fieldset>
+  <legend>Tags</legend>
+  <label for="add-tag">Add tag</label>
+  <input
+    #tagInput
+    id="add-tag"
+    class="text-input"
+    type="text"
+    autocomplete="off"
+    [matAutocomplete]="tagAutocomplete"
+    (input)="tagQuery.set(tagInput.value)"
+  />
+  <mat-autocomplete #tagAutocomplete="matAutocomplete" (optionSelected)="addTag($event, tagInput)">
+    @for (tag of availableTags(); track tag.id) {
+      <mat-option [value]="tag.id">{{ tag.name }}</mat-option>
+    }
+  </mat-autocomplete>
+  @for (tag of selectedTags(); track tag.id) {
+    <div class="entity-value-entry">
+      @if (inheritedTags().has(tag.name)) {
+        <mat-icon
+          matTooltip="Inherited from parent"
+          aria-label="Inherited from parent"
+          tabindex="0"
+        >
+          arrow_upward
+        </mat-icon>
+      } @else {
+        <span class="inheritance-indicator-placeholder" aria-hidden="true"></span>
+      }
+      <span>{{ tag.name }}</span>
+      @if (!inheritedTags().has(tag.name)) {
+        <button
+          mat-icon-button
+          type="button"
+          [attr.aria-label]="'Remove tag ' + tag.name"
+          (click)="removeTag(tag)"
+        >
+          <mat-icon>delete</mat-icon>
+        </button>
+      }
+    </div>
+  }
+</fieldset>

@@ -1,5 +1,5 @@
 import { AttributeType } from '../attributes/attributes-model';
-import { TypedValueDto } from './card-types-model';
+import { CardTypeDto, TypedValueDto } from './card-types-model';
 
 export type EditableAttributeType = Extract<AttributeType, 'Int' | 'String'>;
 
@@ -25,4 +25,27 @@ export function parseAttributeValue(type: EditableAttributeType, value: string):
   }
 
   return { type, value };
+}
+
+export function inheritedCardTypeValues(
+  parentId: string,
+  cardTypes: CardTypeDto[],
+): {
+  attributes: Map<string, TypedValueDto>;
+  tags: Set<string>;
+} {
+  const attributes = new Map<string, TypedValueDto>();
+  const tags = new Set<string>();
+  const visited = new Set<string>();
+  while (parentId && !visited.has(parentId)) {
+    visited.add(parentId);
+    const parent = cardTypes.find((cardType) => cardType.id === parentId);
+    if (!parent) break;
+    for (const [name, value] of Object.entries(parent.attributes)) {
+      if (!attributes.has(name)) attributes.set(name, value);
+    }
+    parent.tags.forEach((tag) => tags.add(tag));
+    parentId = parent.parentId ?? '';
+  }
+  return { attributes, tags };
 }
