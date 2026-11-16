@@ -15,7 +15,7 @@
     (optionSelected)="addAttribute($event, attributeInput)"
   >
     @for (attribute of availableAttributes(); track attribute.id) {
-      <mat-option [value]="attribute.id">{{ attribute.name }} ({{ attribute.type }})</mat-option>
+      <mat-option [value]="attribute.id">{{ attribute.name }}</mat-option>
     }
   </mat-autocomplete>
   @for (attribute of selectedAttributes(); track attribute.id) {
@@ -32,7 +32,7 @@
         <span class="inheritance-indicator-placeholder" aria-hidden="true"></span>
       }
       <label [for]="'attribute-value-' + attribute.id"
-        >{{ attribute.name }} ({{ attribute.type }})</label
+        >{{ attribute.name }}</label
       >
       <input
         [id]="'attribute-value-' + attribute.id"
