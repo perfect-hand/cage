@@ -42,72 +42,16 @@
           }
         </select>
 
-        <fieldset>
-          <legend>Attributes</legend>
-          @for (attribute of editableAttributes(); track attribute.id) {
-            <div class="card-type-form-entry">
-              @if (isAttributeInherited(attribute.name)) {
-                <mat-icon
-                  matTooltip="Inherited from parent card type"
-                  aria-label="Inherited from parent card type"
-                  tabindex="0"
-                  >arrow_upward</mat-icon
-                >
-              } @else {
-                <span class="inheritance-indicator-placeholder" aria-hidden="true"></span>
-              }
-              <label>
-                <input
-                  type="checkbox"
-                  [checked]="isAttributeSelected(attribute.name)"
-                  [disabled]="isAttributeInherited(attribute.name)"
-                  (change)="toggleAttribute(attribute, $event)"
-                />
-                {{ attribute.name }} ({{ attribute.type }})
-              </label>
-              @if (isAttributeSelected(attribute.name)) {
-                <input
-                  class="text-input"
-                  [type]="attribute.type === 'Int' ? 'number' : 'text'"
-                  [value]="attributeValue(attribute.name)"
-                  (input)="setAttributeValue(attribute.name, $event)"
-                  [attr.aria-label]="attribute.name + ' value'"
-                />
-              }
-            </div>
-          } @empty {
-            <p>No editable attributes are defined for this title version.</p>
-          }
-        </fieldset>
-
-        <fieldset>
-          <legend>Tags</legend>
-          @for (tag of tags(); track tag.id) {
-            <div class="card-type-form-entry">
-              @if (isTagInherited(tag.name)) {
-                <mat-icon
-                  matTooltip="Inherited from parent card type"
-                  aria-label="Inherited from parent card type"
-                  tabindex="0"
-                  >arrow_upward</mat-icon
-                >
-              } @else {
-                <span class="inheritance-indicator-placeholder" aria-hidden="true"></span>
-              }
-              <label>
-                <input
-                  type="checkbox"
-                  [checked]="isTagSelected(tag)"
-                  [disabled]="isTagInherited(tag.name)"
-                  (change)="toggleTag(tag, $event)"
-                />
-                {{ tag.name }}
-              </label>
-            </div>
-          } @empty {
-            <p>No tags are defined for this title version.</p>
-          }
-        </fieldset>
+        <app-entity-values-editor
+          [attributes]="attributes()"
+          [tags]="tags()"
+          [inheritedAttributes]="inheritedValues().attributes"
+          [inheritedTags]="inheritedValues().tags"
+          [attributeValues]="model().attributeValues"
+          (attributeValuesChange)="setAttributeValues($event)"
+          [tagIds]="model().tagIds"
+          (tagIdsChange)="setTagIds($event)"
+        />
 
         @if (errorMessage()) {
           <p class="field-error" role="alert">{{ errorMessage() }}</p>

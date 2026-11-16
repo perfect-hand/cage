@@ -10,21 +10,20 @@ import {
 } from '@angular/core';
 import { form, FormField, maxLength, pattern, required } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AttributeDto } from '../attributes/attributes-model';
 import { AttributesService } from '../attributes/attributes-service';
+import { EntityValuesEditorComponent } from '../entity-values/entity-values-editor/entity-values-editor.component';
 import { TagDto } from '../tags/tags-model';
 import { TagsService } from '../tags/tags-service';
 import { TitleVersionsService } from '../titles/title-versions-service';
 import { CardTypeDto, CardTypeRequestDto, TypedValueDto } from './card-types-model';
 import { CardTypesService } from './card-types-service';
 import {
-  defaultAttributeValue,
   formatAttributeValue,
+  inheritedCardTypeValues,
   isEditableAttributeType,
   parseAttributeValue,
 } from './card-type-form-utils';
@@ -41,9 +40,8 @@ interface CardTypeFormModel {
   imports: [
     FormField,
     MatButtonModule,
-    MatIconModule,
+    EntityValuesEditorComponent,
     MatProgressSpinnerModule,
-    MatTooltipModule,
     RouterLink,
   ],
   templateUrl: './edit-card-type.html',
@@ -68,48 +66,9 @@ export class EditCardType implements OnInit {
   );
   readonly tags = signal<TagDto[]>([]);
   readonly parentCardTypes = signal<CardTypeDto[]>([]);
-  readonly inheritedAttributeValues = computed(() => {
-    const inherited = new Map<string, TypedValueDto>();
-    const cardTypes = this.parentCardTypes();
-    const visited = new Set<string>();
-    let parentId = this.model().parentId;
-
-    while (parentId && !visited.has(parentId)) {
-      visited.add(parentId);
-      const parent = cardTypes.find((cardType) => cardType.id === parentId);
-      if (!parent) {
-        break;
-      }
-
-      for (const [name, value] of Object.entries(parent.attributes)) {
-        if (!inherited.has(name)) {
-          inherited.set(name, value);
-        }
-      }
-      parentId = parent.parentId ?? '';
-    }
-
-    return inherited;
-  });
-  readonly inheritedTagNames = computed(() => {
-    const inherited = new Set<string>();
-    const cardTypes = this.parentCardTypes();
-    const visited = new Set<string>();
-    let parentId = this.model().parentId;
-
-    while (parentId && !visited.has(parentId)) {
-      visited.add(parentId);
-      const parent = cardTypes.find((cardType) => cardType.id === parentId);
-      if (!parent) {
-        break;
-      }
-
-      parent.tags.forEach((tag) => inherited.add(tag));
-      parentId = parent.parentId ?? '';
-    }
-
-    return inherited;
-  });
+  readonly inheritedValues = computed(() =>
+    inheritedCardTypeValues(this.model().parentId, this.parentCardTypes()),
+  );
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
   readonly isReadOnly = signal(false);
@@ -132,72 +91,12 @@ export class EditCardType implements OnInit {
     void this.loadForm();
   }
 
-  isAttributeSelected(name: string): boolean {
-    return (
-      Object.prototype.hasOwnProperty.call(this.model().attributeValues, name) ||
-      this.inheritedAttributeValues().has(name)
-    );
+  setAttributeValues(attributeValues: Record<string, string>): void {
+    this.model.update((model) => ({ ...model, attributeValues }));
   }
 
-  isAttributeInherited(name: string): boolean {
-    return this.inheritedAttributeValues().has(name);
-  }
-
-  attributeValue(name: string): string {
-    if (Object.prototype.hasOwnProperty.call(this.model().attributeValues, name)) {
-      return this.model().attributeValues[name];
-    }
-
-    const inheritedValue = this.inheritedAttributeValues().get(name);
-    return inheritedValue ? formatAttributeValue(inheritedValue) : '';
-  }
-
-  isTagSelected(tag: TagDto): boolean {
-    return this.model().tagIds.includes(tag.id) || this.inheritedTagNames().has(tag.name);
-  }
-
-  isTagInherited(name: string): boolean {
-    return this.inheritedTagNames().has(name);
-  }
-
-  toggleTag(tag: TagDto, event: Event): void {
-    if (this.isTagInherited(tag.name)) {
-      return;
-    }
-
-    const checked = (event.target as HTMLInputElement).checked;
-    this.model.update((model) => ({
-      ...model,
-      tagIds: checked
-        ? [...model.tagIds, tag.id]
-        : model.tagIds.filter((tagId) => tagId !== tag.id),
-    }));
-  }
-
-  toggleAttribute(attribute: AttributeDto, event: Event): void {
-    if (!isEditableAttributeType(attribute.type) || this.isAttributeInherited(attribute.name)) {
-      return;
-    }
-
-    const checked = (event.target as HTMLInputElement).checked;
-    const defaultValue = defaultAttributeValue(attribute.type);
-    this.model.update((model) => {
-      const attributeValues = { ...model.attributeValues };
-      if (checked) {
-        attributeValues[attribute.name] = defaultValue;
-      } else {
-        delete attributeValues[attribute.name];
-      }
-      return { ...model, attributeValues };
-    });
-  }
-
-  setAttributeValue(name: string, event: Event): void {
-    const value = (event.target as HTMLInputElement | HTMLTextAreaElement).value;
-    this.model.update((model) => ({
-      ...model,
-      attributeValues: { ...model.attributeValues, [name]: value },
-    }));
+  setTagIds(tagIds: string[]): void {
+    this.model.update((model) => ({ ...model, tagIds }));
   }
 
   setParentId(event: Event): void {

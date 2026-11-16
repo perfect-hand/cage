@@ -7,37 +7,3 @@ form {
   gap: var(--app-space-sm);
   max-width: 40rem;
 }
-
-fieldset {
-  display: grid;
-  gap: var(--app-space-sm);
-  border: 1px solid var(--app-outline-subtle);
-  border-radius: var(--mat-sys-corner-small);
-  padding: var(--app-space-md);
-}
-
-.card-type-form-entry {
-  display: grid;
-  grid-template-columns: 1.5rem auto minmax(0, 1fr);
-  align-items: center;
-  gap: var(--app-space-sm);
-}
-
-.card-type-form-entry label {
-  display: flex;
-  align-items: center;
-  gap: var(--app-space-xs);
-}
-
-.card-type-form-entry input[type='checkbox'] {
-  margin: 0;
-}
-
-.inheritance-indicator-placeholder {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-textarea {
-  resize: vertical;
-}

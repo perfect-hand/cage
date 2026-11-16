@@ -15,13 +15,14 @@ import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AttributeDto } from '../attributes/attributes-model';
 import { AttributesService } from '../attributes/attributes-service';
+import { EntityValuesEditorComponent } from '../entity-values/entity-values-editor/entity-values-editor.component';
 import { TagDto } from '../tags/tags-model';
 import { TagsService } from '../tags/tags-service';
 import { TitleVersionsService } from '../titles/title-versions-service';
 import { CardTypeDto, CardTypeRequestDto, TypedValueDto } from './card-types-model';
 import { CardTypesService } from './card-types-service';
 import {
-  defaultAttributeValue,
+  inheritedCardTypeValues,
   isEditableAttributeType,
   parseAttributeValue,
 } from './card-type-form-utils';
@@ -36,7 +37,13 @@ interface CardTypeFormModel {
 
 @Component({
   selector: 'create-card-type',
-  imports: [FormField, MatButtonModule, MatProgressSpinnerModule, RouterLink],
+  imports: [
+    EntityValuesEditorComponent,
+    FormField,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    RouterLink,
+  ],
   templateUrl: './create-card-type.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './card-type-form.scss',
@@ -58,6 +65,9 @@ export class CreateCardType implements OnInit {
   );
   readonly tags = signal<TagDto[]>([]);
   readonly parentCardTypes = signal<CardTypeDto[]>([]);
+  readonly inheritedValues = computed(() =>
+    inheritedCardTypeValues(this.model().parentId, this.parentCardTypes()),
+  );
   readonly isLoading = signal(true);
   readonly isSubmitting = signal(false);
   readonly isReadOnly = signal(false);
@@ -81,44 +91,12 @@ export class CreateCardType implements OnInit {
     void this.loadForm();
   }
 
-  isAttributeSelected(name: string): boolean {
-    return Object.prototype.hasOwnProperty.call(this.model().attributeValues, name);
+  setAttributeValues(attributeValues: Record<string, string>): void {
+    this.model.update((model) => ({ ...model, attributeValues }));
   }
 
-  toggleTag(tag: TagDto, event: Event): void {
-    const checked = (event.target as HTMLInputElement).checked;
-    this.model.update((model) => ({
-      ...model,
-      tagIds: checked
-        ? [...model.tagIds, tag.id]
-        : model.tagIds.filter((tagId) => tagId !== tag.id),
-    }));
-  }
-
-  toggleAttribute(attribute: AttributeDto, event: Event): void {
-    if (!isEditableAttributeType(attribute.type)) {
-      return;
-    }
-
-    const checked = (event.target as HTMLInputElement).checked;
-    const defaultValue = defaultAttributeValue(attribute.type);
-    this.model.update((model) => {
-      const attributeValues = { ...model.attributeValues };
-      if (checked) {
-        attributeValues[attribute.name] = defaultValue;
-      } else {
-        delete attributeValues[attribute.name];
-      }
-      return { ...model, attributeValues };
-    });
-  }
-
-  setAttributeValue(name: string, event: Event): void {
-    const value = (event.target as HTMLInputElement | HTMLTextAreaElement).value;
-    this.model.update((model) => ({
-      ...model,
-      attributeValues: { ...model.attributeValues, [name]: value },
-    }));
+  setTagIds(tagIds: string[]): void {
+    this.model.update((model) => ({ ...model, tagIds }));
   }
 
   setParentId(event: Event): void {

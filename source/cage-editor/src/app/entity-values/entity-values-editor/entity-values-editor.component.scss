@@ -1,0 +1,29 @@
+:host {
+  display: grid;
+  gap: var(--app-space-sm);
+}
+
+fieldset {
+  display: grid;
+  gap: var(--app-space-sm);
+  border: 1px solid var(--app-outline-subtle);
+  border-radius: var(--mat-sys-corner-small);
+  padding: var(--app-space-md);
+}
+
+.entity-value-entry {
+  display: flex;
+  align-items: center;
+  gap: var(--app-space-sm);
+}
+
+.entity-value-entry input {
+  flex: 1;
+  min-width: 0;
+}
+
+.inheritance-indicator-placeholder {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: none;
+}
