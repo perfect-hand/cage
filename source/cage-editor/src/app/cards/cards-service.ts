@@ -8,6 +8,8 @@ export class CardsService {
   private readonly http = inject(HttpClient);
   private readonly cardsByCardSet = signal<Record<string, CardDto[]>>({});
   private readonly pendingRequests = new Map<string, Promise<CardDto[]>>();
+  private readonly pendingRequestTokens = new Map<string, object>();
+  private readonly generationsByVersion = new Map<string, number>();
 
   getCards(titleId: string, versionId: string, cardSetId: string): CardDto[] {
     return this.cardsByCardSet()[this.cacheKey(titleId, versionId, cardSetId)] ?? [];
@@ -36,17 +38,28 @@ export class CardsService {
       return pendingRequest;
     }
 
+    const generationKey = `${titleId}:${versionId}`;
+    const generation = this.generationsByVersion.get(generationKey) ?? 0;
+    const requestToken = {};
     const request = firstValueFrom(
       this.http.get<CardDto[]>(
         `/organizations/${organizationId}/titles/${titleId}/versions/${versionId}/card-sets/${cardSetId}/cards`,
       ),
     )
       .then((cards) => {
-        this.setCards(titleId, versionId, cardSetId, cards ?? []);
+        if ((this.generationsByVersion.get(generationKey) ?? 0) === generation) {
+          this.setCards(titleId, versionId, cardSetId, cards ?? []);
+        }
         return this.getCards(titleId, versionId, cardSetId);
       })
-      .finally(() => this.pendingRequests.delete(cacheKey));
+      .finally(() => {
+        if (this.pendingRequestTokens.get(cacheKey) === requestToken) {
+          this.pendingRequests.delete(cacheKey);
+          this.pendingRequestTokens.delete(cacheKey);
+        }
+      });
     this.pendingRequests.set(cacheKey, request);
+    this.pendingRequestTokens.set(cacheKey, requestToken);
     return request;
   }
 
@@ -69,6 +82,11 @@ export class CardsService {
 
   invalidateCardsForVersion(titleId: string, versionId: string): void {
     const cachePrefix = `${titleId}:${versionId}:`;
+    const generationKey = `${titleId}:${versionId}`;
+    this.generationsByVersion.set(
+      generationKey,
+      (this.generationsByVersion.get(generationKey) ?? 0) + 1,
+    );
     this.cardsByCardSet.update((cardsByCardSet) => {
       const updated = { ...cardsByCardSet };
       for (const cacheKey of Object.keys(updated)) {
@@ -81,6 +99,7 @@ export class CardsService {
     for (const cacheKey of this.pendingRequests.keys()) {
       if (cacheKey.startsWith(cachePrefix)) {
         this.pendingRequests.delete(cacheKey);
+        this.pendingRequestTokens.delete(cacheKey);
       }
     }
   }
