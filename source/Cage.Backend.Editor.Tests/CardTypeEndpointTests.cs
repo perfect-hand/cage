@@ -277,6 +277,24 @@ public class CardTypeEndpointTests : EndpointTest, IClassFixture<WebApplicationF
   }
 
   [Fact]
+  public async Task FailsToUpdateCardTypeWithWhitespaceName()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var cardTypeId = await testDao.AddCardType(versionId, "Old");
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"{CardTypesPath(organizationId, titleId, versionId)}/{cardTypeId}",
+        new CardTypeDto { Name = " " });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryCardTypesByTitleVersion(versionId)).Name);
+  }
+
+  [Fact]
   public async Task FailsToUpdateCardTypeWithAttributeOfWrongType()
   {
     // GIVEN
