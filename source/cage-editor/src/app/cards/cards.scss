@@ -1,0 +1,16 @@
+.card-actions {
+  display: flex;
+  gap: var(--app-space-xs);
+}
+
+.card-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+
+  th,
+  td {
+    padding: var(--app-space-sm) var(--app-space-md);
+    border-bottom: 1px solid var(--app-outline-subtle);
+  }
+}

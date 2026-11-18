@@ -8,6 +8,7 @@ import { firstValueFrom } from 'rxjs';
 import { TagDto, TagRequestDto } from './tags-model';
 import { TagsService } from './tags-service';
 import { CardTypesService } from '../card-types/card-types-service';
+import { CardsService } from '../cards/cards-service';
 
 @Component({
   selector: 'edit-tag',
@@ -21,6 +22,7 @@ export class EditTag implements OnInit {
   private readonly router = inject(Router);
   private readonly tagsService = inject(TagsService);
   private readonly cardTypesService = inject(CardTypesService);
+  private readonly cardsService = inject(CardsService);
 
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
@@ -79,6 +81,7 @@ export class EditTag implements OnInit {
         ),
       );
       this.cardTypesService.invalidateCardTypes(this.titleId(), versionId);
+      this.cardsService.invalidateCardsForVersion(this.titleId(), versionId);
       const tags = this.tagsService
         .getTags(this.titleId(), versionId)
         .map((item) => (item.id === this.tagId() ? { ...item, name } : item));

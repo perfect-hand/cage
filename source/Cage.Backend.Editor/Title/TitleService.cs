@@ -1,6 +1,7 @@
 using Cage.Backend.Editor.Attribute;
 using Cage.Backend.Editor.CardType;
 using Cage.Backend.Editor.CardSet;
+using Cage.Backend.Editor.Card;
 using Cage.Backend.Editor.Organization;
 using Cage.Backend.Editor.Tag;
 
@@ -18,6 +19,7 @@ public class TitleService
   private readonly TagDao tagDao;
   private readonly CardTypeDao cardTypeDao;
   private readonly CardSetDao cardSetDao;
+  private readonly CardDao cardDao;
   private readonly OrganizationDao organizationDao;
   private readonly ILogger<TitleService> logger;
 
@@ -30,6 +32,7 @@ public class TitleService
     tagDao = new TagDao();
     cardTypeDao = new CardTypeDao();
     cardSetDao = new CardSetDao();
+    cardDao = new CardDao();
     organizationDao = new OrganizationDao();
     this.logger = logger;
   }
@@ -102,6 +105,7 @@ public class TitleService
         await tagDao.DeleteByTitleVersion(version.RowKey);
         await cardTypeDao.DeleteByTitleVersion(version.RowKey);
         await cardSetDao.DeleteByTitleVersion(version.RowKey);
+        await cardDao.DeleteByTitleVersion(version.RowKey);
       }
 
       await titleVersionDao.DeleteByTitle(titleId);

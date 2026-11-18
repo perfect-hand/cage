@@ -91,6 +91,66 @@ public class CardTypeEndpointTests : EndpointTest, IClassFixture<WebApplicationF
   }
 
   [Fact]
+  public async Task FailsToCreateCardTypeWithAttributeOfWrongType()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    await testDao.AddAttribute(versionId, "Costs", CageType.Int);
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(
+        CardTypesPath(organizationId, titleId, versionId),
+        new CardTypeDto
+        {
+          Name = "Monster",
+          Attributes = new Dictionary<string, TypedValue> { ["Costs"] = new("one") }
+        });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Empty(testDao.QueryCardTypesByTitleVersion(versionId));
+  }
+
+  [Fact]
+  public async Task FailsToCreateCardTypeWithUnknownAttribute()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(
+        CardTypesPath(organizationId, titleId, versionId),
+        new CardTypeDto
+        {
+          Name = "Monster",
+          Attributes = new Dictionary<string, TypedValue> { ["Unknown"] = new(1) }
+        });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Empty(testDao.QueryCardTypesByTitleVersion(versionId));
+  }
+
+  [Fact]
+  public async Task FailsToCreateCardTypeWithUnknownTag()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(
+        CardTypesPath(organizationId, titleId, versionId),
+        new CardTypeDto { Name = "Monster", Tags = ["Unknown"] });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Empty(testDao.QueryCardTypesByTitleVersion(versionId));
+  }
+
+  [Fact]
   public async Task FailsToCreateCardTypeWithNameOverMaximumLength()
   {
     // GIVEN
@@ -210,6 +270,87 @@ public class CardTypeEndpointTests : EndpointTest, IClassFixture<WebApplicationF
     var response = await httpClient.PutAsJsonAsync(
         $"{CardTypesPath(organizationId, titleId, versionId)}/{cardTypeId}",
         new CardTypeDto { Name = new string('a', CardTypeService.MaximumCardTypeNameLength + 1) });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryCardTypesByTitleVersion(versionId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateCardTypeWithWhitespaceName()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var cardTypeId = await testDao.AddCardType(versionId, "Old");
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"{CardTypesPath(organizationId, titleId, versionId)}/{cardTypeId}",
+        new CardTypeDto { Name = " " });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryCardTypesByTitleVersion(versionId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateCardTypeWithAttributeOfWrongType()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var cardTypeId = await testDao.AddCardType(versionId, "Old");
+    await testDao.AddAttribute(versionId, "Costs", CageType.Int);
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"{CardTypesPath(organizationId, titleId, versionId)}/{cardTypeId}",
+        new CardTypeDto
+        {
+          Name = "New",
+          Attributes = new Dictionary<string, TypedValue> { ["Costs"] = new("one") }
+        });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryCardTypesByTitleVersion(versionId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateCardTypeWithUnknownAttribute()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var cardTypeId = await testDao.AddCardType(versionId, "Old");
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"{CardTypesPath(organizationId, titleId, versionId)}/{cardTypeId}",
+        new CardTypeDto
+        {
+          Name = "New",
+          Attributes = new Dictionary<string, TypedValue> { ["Unknown"] = new(1) }
+        });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryCardTypesByTitleVersion(versionId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateCardTypeWithUnknownTag()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var cardTypeId = await testDao.AddCardType(versionId, "Old");
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"{CardTypesPath(organizationId, titleId, versionId)}/{cardTypeId}",
+        new CardTypeDto { Name = "New", Tags = ["Unknown"] });
 
     // THEN
     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

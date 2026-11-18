@@ -34,8 +34,26 @@
             <tr>
               <td>{{ cardSet.name }}</td>
               <td>
-                @if (!isReadOnly()) {
-                  <div class="card-set-actions">
+                <div class="card-set-actions">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    [routerLink]="[
+                      '/organizations',
+                      organizationId(),
+                      'titles',
+                      titleId(),
+                      'versions',
+                      versionId(),
+                      'card-sets',
+                      cardSet.id,
+                      'cards',
+                    ]"
+                    [attr.aria-label]="'View cards in ' + cardSet.name"
+                  >
+                    <mat-icon aria-hidden="true">view_list</mat-icon>
+                  </button>
+                  @if (!isReadOnly()) {
                     <button
                       mat-icon-button
                       type="button"
@@ -63,8 +81,8 @@
                     >
                       <mat-icon aria-hidden="true">delete</mat-icon>
                     </button>
-                  </div>
-                }
+                  }
+                </div>
               </td>
             </tr>
           } @empty {

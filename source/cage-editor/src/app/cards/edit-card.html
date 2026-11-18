@@ -1,0 +1,66 @@
+<main class="content-panel">
+  <section class="content-section">
+    <div class="section-header">
+      <h2>Edit card</h2>
+    </div>
+
+    @if (isLoading()) {
+      <div class="loading-state" aria-live="polite">
+        <mat-progress-spinner mode="indeterminate" diameter="28"></mat-progress-spinner>
+        <span>Loading card...</span>
+      </div>
+    } @else if (notFound()) {
+      <p class="field-error" role="alert">Card not found.</p>
+    } @else if (isReadOnly()) {
+      <p>This version is read-only.</p>
+    } @else {
+      <form (submit)="updateCard(); $event.preventDefault()" novalidate>
+        <label for="card-name">Card name</label>
+        <input
+          id="card-name"
+          class="text-input"
+          type="text"
+          [formField]="cardForm.name"
+          autocomplete="off"
+        />
+        @if (cardForm.name().touched() && cardForm.name().invalid()) {
+          <p class="field-error" role="alert">Enter a card name of at most 50 characters.</p>
+        }
+
+        <label for="card-type">Card type</label>
+        <select
+          id="card-type"
+          class="text-input"
+          [value]="model().cardTypeId"
+          (change)="setCardTypeId($event)"
+        >
+          @for (cardType of cardTypes(); track cardType.id) {
+            <option [value]="cardType.id">{{ cardType.name }}</option>
+          }
+        </select>
+
+        <app-entity-values-editor
+          [attributes]="attributes()"
+          [tags]="tags()"
+          [inheritedAttributes]="inheritedValues().attributes"
+          [inheritedTags]="inheritedValues().tags"
+          [attributeValues]="model().attributeValues"
+          (attributeValuesChange)="setAttributeValues($event)"
+          [tagIds]="model().tagIds"
+          (tagIdsChange)="setTagIds($event)"
+        />
+
+        @if (errorMessage()) {
+          <p class="field-error" role="alert">{{ errorMessage() }}</p>
+        }
+
+        <div class="form-actions">
+          <button mat-button type="button" [routerLink]="cardsPath()">Cancel</button>
+          <button mat-button type="submit" [disabled]="isSubmitting() || !cardTypes().length">
+            {{ isSubmitting() ? 'Saving...' : 'Save card' }}
+          </button>
+        </div>
+      </form>
+    }
+  </section>
+</main>

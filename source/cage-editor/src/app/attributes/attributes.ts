@@ -1,5 +1,13 @@
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,6 +19,7 @@ import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
 import { TitleVersionsService } from '../titles/title-versions-service';
 import { AttributesService } from './attributes-service';
 import { CardTypesService } from '../card-types/card-types-service';
+import { CardsService } from '../cards/cards-service';
 
 export const maximumAttributes = 100;
 
@@ -26,6 +35,7 @@ export class Attributes implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly attributesService = inject(AttributesService);
   private readonly cardTypesService = inject(CardTypesService);
+  private readonly cardsService = inject(CardsService);
   private readonly versionsService = inject(TitleVersionsService);
 
   readonly organizationId = input.required<string>();
@@ -37,7 +47,8 @@ export class Attributes implements OnInit {
     const searchTerm = this.searchTerm().trim().toLowerCase();
     return this.attributes().filter(
       (attribute) =>
-        attribute.name.toLowerCase().includes(searchTerm) || attribute.type.toLowerCase().includes(searchTerm),
+        attribute.name.toLowerCase().includes(searchTerm) ||
+        attribute.type.toLowerCase().includes(searchTerm),
     );
   });
   readonly isLoading = signal(false);
@@ -59,7 +70,10 @@ export class Attributes implements OnInit {
     const versionId = this.versionId();
 
     try {
-      const versions = await this.versionsService.loadVersions(this.organizationId(), this.titleId());
+      const versions = await this.versionsService.loadVersions(
+        this.organizationId(),
+        this.titleId(),
+      );
 
       const version = versions.find((item) => item.id === versionId);
       if (!version) {
@@ -93,9 +107,10 @@ export class Attributes implements OnInit {
         .open(ConfirmDeleteDialog, {
           data: {
             name,
-            consequence: referenceCount > 0
-              ? `This attribute is referenced by ${referenceCount} card type${referenceCount === 1 ? '' : 's'}. Deleting it will remove the attribute value from those card types.`
-              : undefined,
+            consequence:
+              referenceCount > 0
+                ? `This attribute is referenced ${referenceCount} time${referenceCount === 1 ? '' : 's'} by card types or cards. Deleting it will remove those values.`
+                : undefined,
           },
         })
         .afterClosed(),
@@ -114,6 +129,7 @@ export class Attributes implements OnInit {
         ),
       );
       this.cardTypesService.invalidateCardTypes(this.titleId(), versionId);
+      this.cardsService.invalidateCardsForVersion(this.titleId(), versionId);
       const attributes = this.attributes().filter((attribute) => attribute.id !== attributeId);
       this.attributes.set(attributes);
       this.attributesService.setAttributes(this.titleId(), versionId, attributes);

@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using Cage.Backend.Editor.Attribute;
+using Cage.Backend.Editor.Card;
 using Cage.Backend.Editor.Tag;
 using Cage.Backend.Editor.Title;
 using Cage.Simulation.Types;
@@ -16,6 +17,7 @@ public class CardTypeService : VersionedTitleEntityService<CardTypeEntity>
   private const int MaximumJsonPropertySize = 60 * 1024;
 
   private readonly CardTypeMapper mapper = new();
+  private readonly CardDao cardDao = new();
   private readonly AttributeDao attributeDao = new();
   private readonly TagDao tagDao = new();
   private readonly ILogger<CardTypeService> logger;
@@ -92,6 +94,12 @@ public class CardTypeService : VersionedTitleEntityService<CardTypeEntity>
     if (cardTypes.Any(cardType => cardType.ParentId == cardTypeId))
     {
       throw new InvalidOperationException("Card types with child card types cannot be deleted.");
+    }
+
+    if ((await cardDao.QueryByTitleVersionAndAncestors(titleId, versionId))
+        .Any(card => card.CardTypeId == cardTypeId))
+    {
+      throw new InvalidOperationException("Card types assigned to cards cannot be deleted.");
     }
 
     await PreserveForChildren(titleId, versionId, existing);

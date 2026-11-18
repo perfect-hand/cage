@@ -1,4 +1,5 @@
 using Cage.Backend.Editor.CardType;
+using Cage.Backend.Editor.Card;
 using Cage.Backend.Editor.Title;
 
 namespace Cage.Backend.Editor.Attribute;
@@ -10,12 +11,14 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
 
   private readonly AttributeMapper mapper = new();
   private readonly CardTypeService cardTypeService;
+  private readonly CardService cardService;
   private readonly ILogger<AttributeService> logger;
 
-  public AttributeService(ILogger<AttributeService> logger, CardTypeService cardTypeService) : base(new AttributeDao())
+  public AttributeService(ILogger<AttributeService> logger, CardTypeService cardTypeService, CardService cardService) : base(new AttributeDao())
   {
     this.logger = logger;
     this.cardTypeService = cardTypeService;
+    this.cardService = cardService;
   }
 
   public async Task<AttributeDto> Create(string organizationId, string titleId, string versionId, AttributeDto dto, string? user)
@@ -40,6 +43,10 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
   {
     await EnsureAccess(organizationId, titleId, versionId, user);
     var referenceCounts = await cardTypeService.CountAttributeReferences(titleId, versionId);
+    foreach (var (name, count) in await cardService.CountAttributeReferences(titleId, versionId))
+    {
+      referenceCounts[name] = referenceCounts.GetValueOrDefault(name) + count;
+    }
     return (await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId))
         .Select(attribute =>
         {
@@ -63,7 +70,9 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
       return false;
     }
 
+    await cardService.ValidateAttributeRenameReferences(titleId, versionId, existing.Name, dto.Name);
     await cardTypeService.RenameAttributeReferences(titleId, versionId, existing.Name, dto.Name);
+    await cardService.RenameAttributeReferences(titleId, versionId, existing.Name, dto.Name);
     await PreserveForChildren(titleId, versionId, existing);
     existing.PartitionKey = versionId;
     existing.Name = dto.Name;
@@ -87,6 +96,7 @@ public class AttributeService : VersionedTitleEntityService<AttributeEntity>
     }
 
     await cardTypeService.DeleteAttributeReferences(titleId, versionId, existing.Name);
+    await cardService.DeleteAttributeReferences(titleId, versionId, existing.Name);
     await PreserveForChildren(titleId, versionId, existing);
     if (version.ParentVersionId is null)
     {

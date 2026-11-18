@@ -8,6 +8,7 @@ import { firstValueFrom } from 'rxjs';
 import { AttributeDto, AttributeRequestDto, AttributeType } from './attributes-model';
 import { AttributesService, attributeTypes } from './attributes-service';
 import { CardTypesService } from '../card-types/card-types-service';
+import { CardsService } from '../cards/cards-service';
 
 @Component({
   selector: 'edit-attribute',
@@ -21,6 +22,7 @@ export class EditAttribute implements OnInit {
   private readonly router = inject(Router);
   private readonly attributesService = inject(AttributesService);
   private readonly cardTypesService = inject(CardTypesService);
+  private readonly cardsService = inject(CardsService);
 
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
@@ -82,6 +84,7 @@ export class EditAttribute implements OnInit {
         ),
       );
       this.cardTypesService.invalidateCardTypes(this.titleId(), versionId);
+      this.cardsService.invalidateCardsForVersion(this.titleId(), versionId);
       const attributes = this.attributesService
         .getAttributes(this.titleId(), versionId)
         .map((attribute) =>

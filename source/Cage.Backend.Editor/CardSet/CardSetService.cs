@@ -1,4 +1,5 @@
 using Cage.Backend.Editor.Title;
+using Cage.Backend.Editor.Card;
 
 namespace Cage.Backend.Editor.CardSet;
 
@@ -8,6 +9,7 @@ public class CardSetService : VersionedTitleEntityService<CardSetEntity>
   public const int MaximumCardSetNameLength = 50;
 
   private readonly CardSetMapper mapper = new();
+  private readonly CardDao cardDao = new();
   private readonly ILogger<CardSetService> logger;
 
   public CardSetService(ILogger<CardSetService> logger) : base(new CardSetDao())
@@ -36,8 +38,16 @@ public class CardSetService : VersionedTitleEntityService<CardSetEntity>
   public async Task<List<CardSetDto>> ReadAll(string organizationId, string titleId, string versionId, string? user)
   {
     await EnsureAccess(organizationId, titleId, versionId, user);
+    var cardCounts = (await cardDao.QueryByTitleVersionAndAncestors(titleId, versionId))
+        .GroupBy(card => card.CardSetId)
+        .ToDictionary(group => group.Key, group => group.Count(), StringComparer.Ordinal);
     return (await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId))
-        .Select(mapper.ToDto)
+        .Select(cardSet =>
+        {
+          var dto = mapper.ToDto(cardSet);
+          dto.CardCount = cardCounts.GetValueOrDefault(cardSet.RowKey);
+          return dto;
+        })
         .ToList();
   }
 
@@ -73,6 +83,12 @@ public class CardSetService : VersionedTitleEntityService<CardSetEntity>
     if (existing is null)
     {
       return false;
+    }
+
+    if ((await cardDao.QueryByTitleVersionAndAncestors(titleId, versionId))
+        .Any(card => card.CardSetId == cardSetId))
+    {
+      throw new InvalidOperationException("Card sets with cards cannot be deleted.");
     }
 
     await PreserveForChildren(titleId, versionId, existing);

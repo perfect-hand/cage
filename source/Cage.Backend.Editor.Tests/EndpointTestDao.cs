@@ -3,6 +3,7 @@ using Azure.Data.Tables;
 using Cage.Backend.Editor.Attribute;
 using Cage.Backend.Editor.CardType;
 using Cage.Backend.Editor.CardSet;
+using Cage.Backend.Editor.Card;
 using Cage.Backend.Editor.Organization;
 using Cage.Backend.Editor.Tag;
 using Cage.Backend.Editor.Title;
@@ -20,6 +21,7 @@ public class EndpointTestDao
   private readonly TableClient tagsTableClient;
   private readonly TableClient cardTypesTableClient;
   private readonly TableClient cardSetsTableClient;
+  private readonly TableClient cardsTableClient;
 
   public EndpointTestDao(string connectionString)
   {
@@ -32,10 +34,12 @@ public class EndpointTestDao
     tableServiceClient.CreateTableIfNotExists(TagDao.TagsTableName);
     tableServiceClient.CreateTableIfNotExists(CardTypeDao.CardTypesTableName);
     tableServiceClient.CreateTableIfNotExists(CardSetDao.CardSetsTableName);
+    tableServiceClient.CreateTableIfNotExists(CardDao.CardsTableName);
     attributesTableClient = tableServiceClient.GetTableClient(AttributeDao.AttributesTableName);
     tagsTableClient = tableServiceClient.GetTableClient(TagDao.TagsTableName);
     cardTypesTableClient = tableServiceClient.GetTableClient(CardTypeDao.CardTypesTableName);
     cardSetsTableClient = tableServiceClient.GetTableClient(CardSetDao.CardSetsTableName);
+    cardsTableClient = tableServiceClient.GetTableClient(CardDao.CardsTableName);
     organizationsTableClient = tableServiceClient.GetTableClient(OrganizationDao.OrganizationsTableName);
     usersInOrganizationTableClient = tableServiceClient.GetTableClient(OrganizationDao.UsersInOrganizationTableName);
     titlesTableClient = tableServiceClient.GetTableClient(TitleDao.TitlesTableName);
@@ -155,6 +159,28 @@ public class EndpointTestDao
     return cardType.RowKey;
   }
 
+  public async Task<string> AddCard(
+      string titleVersionId,
+      string cardSetId,
+      string cardTypeId,
+      string name,
+      Dictionary<string, TypedValue>? attributes = null,
+      List<string>? tags = null)
+  {
+    var card = new CardEntity
+    {
+      PartitionKey = titleVersionId,
+      RowKey = Guid.NewGuid().ToString(),
+      Name = name,
+      CardSetId = cardSetId,
+      CardTypeId = cardTypeId,
+      AttributesJson = JsonSerializer.Serialize(attributes ?? new Dictionary<string, TypedValue>()),
+      TagsJson = JsonSerializer.Serialize(tags ?? new List<string>())
+    };
+    await cardsTableClient.AddEntityAsync(card);
+    return card.RowKey;
+  }
+
   public async Task<string> AddVersion(string titleId, string name, string? parentVersionId = null, bool isReadOnly = false)
   {
     var version = new TitleVersionEntity
@@ -201,6 +227,11 @@ public class EndpointTestDao
   public List<CardSetEntity> QueryCardSetsByTitleVersion(string titleVersionId)
   {
     return cardSetsTableClient.Query<CardSetEntity>(entity => entity.PartitionKey == titleVersionId).ToList();
+  }
+
+  public List<CardEntity> QueryCardsByTitleVersion(string titleVersionId)
+  {
+    return cardsTableClient.Query<CardEntity>(entity => entity.PartitionKey == titleVersionId).ToList();
   }
 
   public List<TitleEntity> QueryTitlesByOrganization(string organizationId)
