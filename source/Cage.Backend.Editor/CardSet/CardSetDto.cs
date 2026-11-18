@@ -4,4 +4,5 @@ public class CardSetDto
 {
   public string? Id { get; set; }
   public required string Name { get; set; }
+  public int CardCount { get; set; }
 }

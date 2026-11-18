@@ -1,6 +1,7 @@
 using Cage.Backend.Editor.Attribute;
 using Cage.Backend.Editor.CardType;
 using Cage.Backend.Editor.CardSet;
+using Cage.Backend.Editor.Card;
 using Cage.Backend.Editor.Info;
 using Cage.Backend.Editor.Organization;
 using Cage.Backend.Editor.Tag;
@@ -53,6 +54,7 @@ builder.Services.AddScoped<AttributeService>();
 builder.Services.AddScoped<TagService>();
 builder.Services.AddScoped<CardSetService>();
 builder.Services.AddScoped<CardTypeService>();
+builder.Services.AddScoped<CardService>();
 
 var app = builder.Build();
 app.UseHttpsRedirection();
@@ -93,6 +95,10 @@ organizations.MapGet("/{organizationId}/titles/{titleId}/versions/{versionId}/ca
 organizations.MapPost("/{organizationId}/titles/{titleId}/versions/{versionId}/card-sets", CreateVersionCardSet);
 organizations.MapPut("/{organizationId}/titles/{titleId}/versions/{versionId}/card-sets/{cardSetId}", UpdateVersionCardSet);
 organizations.MapDelete("/{organizationId}/titles/{titleId}/versions/{versionId}/card-sets/{cardSetId}", DeleteVersionCardSet);
+organizations.MapGet("/{organizationId}/titles/{titleId}/versions/{versionId}/card-sets/{cardSetId}/cards", GetAllCards);
+organizations.MapPost("/{organizationId}/titles/{titleId}/versions/{versionId}/card-sets/{cardSetId}/cards", CreateCard);
+organizations.MapPut("/{organizationId}/titles/{titleId}/versions/{versionId}/card-sets/{cardSetId}/cards/{cardId}", UpdateCard);
+organizations.MapDelete("/{organizationId}/titles/{titleId}/versions/{versionId}/card-sets/{cardSetId}/cards/{cardId}", DeleteCard);
 organizations.MapGet("/{organizationId}/titles/{titleId}/versions/{versionId}/card-types", GetAllVersionCardTypes);
 organizations.MapPost("/{organizationId}/titles/{titleId}/versions/{versionId}/card-types", CreateVersionCardType);
 organizations.MapPut("/{organizationId}/titles/{titleId}/versions/{versionId}/card-types/{cardTypeId}", UpdateVersionCardType);
@@ -542,6 +548,83 @@ static async Task<IResult> DeleteVersionCardSet(CardSetService cardSetService, s
   try
   {
     return await cardSetService.Delete(organizationId, titleId, versionId, cardSetId, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+  }
+}
+
+static async Task<IResult> GetAllCards(CardService cardService, string organizationId, string titleId, string versionId, string cardSetId, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return TypedResults.Ok(await cardService.ReadAll(organizationId, titleId, versionId, cardSetId, user));
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+}
+
+static async Task<IResult> CreateCard(CardService cardService, string organizationId, string titleId, string versionId, string cardSetId, CardDto dto, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    var card = await cardService.Create(organizationId, titleId, versionId, cardSetId, dto, user);
+    return TypedResults.Created($"/organizations/{organizationId}/titles/{titleId}/versions/{versionId}/card-sets/{cardSetId}/cards/{card.Id}", card);
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (ArgumentException)
+  {
+    return TypedResults.BadRequest();
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+  }
+}
+
+static async Task<IResult> UpdateCard(CardService cardService, string organizationId, string titleId, string versionId, string cardSetId, string cardId, CardDto dto, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await cardService.Update(organizationId, titleId, versionId, cardSetId, cardId, dto, user)
+        ? TypedResults.NoContent()
+        : TypedResults.NotFound();
+  }
+  catch (UnauthorizedAccessException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status403Forbidden);
+  }
+  catch (ArgumentException)
+  {
+    return TypedResults.BadRequest();
+  }
+  catch (InvalidOperationException)
+  {
+    return TypedResults.StatusCode(StatusCodes.Status409Conflict);
+  }
+}
+
+static async Task<IResult> DeleteCard(CardService cardService, string organizationId, string titleId, string versionId, string cardSetId, string cardId, HttpContext httpContext)
+{
+  var user = GetUser(httpContext);
+  try
+  {
+    return await cardService.Delete(organizationId, titleId, versionId, cardSetId, cardId, user)
         ? TypedResults.NoContent()
         : TypedResults.NotFound();
   }

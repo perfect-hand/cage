@@ -51,4 +51,11 @@ export class CardSetsService {
       [`${titleId}:${versionId}`]: [...cardSets].sort((a, b) => a.name.localeCompare(b.name)),
     }));
   }
+
+  setCardCount(titleId: string, versionId: string, cardSetId: string, cardCount: number): void {
+    const cardSets = this.getCardSets(titleId, versionId).map((cardSet) =>
+      cardSet.id === cardSetId ? { ...cardSet, cardCount } : cardSet,
+    );
+    this.setCardSets(titleId, versionId, cardSets);
+  }
 }

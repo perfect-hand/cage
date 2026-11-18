@@ -47,6 +47,7 @@ export class TitleVersionOverview implements OnInit {
   readonly tagCount = signal(0);
   readonly cardTypeCount = signal(0);
   readonly cardSetCount = signal(0);
+  readonly cardCount = signal(0);
   readonly isLoading = signal(true);
   readonly notFound = signal(false);
 
@@ -79,6 +80,7 @@ export class TitleVersionOverview implements OnInit {
       this.tagCount.set(tags.length);
       this.cardSetCount.set(cardSets.length);
       this.cardTypeCount.set(cardTypes.length);
+      this.cardCount.set(cardSets.reduce((count, cardSet) => count + cardSet.cardCount, 0));
     } catch (error) {
       console.error('Failed to load title version overview.', error);
     } finally {

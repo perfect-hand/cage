@@ -31,6 +31,26 @@ public class CardSetEndpointTests : EndpointTest, IClassFixture<WebApplicationFa
   }
 
   [Fact]
+  public async Task GetsCardCountsForCardSets()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var cardSetId = await testDao.AddCardSet(versionId, "Characters");
+    var cardTypeId = await testDao.AddCardType(versionId, "Hero");
+    await testDao.AddCard(versionId, cardSetId, cardTypeId, "Knight");
+    await testDao.AddCard(versionId, cardSetId, cardTypeId, "Wizard");
+
+    // WHEN
+    var response = await httpClient.GetAsync(CardSetsPath(organizationId, titleId, versionId));
+
+    // THEN
+    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    var cardSets = await response.Content.ReadFromJsonAsync<List<CardSetDto>>();
+    Assert.Equal(2, Assert.Single(Assert.IsType<List<CardSetDto>>(cardSets)).CardCount);
+  }
+
+  [Fact]
   public async Task FailsToGetCardSetsWithoutAuthentication()
   {
     // GIVEN

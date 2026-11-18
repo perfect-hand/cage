@@ -19,6 +19,7 @@ import { TitleVersionsService } from '../titles/title-versions-service';
 import { TagDto } from './tags-model';
 import { TagsService } from './tags-service';
 import { CardTypesService } from '../card-types/card-types-service';
+import { CardsService } from '../cards/cards-service';
 
 export const maximumTags = 100;
 
@@ -34,6 +35,7 @@ export class Tags implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly tagsService = inject(TagsService);
   private readonly cardTypesService = inject(CardTypesService);
+  private readonly cardsService = inject(CardsService);
   private readonly versionsService = inject(TitleVersionsService);
 
   readonly organizationId = input.required<string>();
@@ -100,9 +102,10 @@ export class Tags implements OnInit {
         .open(ConfirmDeleteDialog, {
           data: {
             name,
-            consequence: referenceCount > 0
-              ? `This tag is referenced by ${referenceCount} card type${referenceCount === 1 ? '' : 's'}. Deleting it will remove the tag from those card types.`
-              : undefined,
+            consequence:
+              referenceCount > 0
+                ? `This tag is referenced ${referenceCount} time${referenceCount === 1 ? '' : 's'} by card types or cards. Deleting it will remove those references.`
+                : undefined,
           },
         })
         .afterClosed(),
@@ -119,6 +122,7 @@ export class Tags implements OnInit {
         ),
       );
       this.cardTypesService.invalidateCardTypes(this.titleId(), versionId);
+      this.cardsService.invalidateCardsForVersion(this.titleId(), versionId);
       const tags = this.tags().filter((tag) => tag.id !== tagId);
       this.tags.set(tags);
       this.tagsService.setTags(this.titleId(), versionId, tags);

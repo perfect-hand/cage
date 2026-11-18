@@ -1,4 +1,5 @@
 using Cage.Backend.Editor.CardType;
+using Cage.Backend.Editor.Card;
 using Cage.Backend.Editor.Title;
 
 namespace Cage.Backend.Editor.Tag;
@@ -10,12 +11,14 @@ public class TagService : VersionedTitleEntityService<TagEntity>
 
   private readonly TagMapper mapper = new();
   private readonly CardTypeService cardTypeService;
+  private readonly CardService cardService;
   private readonly ILogger<TagService> logger;
 
-  public TagService(ILogger<TagService> logger, CardTypeService cardTypeService) : base(new TagDao())
+  public TagService(ILogger<TagService> logger, CardTypeService cardTypeService, CardService cardService) : base(new TagDao())
   {
     this.logger = logger;
     this.cardTypeService = cardTypeService;
+    this.cardService = cardService;
   }
 
   public async Task<TagDto> Create(string organizationId, string titleId, string versionId, TagDto dto, string? user)
@@ -40,6 +43,10 @@ public class TagService : VersionedTitleEntityService<TagEntity>
   {
     await EnsureAccess(organizationId, titleId, versionId, user);
     var referenceCounts = await cardTypeService.CountTagReferences(titleId, versionId);
+    foreach (var (name, count) in await cardService.CountTagReferences(titleId, versionId))
+    {
+      referenceCounts[name] = referenceCounts.GetValueOrDefault(name) + count;
+    }
     return (await entityDao.QueryByTitleVersionAndAncestors(titleId, versionId))
         .Select(tag =>
         {
@@ -64,6 +71,7 @@ public class TagService : VersionedTitleEntityService<TagEntity>
     }
 
     await cardTypeService.RenameTagReferences(titleId, versionId, existing.Name, dto.Name);
+    await cardService.RenameTagReferences(titleId, versionId, existing.Name, dto.Name);
     await PreserveForChildren(titleId, versionId, existing);
     existing.PartitionKey = versionId;
     existing.Name = dto.Name;
@@ -86,6 +94,7 @@ public class TagService : VersionedTitleEntityService<TagEntity>
     }
 
     await cardTypeService.DeleteTagReferences(titleId, versionId, existing.Name);
+    await cardService.DeleteTagReferences(titleId, versionId, existing.Name);
     await PreserveForChildren(titleId, versionId, existing);
     if (version.ParentVersionId is null)
     {
