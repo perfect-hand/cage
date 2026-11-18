@@ -9,6 +9,7 @@ export class CardsService {
   private readonly cardsByCardSet = signal<Record<string, CardDto[]>>({});
   private readonly pendingRequests = new Map<string, Promise<CardDto[]>>();
   private readonly pendingRequestTokens = new Map<string, object>();
+  // Version-wide generations keep in-flight card loads from restoring stale data after invalidation.
   private readonly generationsByVersion = new Map<string, number>();
 
   getCards(titleId: string, versionId: string, cardSetId: string): CardDto[] {
