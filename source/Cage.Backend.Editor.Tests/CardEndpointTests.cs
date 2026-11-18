@@ -120,6 +120,67 @@ public class CardEndpointTests : EndpointTest, IClassFixture<WebApplicationFacto
   }
 
   [Fact]
+  public async Task FailsToCreateCardWithInvalidCardSet()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var cardTypeId = await testDao.AddCardType(versionId, "Hero");
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(
+        CardsPath(organizationId, titleId, versionId, Guid.NewGuid().ToString()),
+        new CardDto { Name = "Knight", CardTypeId = cardTypeId });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Empty(testDao.QueryCardsByTitleVersion(versionId));
+  }
+
+  [Fact]
+  public async Task FailsToCreateCardWithUnknownAttribute()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var cardSetId = await testDao.AddCardSet(versionId, "Characters");
+    var cardTypeId = await testDao.AddCardType(versionId, "Hero");
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(
+        CardsPath(organizationId, titleId, versionId, cardSetId),
+        new CardDto
+        {
+          Name = "Knight",
+          CardTypeId = cardTypeId,
+          Attributes = new Dictionary<string, TypedValue> { ["Unknown"] = new(8) }
+        });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Empty(testDao.QueryCardsByTitleVersion(versionId));
+  }
+
+  [Fact]
+  public async Task FailsToCreateCardWithUnknownTag()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var cardSetId = await testDao.AddCardSet(versionId, "Characters");
+    var cardTypeId = await testDao.AddCardType(versionId, "Hero");
+
+    // WHEN
+    var response = await httpClient.PostAsJsonAsync(
+        CardsPath(organizationId, titleId, versionId, cardSetId),
+        new CardDto { Name = "Knight", CardTypeId = cardTypeId, Tags = ["Unknown"] });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Empty(testDao.QueryCardsByTitleVersion(versionId));
+  }
+
+  [Fact]
   public async Task FailsToCreateCardWithAttributeOfWrongType()
   {
     // GIVEN
@@ -282,6 +343,117 @@ public class CardEndpointTests : EndpointTest, IClassFixture<WebApplicationFacto
           Name = new string('a', CardService.MaximumCardNameLength + 1),
           CardTypeId = cardTypeId
         });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryCardsByTitleVersion(versionId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateCardWithInvalidCardSet()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var cardSetId = await testDao.AddCardSet(versionId, "Characters");
+    var cardTypeId = await testDao.AddCardType(versionId, "Hero");
+    var cardId = await testDao.AddCard(versionId, cardSetId, cardTypeId, "Old");
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"{CardsPath(organizationId, titleId, versionId, Guid.NewGuid().ToString())}/{cardId}",
+        new CardDto { Name = "New", CardTypeId = cardTypeId });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryCardsByTitleVersion(versionId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateCardWithInvalidCardType()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var cardSetId = await testDao.AddCardSet(versionId, "Characters");
+    var cardTypeId = await testDao.AddCardType(versionId, "Hero");
+    var cardId = await testDao.AddCard(versionId, cardSetId, cardTypeId, "Old");
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"{CardsPath(organizationId, titleId, versionId, cardSetId)}/{cardId}",
+        new CardDto { Name = "New", CardTypeId = Guid.NewGuid().ToString() });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryCardsByTitleVersion(versionId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateCardWithWrongTypeAttribute()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var cardSetId = await testDao.AddCardSet(versionId, "Characters");
+    var cardTypeId = await testDao.AddCardType(versionId, "Hero");
+    await testDao.AddAttribute(versionId, "Health", CageType.Int);
+    var cardId = await testDao.AddCard(versionId, cardSetId, cardTypeId, "Old");
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"{CardsPath(organizationId, titleId, versionId, cardSetId)}/{cardId}",
+        new CardDto
+        {
+          Name = "New",
+          CardTypeId = cardTypeId,
+          Attributes = new Dictionary<string, TypedValue> { ["Health"] = new("eight") }
+        });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryCardsByTitleVersion(versionId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateCardWithUnknownAttribute()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var cardSetId = await testDao.AddCardSet(versionId, "Characters");
+    var cardTypeId = await testDao.AddCardType(versionId, "Hero");
+    var cardId = await testDao.AddCard(versionId, cardSetId, cardTypeId, "Old");
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"{CardsPath(organizationId, titleId, versionId, cardSetId)}/{cardId}",
+        new CardDto
+        {
+          Name = "New",
+          CardTypeId = cardTypeId,
+          Attributes = new Dictionary<string, TypedValue> { ["Unknown"] = new(8) }
+        });
+
+    // THEN
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("Old", Assert.Single(testDao.QueryCardsByTitleVersion(versionId)).Name);
+  }
+
+  [Fact]
+  public async Task FailsToUpdateCardWithUnknownTag()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var versionId = testDao.GetInitialVersionId(titleId);
+    var cardSetId = await testDao.AddCardSet(versionId, "Characters");
+    var cardTypeId = await testDao.AddCardType(versionId, "Hero");
+    var cardId = await testDao.AddCard(versionId, cardSetId, cardTypeId, "Old");
+
+    // WHEN
+    var response = await httpClient.PutAsJsonAsync(
+        $"{CardsPath(organizationId, titleId, versionId, cardSetId)}/{cardId}",
+        new CardDto { Name = "New", CardTypeId = cardTypeId, Tags = ["Unknown"] });
 
     // THEN
     Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -466,6 +638,55 @@ public class CardEndpointTests : EndpointTest, IClassFixture<WebApplicationFacto
     // THEN
     Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     Assert.Empty(testDao.QueryCardsByTitleVersion(childVersionId));
+  }
+
+  [Fact]
+  public async Task DeletesCardsWhenDeletingTitle()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var rootVersionId = testDao.GetInitialVersionId(titleId);
+    var childVersionId = await testDao.AddVersion(titleId, "2.0", rootVersionId);
+    var rootCardSetId = await testDao.AddCardSet(rootVersionId, "Root set");
+    var rootCardTypeId = await testDao.AddCardType(rootVersionId, "Hero");
+    await testDao.AddCard(rootVersionId, rootCardSetId, rootCardTypeId, "Root card");
+    var childCardSetId = await testDao.AddCardSet(childVersionId, "Child set");
+    var childCardTypeId = await testDao.AddCardType(childVersionId, "Villain");
+    await testDao.AddCard(childVersionId, childCardSetId, childCardTypeId, "Child card");
+
+    // WHEN
+    var response = await httpClient.DeleteAsync($"/organizations/{organizationId}/titles/{titleId}");
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    Assert.Empty(testDao.QueryCardsByTitleVersion(rootVersionId));
+    Assert.Empty(testDao.QueryCardsByTitleVersion(childVersionId));
+  }
+
+  [Fact]
+  public async Task DeletingCardDoesNotAffectChildTitleVersion()
+  {
+    // GIVEN
+    var (organizationId, titleId) = await testDao.AddTitleToOwnOrganization();
+    var parentVersionId = testDao.GetInitialVersionId(titleId);
+    var cardSetId = await testDao.AddCardSet(parentVersionId, "Characters");
+    var cardTypeId = await testDao.AddCardType(parentVersionId, "Hero");
+    var cardId = await testDao.AddCard(parentVersionId, cardSetId, cardTypeId, "Knight");
+    var childVersionId = await testDao.AddVersion(titleId, "2.0", parentVersionId);
+
+    // WHEN
+    var response = await httpClient.DeleteAsync(
+        $"{CardsPath(organizationId, titleId, parentVersionId, cardSetId)}/{cardId}");
+    var childResponse = await httpClient.GetAsync(
+        CardsPath(organizationId, titleId, childVersionId, cardSetId));
+
+    // THEN
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    Assert.Equal(HttpStatusCode.OK, childResponse.StatusCode);
+    var cards = await childResponse.Content.ReadFromJsonAsync<List<CardDto>>();
+    var card = Assert.Single(Assert.IsType<List<CardDto>>(cards));
+    Assert.Equal(cardId, card.Id);
+    Assert.Equal("Knight", card.Name);
   }
 
   private static string CardsPath(string organizationId, string titleId, string versionId, string cardSetId)
