@@ -91,7 +91,9 @@ export class Cards implements OnInit {
           `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/card-sets/${cardSetId}/cards/${cardId}`,
         ),
       );
-      const cards = this.cards().filter((card) => card.id !== cardId);
+      const cards = this.cardsService
+        .getCards(this.titleId(), versionId, cardSetId)
+        .filter((card) => card.id !== cardId);
       this.cards.set(cards);
       if (this.selectedCardId() === cardId) {
         this.selectedCardId.set(null);
