@@ -14,13 +14,13 @@
   }
 
   td:last-child {
-    text-align: right;
+    text-align: left;
   }
 }
 
 .version-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: var(--app-space-xs);
 }
 
