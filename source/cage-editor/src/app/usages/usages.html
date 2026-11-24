@@ -29,7 +29,16 @@
               </td>
               <td>Card Type</td>
             </tr>
-          } @empty {
+          }
+          @for (usage of cards(); track usage.card.id) {
+            <tr>
+              <td>
+                <a [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId(), 'card-sets', usage.cardSetId, 'cards', usage.card.id, 'edit']">{{ usage.card.name }}</a>
+              </td>
+              <td>Card</td>
+            </tr>
+          }
+          @if (!cardTypes().length && !cards().length) {
             <tr><td colspan="2">No usages found.</td></tr>
           }
         </tbody>

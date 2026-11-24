@@ -2,8 +2,11 @@ import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } fro
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { AttributesService } from '../attributes/attributes-service';
+import { CardSetsService } from '../card-sets/card-sets-service';
 import { CardTypeDto } from '../card-types/card-types-model';
 import { CardTypesService } from '../card-types/card-types-service';
+import { CardDto } from '../cards/cards-model';
+import { CardsService } from '../cards/cards-service';
 import { TagsService } from '../tags/tags-service';
 
 @Component({
@@ -15,6 +18,8 @@ export class Usages implements OnInit {
   private readonly attributesService = inject(AttributesService);
   private readonly tagsService = inject(TagsService);
   private readonly cardTypesService = inject(CardTypesService);
+  private readonly cardSetsService = inject(CardSetsService);
+  private readonly cardsService = inject(CardsService);
 
   readonly organizationId = input.required<string>();
   readonly titleId = input.required<string>();
@@ -23,6 +28,7 @@ export class Usages implements OnInit {
   readonly tagId = input<string>();
   readonly name = signal('');
   readonly cardTypes = signal<CardTypeDto[]>([]);
+  readonly cards = signal<{ card: CardDto; cardSetId: string }[]>([]);
   readonly isLoading = signal(true);
   readonly notFound = signal(false);
   readonly error = signal(false);
@@ -48,11 +54,23 @@ export class Usages implements OnInit {
       }
 
       this.name.set(entity.name);
-      const cardTypes = await this.cardTypesService.loadCardTypes(organizationId, titleId, versionId);
-      this.cardTypes.set(cardTypes.filter((cardType) =>
+      const [cardTypes, cardSets] = await Promise.all([
+        this.cardTypesService.loadCardTypes(organizationId, titleId, versionId),
+        this.cardSetsService.loadCardSets(organizationId, titleId, versionId),
+      ]);
+      const referencesEntity = (item: Pick<CardDto, 'attributes' | 'tags'>) =>
         attributeId
-          ? Object.prototype.hasOwnProperty.call(cardType.attributes, entity.name)
-          : cardType.tags.includes(entity.name),
+          ? Object.prototype.hasOwnProperty.call(item.attributes, entity.name)
+          : item.tags.includes(entity.name);
+      this.cardTypes.set(cardTypes.filter(referencesEntity));
+      const cardsBySet = await Promise.all(
+        cardSets.map(async (cardSet) => ({
+          cardSetId: cardSet.id,
+          cards: await this.cardsService.loadCards(organizationId, titleId, versionId, cardSet.id),
+        })),
+      );
+      this.cards.set(cardsBySet.flatMap(({ cardSetId, cards }) =>
+        cards.filter(referencesEntity).map((card) => ({ card, cardSetId })),
       ));
     } catch (error) {
       console.error('Failed to load usages.', error);
