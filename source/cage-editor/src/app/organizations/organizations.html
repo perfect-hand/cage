@@ -20,6 +20,7 @@
           type="button"
           [routerLink]="['/organizations', organization.id, 'edit']"
           [attr.aria-label]="'Edit organization ' + organization.name"
+          [matTooltip]="'Edit organization ' + organization.name"
         >
           <mat-icon aria-hidden="true">edit</mat-icon>
         </button>
@@ -29,6 +30,7 @@
           (click)="deleteOrganization(organization.id, organization.name)"
           [disabled]="isDeleting()"
           [attr.aria-label]="'Delete organization ' + organization.name"
+          [matTooltip]="'Delete organization ' + organization.name"
         >
           <mat-icon aria-hidden="true">delete</mat-icon>
         </button>

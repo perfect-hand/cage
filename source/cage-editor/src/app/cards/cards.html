@@ -60,6 +60,7 @@
                         'edit',
                       ]"
                       [attr.aria-label]="'Edit card ' + card.name"
+                      [matTooltip]="'Edit card ' + card.name"
                     >
                       <mat-icon aria-hidden="true">edit</mat-icon>
                     </button>
@@ -69,6 +70,7 @@
                       (click)="deleteCard(card.id, card.name)"
                       [disabled]="isDeleting()"
                       [attr.aria-label]="'Delete card ' + card.name"
+                      [matTooltip]="'Delete card ' + card.name"
                     >
                       <mat-icon aria-hidden="true">delete</mat-icon>
                     </button>

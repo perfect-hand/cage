@@ -39,6 +39,7 @@
                       mat-icon-button
                       [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId(), 'tags', tag.id, 'usages']"
                       [attr.aria-label]="'Find usages of tag ' + tag.name"
+                      [matTooltip]="'Find usages of tag ' + tag.name"
                     >
                       <mat-icon aria-hidden="true">search</mat-icon>
                     </a>
@@ -58,6 +59,7 @@
                         'edit',
                       ]"
                       [attr.aria-label]="'Edit tag ' + tag.name"
+                      [matTooltip]="'Edit tag ' + tag.name"
                     >
                       <mat-icon aria-hidden="true">edit</mat-icon>
                     </button>
@@ -67,6 +69,7 @@
                       (click)="deleteTag(tag.id, tag.name, tag.referenceCount ?? 0)"
                       [disabled]="isDeleting()"
                       [attr.aria-label]="'Delete tag ' + tag.name"
+                      [matTooltip]="'Delete tag ' + tag.name"
                     >
                       <mat-icon aria-hidden="true">delete</mat-icon>
                     </button>

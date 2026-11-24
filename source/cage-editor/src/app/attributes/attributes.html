@@ -41,6 +41,7 @@
                     mat-icon-button
                     [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId(), 'attributes', attribute.id, 'usages']"
                     [attr.aria-label]="'Find usages of attribute ' + attribute.name"
+                    [matTooltip]="'Find usages of attribute ' + attribute.name"
                   >
                     <mat-icon aria-hidden="true">search</mat-icon>
                   </a>
@@ -50,6 +51,7 @@
                     type="button"
                     [routerLink]="['/organizations', organizationId(), 'titles', titleId(), 'versions', versionId(), 'attributes', attribute.id, 'edit']"
                     [attr.aria-label]="'Edit attribute ' + attribute.name"
+                    [matTooltip]="'Edit attribute ' + attribute.name"
                   >
                     <mat-icon aria-hidden="true">edit</mat-icon>
                   </button>
@@ -59,6 +61,7 @@
                     (click)="deleteAttribute(attribute.id, attribute.name, attribute.referenceCount ?? 0)"
                     [disabled]="isDeleting()"
                     [attr.aria-label]="'Delete attribute ' + attribute.name"
+                    [matTooltip]="'Delete attribute ' + attribute.name"
                   >
                     <mat-icon aria-hidden="true">delete</mat-icon>
                   </button>
