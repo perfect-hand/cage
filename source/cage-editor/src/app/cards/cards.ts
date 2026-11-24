@@ -10,8 +10,6 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -23,12 +21,13 @@ import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
 import { TitleVersionsService } from '../titles/title-versions-service';
 import { CardDto } from './cards-model';
 import { CardsService } from './cards-service';
+import { EditCard } from './edit-card';
 
 export const maximumCards = 1000;
 
 @Component({
   selector: 'cards',
-  imports: [MatProgressSpinnerModule, MatButtonModule, MatIconModule, MatTooltipModule, RouterLink],
+  imports: [MatProgressSpinnerModule, MatButtonModule, RouterLink, EditCard],
   templateUrl: './cards.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './cards.scss',
@@ -53,6 +52,10 @@ export class Cards implements OnInit {
     const searchTerm = this.searchTerm().trim().toLowerCase();
     return this.cards().filter((card) => card.name.toLowerCase().includes(searchTerm));
   });
+  readonly selectedCardId = signal<string | null>(null);
+  readonly selectedCards = computed(() =>
+    this.cards().filter((card) => card.id === this.selectedCardId()),
+  );
   readonly isLoading = signal(false);
   readonly isDeleting = signal(false);
   readonly isReadOnly = signal(false);
@@ -65,10 +68,6 @@ export class Cards implements OnInit {
 
   setSearchTerm(event: Event): void {
     this.searchTerm.set((event.target as HTMLInputElement).value);
-  }
-
-  displayCardType(card: CardDto): string {
-    return this.cardTypes().find((cardType) => cardType.id === card.cardTypeId)?.name ?? '';
   }
 
   async deleteCard(cardId: string, name: string): Promise<void> {
@@ -92,8 +91,13 @@ export class Cards implements OnInit {
           `/organizations/${this.organizationId()}/titles/${this.titleId()}/versions/${versionId}/card-sets/${cardSetId}/cards/${cardId}`,
         ),
       );
-      const cards = this.cards().filter((card) => card.id !== cardId);
+      const cards = this.cardsService
+        .getCards(this.titleId(), versionId, cardSetId)
+        .filter((card) => card.id !== cardId);
       this.cards.set(cards);
+      if (this.selectedCardId() === cardId) {
+        this.selectedCardId.set(null);
+      }
       this.cardsService.setCards(this.titleId(), versionId, cardSetId, cards);
       this.cardSetsService.setCardCount(this.titleId(), versionId, cardSetId, cards.length);
     } catch (error) {

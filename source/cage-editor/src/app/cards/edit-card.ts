@@ -8,10 +8,8 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
-import { form, FormField, maxLength, pattern, required } from '@angular/forms/signals';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { AttributeDto } from '../attributes/attributes-model';
 import { AttributesService } from '../attributes/attributes-service';
@@ -42,10 +40,8 @@ interface CardFormModel {
   selector: 'edit-card',
   imports: [
     EntityValuesEditorComponent,
-    FormField,
     MatButtonModule,
     MatProgressSpinnerModule,
-    RouterLink,
   ],
   templateUrl: './edit-card.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -53,7 +49,6 @@ interface CardFormModel {
 })
 export class EditCard implements OnInit {
   private readonly http = inject(HttpClient);
-  private readonly router = inject(Router);
   private readonly attributesService = inject(AttributesService);
   private readonly tagsService = inject(TagsService);
   private readonly cardSetsService = inject(CardSetsService);
@@ -66,6 +61,7 @@ export class EditCard implements OnInit {
   readonly versionId = input.required<string>();
   readonly cardSetId = input.required<string>();
   readonly cardId = input.required<string>();
+  readonly disabled = input(false);
   readonly attributes = signal<AttributeDto[]>([]);
   readonly tags = signal<TagDto[]>([]);
   readonly cardTypes = signal<CardTypeDto[]>([]);
@@ -84,21 +80,8 @@ export class EditCard implements OnInit {
     tagIds: [],
     attributeValues: {},
   });
-  readonly cardForm = form(this.model, (path) => {
-    required(path.name, { message: 'Enter a card name.' });
-    pattern(path.name, /\S/, { message: 'Enter a card name.' });
-    maxLength(path.name, 50, { message: 'Enter a card name of at most 50 characters.' });
-  });
-
   ngOnInit(): void {
     void this.loadForm();
-  }
-
-  setCardTypeId(event: Event): void {
-    this.model.update((model) => ({
-      ...model,
-      cardTypeId: (event.target as HTMLSelectElement).value,
-    }));
   }
 
   setAttributeValues(attributeValues: Record<string, string>): void {
@@ -109,27 +92,8 @@ export class EditCard implements OnInit {
     this.model.update((model) => ({ ...model, tagIds }));
   }
 
-  cardsPath(): string[] {
-    return [
-      '/organizations',
-      this.organizationId(),
-      'titles',
-      this.titleId(),
-      'versions',
-      this.versionId(),
-      'card-sets',
-      this.cardSetId(),
-      'cards',
-    ];
-  }
-
   async updateCard(): Promise<void> {
-    if (
-      this.cardForm().invalid() ||
-      this.isSubmitting() ||
-      this.isReadOnly() ||
-      !this.model().cardTypeId
-    ) {
+    if (this.disabled() || this.isSubmitting() || this.isReadOnly() || !this.model().cardTypeId) {
       return;
     }
 
@@ -150,7 +114,7 @@ export class EditCard implements OnInit {
         }
       }
       const request: CardRequestDto = {
-        name: this.model().name.trim(),
+        name: this.model().name,
         cardTypeId: this.model().cardTypeId,
         attributes,
         tags: this.tags()
@@ -172,7 +136,6 @@ export class EditCard implements OnInit {
           : card,
       );
       this.cardsService.setCards(this.titleId(), versionId, cardSetId, cards);
-      await this.router.navigate(this.cardsPath());
     } catch (error) {
       console.error('Failed to update card.', error);
       this.errorMessage.set(error instanceof Error ? error.message : 'Failed to update card.');

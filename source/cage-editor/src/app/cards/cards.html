@@ -1,12 +1,16 @@
 <main class="content-panel">
   <section class="content-section">
-    <div class="section-header">
-      <h2>
-        Cards
-        @if (cardSet(); as cardSet) {
-          in {{ cardSet.name }}
-        }
-      </h2>
+    <div class="section-header section-header-actions">
+      <h2>{{ cardSet()?.name ?? 'Cards' }}</h2>
+      <button
+        mat-button
+        type="button"
+        [routerLink]="[
+          '/organizations', organizationId(), 'titles', titleId(), 'versions', versionId(), 'card-sets',
+        ]"
+      >
+        Back to card sets
+      </button>
     </div>
 
     @if (isLoading()) {
@@ -17,117 +21,87 @@
     } @else if (notFound()) {
       <p class="field-error" role="alert">Card set or title version not found.</p>
     } @else {
-      <label for="card-search">Search cards</label>
-      <input
-        id="card-search"
-        class="text-input"
-        type="search"
-        [value]="searchTerm()"
-        (input)="setSearchTerm($event)"
-        autocomplete="off"
-        aria-controls="card-table"
-      />
-      <table id="card-table" class="card-table">
-        <thead>
-          <tr>
-            <th scope="col">Name</th>
-            <th scope="col">Card type</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (card of filteredCards(); track card.id) {
-            <tr>
-              <td>{{ card.name }}</td>
-              <td>{{ displayCardType(card) }}</td>
-              <td>
-                @if (!isReadOnly()) {
-                  <div class="card-actions">
-                    <button
-                      mat-icon-button
-                      type="button"
-                      [routerLink]="[
-                        '/organizations',
-                        organizationId(),
-                        'titles',
-                        titleId(),
-                        'versions',
-                        versionId(),
-                        'card-sets',
-                        cardSetId(),
-                        'cards',
-                        card.id,
-                        'edit',
-                      ]"
-                      [attr.aria-label]="'Edit card ' + card.name"
-                      [matTooltip]="'Edit card ' + card.name"
-                    >
-                      <mat-icon aria-hidden="true">edit</mat-icon>
-                    </button>
-                    <button
-                      mat-icon-button
-                      type="button"
-                      (click)="deleteCard(card.id, card.name)"
-                      [disabled]="isDeleting()"
-                      [attr.aria-label]="'Delete card ' + card.name"
-                      [matTooltip]="'Delete card ' + card.name"
-                    >
-                      <mat-icon aria-hidden="true">delete</mat-icon>
-                    </button>
-                  </div>
-                }
-              </td>
-            </tr>
-          } @empty {
-            @if (searchTerm().trim()) {
-              <tr>
-                <td colspan="3">No cards match your search.</td>
-              </tr>
-            }
+      @if (isReadOnly()) {
+        <p>This version is read-only.</p>
+      }
+      <div class="master-detail">
+        <div class="card-master">
+          <button
+            mat-button
+            type="button"
+            [routerLink]="[
+              '/organizations', organizationId(), 'titles', titleId(), 'versions', versionId(),
+              'card-sets', cardSetId(), 'cards', 'new',
+            ]"
+            [disabled]="isReadOnly() || cards().length >= maximumCards"
+          >
+            New card
+          </button>
+          @if (!isReadOnly() && cards().length >= maximumCards) {
+            <p>Maximum of {{ maximumCards }} cards reached.</p>
           }
-        </tbody>
-      </table>
-
-      <div class="form-actions">
-        <button
-          mat-button
-          type="button"
-          [routerLink]="[
-            '/organizations',
-            organizationId(),
-            'titles',
-            titleId(),
-            'versions',
-            versionId(),
-            'card-sets',
-            cardSetId(),
-            'cards',
-            'new',
-          ]"
-          [disabled]="isReadOnly() || cards().length >= maximumCards"
-        >
-          New card
-        </button>
-        <button
-          mat-button
-          type="button"
-          [routerLink]="[
-            '/organizations',
-            organizationId(),
-            'titles',
-            titleId(),
-            'versions',
-            versionId(),
-            'card-sets',
-          ]"
-        >
-          Back to card sets
-        </button>
-        @if (isReadOnly()) {
-          <span>This version is read-only.</span>
-        } @else if (cards().length >= maximumCards) {
-          <span>Maximum of {{ maximumCards }} cards reached.</span>
-        }
+          <label for="card-search">Search cards</label>
+          <input
+            id="card-search"
+            class="text-input"
+            type="search"
+            [value]="searchTerm()"
+            (input)="setSearchTerm($event)"
+            autocomplete="off"
+          />
+          <div class="card-tree">
+            @for (cardType of cardTypes(); track cardType.id) {
+              <details open>
+                <summary>{{ cardType.name }}</summary>
+                <ul>
+                  @for (card of filteredCards(); track card.id) {
+                    @if (card.cardTypeId === cardType.id) {
+                      <li>
+                        <button
+                          mat-button
+                          type="button"
+                          [attr.aria-pressed]="selectedCardId() === card.id"
+                          (click)="selectedCardId.set(card.id)"
+                        >
+                          {{ card.name }}
+                        </button>
+                      </li>
+                    }
+                  }
+                </ul>
+              </details>
+            }
+            @if (searchTerm().trim() && !filteredCards().length) {
+              <p>No cards match your search.</p>
+            }
+          </div>
+        </div>
+        <div class="card-detail">
+          @for (card of selectedCards(); track card.id) {
+            <h3>{{ card.name }}</h3>
+            @if (!isReadOnly()) {
+              <button
+                mat-button
+                type="button"
+                (click)="deleteCard(card.id, card.name)"
+                [disabled]="isDeleting() || editor.isSubmitting()"
+              >
+                Delete card
+              </button>
+            }
+            <edit-card
+              #editor
+              [organizationId]="organizationId()"
+              [titleId]="titleId()"
+              [versionId]="versionId()"
+              [cardSetId]="cardSetId()"
+              [cardId]="card.id"
+              [disabled]="isDeleting()"
+            />
+          } @empty {
+            <p>Select a card to view its details.</p>
+          }
+        </div>
       </div>
     }
   </section>

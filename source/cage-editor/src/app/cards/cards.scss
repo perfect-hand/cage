@@ -1,16 +1,28 @@
-.card-actions {
-  display: flex;
-  gap: var(--app-space-xs);
+.card-master {
+  display: grid;
+  align-content: start;
+  gap: var(--app-space-sm);
 }
 
-.card-table {
-  width: 100%;
-  border-collapse: collapse;
-  text-align: left;
-
-  th,
-  td {
-    padding: var(--app-space-sm) var(--app-space-md);
-    border-bottom: 1px solid var(--app-outline-subtle);
+.card-tree {
+  summary {
+    cursor: pointer;
+    padding: var(--app-space-sm);
   }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding-left: var(--app-space-lg);
+  }
+
+  button[aria-pressed='true'] {
+    background: var(--mat-sys-secondary-container);
+    color: var(--mat-sys-on-secondary-container);
+  }
+}
+
+.card-detail h3 {
+  margin: 0 0 var(--app-space-sm);
+  font: var(--mat-sys-title-large);
 }
