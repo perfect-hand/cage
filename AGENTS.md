@@ -16,6 +16,8 @@ Reuse data cached in frontend services rather than issuing duplicate HTTP reques
 
 Use TypeScript DTOs for HTTP request bodies and response data; do not send inline object literals or use untyped `HttpClient` responses.
 
+Add tooltips to icon-only action buttons, including locked title-version icons.
+
 ## Angular styling
 
 - Put recurring patterns (page/section layout, headers, lists, form actions, inputs, button spacing) in shared partials under `src/styles/` and import them from `src/styles.scss`. Do not copy them into component styles.
