@@ -40,17 +40,6 @@
           }
         </select>
 
-        <app-entity-values-editor
-          [attributes]="attributes()"
-          [tags]="tags()"
-          [inheritedAttributes]="inheritedValues().attributes"
-          [inheritedTags]="inheritedValues().tags"
-          [attributeValues]="model().attributeValues"
-          (attributeValuesChange)="setAttributeValues($event)"
-          [tagIds]="model().tagIds"
-          (tagIdsChange)="setTagIds($event)"
-        />
-
         @if (!cardTypes().length) {
           <p class="field-error" role="alert">Create a card type before adding cards.</p>
         }

@@ -7,3 +7,10 @@ form {
   gap: var(--app-space-sm);
   max-width: 40rem;
 }
+
+form > fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}

@@ -20,7 +20,6 @@ import { CreateCardSet } from './card-sets/create-card-set';
 import { EditCardSet } from './card-sets/edit-card-set';
 import { Cards } from './cards/cards';
 import { CreateCard } from './cards/create-card';
-import { EditCard } from './cards/edit-card';
 import { Titles } from './titles/titles';
 import { TitleVersions } from './titles/title-versions';
 import { TitleVersionOverview } from './titles/title-version-overview';
@@ -107,7 +106,7 @@ export const routes: Routes = [
       },
       {
         path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/card-sets/:cardSetId/cards/:cardId/edit',
-        component: EditCard,
+        redirectTo: '/organizations/:organizationId/titles/:titleId/versions/:versionId/card-sets/:cardSetId/cards',
       },
       {
         path: 'organizations/:organizationId/titles/:titleId/versions/:versionId/card-types',
