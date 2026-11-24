@@ -34,7 +34,7 @@
             <tr>
               <td>
                 @if (version.isReadOnly) {
-                  <mat-icon aria-label="Read-only">lock</mat-icon>
+                  <mat-icon aria-label="Read-only" matTooltip="Read-only">lock</mat-icon>
                 }
               </td>
               <td>
@@ -67,6 +67,7 @@
                       'edit',
                     ]"
                     [attr.aria-label]="'Rename version ' + version.name"
+                    [matTooltip]="'Rename version ' + version.name"
                   >
                     <mat-icon aria-hidden="true">edit</mat-icon>
                   </button>
@@ -76,6 +77,9 @@
                     (click)="setReadOnly(version)"
                     [disabled]="isSubmitting()"
                     [attr.aria-label]="
+                      (version.isReadOnly ? 'Unlock' : 'Lock') + ' version ' + version.name
+                    "
+                    [matTooltip]="
                       (version.isReadOnly ? 'Unlock' : 'Lock') + ' version ' + version.name
                     "
                   >
@@ -89,6 +93,7 @@
                     (click)="deleteVersion(version)"
                     [disabled]="isSubmitting()"
                     [attr.aria-label]="'Delete version ' + version.name"
+                    [matTooltip]="'Delete version ' + version.name"
                   >
                     <mat-icon aria-hidden="true">delete</mat-icon>
                   </button>

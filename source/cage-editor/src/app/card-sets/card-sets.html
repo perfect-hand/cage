@@ -50,6 +50,7 @@
                       'cards',
                     ]"
                     [attr.aria-label]="'View cards in ' + cardSet.name"
+                    [matTooltip]="'View cards in ' + cardSet.name"
                   >
                     <mat-icon aria-hidden="true">view_list</mat-icon>
                   </button>
@@ -69,6 +70,7 @@
                         'edit',
                       ]"
                       [attr.aria-label]="'Edit card set ' + cardSet.name"
+                      [matTooltip]="'Edit card set ' + cardSet.name"
                     >
                       <mat-icon aria-hidden="true">edit</mat-icon>
                     </button>
@@ -78,6 +80,7 @@
                       (click)="deleteCardSet(cardSet.id, cardSet.name)"
                       [disabled]="isDeleting()"
                       [attr.aria-label]="'Delete card set ' + cardSet.name"
+                      [matTooltip]="'Delete card set ' + cardSet.name"
                     >
                       <mat-icon aria-hidden="true">delete</mat-icon>
                     </button>

@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import {
   NavigationEnd,
   Router,
@@ -18,7 +19,15 @@ import { TitlesService } from '../titles/titles-service';
 
 @Component({
   selector: 'home',
-  imports: [MatButtonModule, MatIconModule, RouterLink, RouterLinkActive, RouterOutlet, Landing],
+  imports: [
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    RouterLink,
+    RouterLinkActive,
+    RouterOutlet,
+    Landing,
+  ],
   templateUrl: './home.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './home.scss',

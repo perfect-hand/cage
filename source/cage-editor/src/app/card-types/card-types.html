@@ -55,6 +55,7 @@
                         'edit',
                       ]"
                       [attr.aria-label]="'Edit card type ' + cardType.name"
+                      [matTooltip]="'Edit card type ' + cardType.name"
                     >
                       <mat-icon aria-hidden="true">edit</mat-icon>
                     </button>
@@ -64,6 +65,7 @@
                       (click)="deleteCardType(cardType.id, cardType.name)"
                       [disabled]="isDeleting()"
                       [attr.aria-label]="'Delete card type ' + cardType.name"
+                      [matTooltip]="'Delete card type ' + cardType.name"
                     >
                       <mat-icon aria-hidden="true">delete</mat-icon>
                     </button>

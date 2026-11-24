@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { ConfirmDeleteDialog } from '../confirm-delete-dialog';
@@ -12,12 +13,7 @@ import { TitlesService } from './titles-service';
 
 @Component({
   selector: 'titles',
-  imports: [
-    MatProgressSpinnerModule,
-    MatButtonModule,
-    MatIconModule,
-    RouterLink,
-  ],
+  imports: [MatProgressSpinnerModule, MatButtonModule, MatIconModule, MatTooltipModule, RouterLink],
   templateUrl: './titles.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './titles.scss',

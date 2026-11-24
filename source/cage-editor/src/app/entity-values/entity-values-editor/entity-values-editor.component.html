@@ -46,6 +46,7 @@
           mat-icon-button
           type="button"
           [attr.aria-label]="'Remove attribute ' + attribute.name"
+          [matTooltip]="'Remove attribute ' + attribute.name"
           (click)="removeAttribute(attribute.name)"
         >
           <mat-icon>delete</mat-icon>
@@ -91,6 +92,7 @@
           mat-icon-button
           type="button"
           [attr.aria-label]="'Remove tag ' + tag.name"
+          [matTooltip]="'Remove tag ' + tag.name"
           (click)="removeTag(tag)"
         >
           <mat-icon>delete</mat-icon>

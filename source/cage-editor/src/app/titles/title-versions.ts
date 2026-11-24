@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component, inject, computed, input, OnInit, si
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -13,7 +14,14 @@ import { maximumTitleVersions, TitleVersionsService } from './title-versions-ser
 
 @Component({
   selector: 'title-versions',
-  imports: [DatePipe, MatButtonModule, MatIconModule, MatProgressSpinnerModule, RouterLink],
+  imports: [
+    DatePipe,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    MatProgressSpinnerModule,
+    RouterLink,
+  ],
   templateUrl: './title-versions.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './title-versions.scss',
